@@ -1,0 +1,47 @@
+github.com/airwindows/ConsoleX2Channel/releases
+
+github.com/airwindows/ConsoleX2Buss/releases
+
+These are the Channel and Buss plugins that make up the ConsoleX2 system
+
+github.com/airwindows/ConsoleX2Pre/releases
+
+This is just the tone shaping of ConsoleX2, standalone and dual mono, to be used as additional tone shaping or with other Console versions
+
+ConsoleX2.zip (2M) standalone(AU, VST2)
+
+This is a set of standalone retro/generic ConsoleX2 plugins (AU, VST2).
+
+It includes the upgrade to TapeHack2: the original plugins as released are available at ConsoleX2Original.zip (2M) standalone(AU, VST2)
+
+Surprise! Not a very long wait for ConsoleX2. This is the one I’m going to be using for stuff. It’s got SmoothEQ2 everywhere which is trickier but more powerful, it’s got the same dynamics as in ConsoleH, the same trim/discontapeity section (labeled ‘More’) as in ConsoleH, the same metering as ConsoleH, the same summing as in Console9/X/H/X2 (these can all be swapped and interchanged! I typically use a Console9Buss on tracks getting sent auxes from other tracks, and then another ConsoleX2Channel instance after the reverb or whatever that’s on the aux.)
+
+You’ve already seen a lot of this on ConsoleH. There’s also the same ‘generic plugins in a zip with more controls than I can fit into Consolidated’, so ConsoleX2 supports retro systems going WAY back, and has an alternate GUI-less Linux build, and supports Raspberry Pi (for certain really basic computers you should be OK with just running the GUI-less version which doesn’t have things like the meter). It’s everything amazing about ConsoleH, again, with a different configuration that trades HipCrush on every track, for a much more powerful EQ on every track and the buss.
+
+I know it seems like a lot for one person to do for the holidays, and it is (plus that same one person also does all the video and editing work, which is why on the ConsoleH Xmas video I forgot to turn on the modular-synth blinkylights, the ONE DAY of the year where they are totally justified :) ) but bear in mind this is how it happens: steady gradual work all across the year, sometimes producing side plugins along the way, and all converging on a big grand project that continues my explorations into making original GUI-enabled plugins that can be recolored, reskinned, and resized way beyond what people normally let you do. You can make my Console GUI plugins functioning postage stamps, or channel strips, or humongous flashy giant hi-res things (if you go big enough you see the pretend milled slots around the thumbs of the knobs), at this cost: you can also make them bad, or ugly, or unusable due to tiny size, or put a terrible texture on them or pick a ridiculous font for all the Airwindows GUI plugins to have. (that’s done using Documents/Airwindows/AirwindowsGlobals.txt, and you don’t have to do it if you don’t want to, but it’s there for those bold of spirit)
+
+I’ve still got a nice backlog of plugins to put out and I’m still thinking of new ones to make, so I should still be here every week. Just not with a massive flashy mixing system. You’ll probably be able to spot when one of those is in the works.
+
+The synth I spotlit in the video is by Sudara, who made Pamplejuce and thus made these GUI plugs possible. I bought the one I’m using, and expect to keep doing cool things with it that aren’t covered by other softsynths I have (like my beloved Surge XT and Six Sines). It’s in early access and you can buy it too if you like, at melatonin.dev
+
+(ConsoleX2 doesn’t fit in Consolidated or the Rack plugin, so there’s no link to those for ConsoleX2)
+
+download 64 Bit Windows VSTs.zip
+
+download Signed M1/Intel Mac AUs.dmg
+
+download Signed M1/Intel Mac VSTs.dmg
+
+download LinuxVSTs.zip
+
+download LinuxARMVSTs.zip for the Pi
+
+download Retro 32 Bit Windows VSTs.zip
+
+download Retro PPC/32/64 Mac AUs.zip
+
+download Retro PPC/32/64 Mac VSTs.zip
+
+Mediafire Backup of all downloads
+
+All this is free and open source under the MIT licens…

@@ -1,0 +1,27 @@
+{
+  "_comment": "Manual category overrides applied at the bridge boundary so we never have to edit the upstream-generated ModuleAdd.h. Mostly: assigning real categories to effects that arrive labelled 'Unclassified'. Family rule: an effect named X3 inherits X2's category; an effect named ConsoleY{Buss,Channel,Pre} goes under 'Consoles'. The 6 truly orphan effects (no whatText, no awpdoc, no predecessor) are best-guess and should be reviewed.",
+
+  "Baxandall3": "Filter",
+  "BitDualPan": "Stereo",
+  "ClipOnly3": "Clipping",
+  "ConsoleHBuss": "Consoles",
+  "ConsoleHChannel": "Consoles",
+  "ConsoleHPre": "Consoles",
+  "ConsoleX2Buss": "Consoles",
+  "ConsoleX2Channel": "Consoles",
+  "ConsoleX2Pre": "Consoles",
+  "ConsoleXBuss": "Consoles",
+  "ConsoleXChannel": "Consoles",
+  "ConsoleXPre": "Consoles",
+  "CStrip": "Effects",
+  "Density3": "Distortion",
+  "Dynamics3": "Dynamics",
+  "LRConvolve3": "Utility",
+  "Pafnuty": "Filter",
+  "PearLiteEQ": "Filter",
+  "PunchyDeluxe": "Dynamics",
+  "PunchyGuitar": "Dynamics",
+  "SoftClock3": "Utility",
+  "WoodenBox": "Ambience",
+  "X2Buss": "Consoles"
+}

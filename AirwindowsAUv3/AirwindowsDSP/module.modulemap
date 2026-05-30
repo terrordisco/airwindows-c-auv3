@@ -1,0 +1,5 @@
+framework module AirwindowsDSP {
+    umbrella header "AirwindowsDSP.h"
+    export *
+    module * { export * }
+}

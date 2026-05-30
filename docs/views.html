@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Airwindows AUv3 — View Terminology</title>
+<style>
+  :root {
+    --bg: #f6f5f1;
+    --surface: #ffffff;
+    --ink: #17171c;
+    --ink-dim: #5c5c66;
+    --ink-faint: #9a9aa3;
+    --rule: rgba(0, 0, 0, 0.08);
+    --accent: #2e94c6;
+    --action: #2272f5;
+    --mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
+    --serif: ui-serif, "Iowan Old Style", "Apple Garamond", Georgia, serif;
+    --sans: -apple-system, "SF Pro Text", "Helvetica Neue", Helvetica, Arial, sans-serif;
+
+    /* diagram palette */
+    --d-bg: #f9f9f7;
+    --d-stroke: #c8c8cc;
+    --d-fill-root: #e8edf3;
+    --d-fill-a: #ddeef7;
+    --d-fill-b: #e2f3e8;
+    --d-fill-c: #f5ece0;
+    --d-fill-d: #f0e4f3;
+    --d-fill-action: #2272f5;
+    --d-text: #17171c;
+    --d-text-dim: #6c6c76;
+    --d-label: #2e94c6;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #17171c;
+      --surface: #1f1f25;
+      --ink: #f6f5f1;
+      --ink-dim: #b4b4bd;
+      --ink-faint: #6a6a74;
+      --rule: rgba(255, 255, 255, 0.1);
+      --d-bg: #1c1c22;
+      --d-stroke: #3a3a42;
+      --d-fill-root: #24262e;
+      --d-fill-a: #1e2a34;
+      --d-fill-b: #1e2e24;
+      --d-fill-c: #2e2820;
+      --d-fill-d: #2a2030;
+      --d-fill-action: #2272f5;
+      --d-text: #e6e6ea;
+      --d-text-dim: #8a8a94;
+      --d-label: #5ab8e0;
+    }
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 16px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 72px 28px 120px;
+  }
+
+  header.hero {
+    margin-bottom: 56px;
+    padding-bottom: 28px;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .eyebrow {
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-dim);
+    font-weight: 600;
+    margin: 0 0 14px;
+  }
+
+  h1 {
+    font-family: var(--serif);
+    font-weight: 500;
+    font-size: clamp(32px, 4.5vw, 52px);
+    line-height: 1.05;
+    letter-spacing: -0.01em;
+    margin: 0 0 16px;
+  }
+
+  .lede {
+    font-size: 17px;
+    color: var(--ink-dim);
+    max-width: 640px;
+    margin: 0;
+  }
+
+  nav.toc {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 12px;
+    padding: 22px 26px;
+    margin: 0 0 56px;
+  }
+
+  nav.toc h2 {
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-dim);
+    font-weight: 600;
+    margin: 0 0 10px;
+  }
+
+  nav.toc ol {
+    list-style: decimal;
+    margin: 0;
+    padding-left: 22px;
+    columns: 2;
+    column-gap: 32px;
+  }
+
+  nav.toc li { margin: 4px 0; }
+
+  nav.toc a {
+    color: var(--ink);
+    text-decoration: none;
+    border-bottom: 1px solid transparent;
+  }
+  nav.toc a:hover { border-bottom-color: var(--ink); }
+
+  section { margin-bottom: 72px; }
+
+  section > h2 {
+    font-family: var(--serif);
+    font-weight: 500;
+    font-size: 28px;
+    letter-spacing: -0.01em;
+    margin: 0 0 8px;
+    scroll-margin-top: 24px;
+  }
+
+  section > .sub {
+    color: var(--ink-dim);
+    margin: 0 0 24px;
+    font-size: 15px;
+  }
+
+  .diagram-wrap {
+    margin: 0 0 28px;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid var(--rule);
+  }
+
+  .diagram-wrap svg {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+
+  .callouts {
+    margin: 0 0 16px;
+    padding: 0;
+    list-style: none;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .callouts li {
+    display: flex;
+    gap: 14px;
+    align-items: baseline;
+  }
+
+  .callouts .name {
+    font-family: var(--mono);
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--ink);
+    min-width: 200px;
+    flex-shrink: 0;
+  }
+
+  .callouts .desc {
+    color: var(--ink-dim);
+    font-size: 14px;
+  }
+
+  table.glossary {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 8px;
+  }
+
+  table.glossary th {
+    text-align: left;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    font-weight: 600;
+    color: var(--ink-dim);
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--rule);
+    background: var(--surface);
+  }
+
+  table.glossary td {
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--rule);
+    vertical-align: top;
+    font-size: 14px;
+  }
+
+  table.glossary tr:last-child td { border-bottom: none; }
+
+  table.glossary td.name {
+    font-weight: 600;
+    color: var(--ink);
+    white-space: nowrap;
+    width: 34%;
+  }
+
+  table.glossary code {
+    font-family: var(--mono);
+    font-size: 12px;
+    background: var(--rule);
+    color: var(--ink);
+    padding: 2px 6px;
+    border-radius: 4px;
+  }
+
+  footer {
+    margin-top: 72px;
+    padding-top: 28px;
+    border-top: 1px solid var(--rule);
+    color: var(--ink-faint);
+    font-size: 12px;
+  }
+</style>
+</head>
+<body>
+  <div class="wrap">
+
+    <header class="hero">
+      <p class="eyebrow">Airwindows AUv3 iPad</p>
+      <h1>View Terminology</h1>
+      <p class="lede">
+        Canonical names for each UI element across the plugin, app, and browser.
+        Use these names when giving design feedback.
+      </p>
+    </header>
+
+    <nav class="toc">
+      <h2>Contents</h2>
+      <ol>
+        <li><a href="#detail">Effect Detail view</a></li>
+        <li><a href="#no-selection">No Selection placeholder</a></li>
+        <li><a href="#browser">Browser / library</a></li>
+        <li><a href="#about">About sheet</a></li>
+        <li><a href="#host">Host app additions</a></li>
+        <li><a href="#glossary">Naming glossary</a></li>
+      </ol>
+    </nav>
+
+    <!-- 1. Effect Detail -->
+    <section id="detail">
+      <h2>1. Effect Detail view</h2>
+      <p class="sub">The main plugin workspace when an effect is selected. Rendered by <code>EffectDetailView</code>.</p>
+
+      <div class="diagram-wrap">
+        <svg viewBox="0 0 900 520" xmlns="http://www.w3.org/2000/svg">
+          <!-- background -->
+          <rect width="900" height="520" rx="0" fill="var(--d-bg)"/>
+
+          <!-- outer frame: EffectDetailView -->
+          <rect x="20" y="16" width="860" height="488" rx="10" fill="none" stroke="var(--d-stroke)" stroke-width="1.5"/>
+          <text x="450" y="10" text-anchor="middle" font-family="var(--mono)" font-size="11" font-weight="600" fill="var(--d-label)">EffectDetailView</text>
+
+          <!-- HeaderStripView -->
+          <rect x="32" y="28" width="836" height="100" rx="8" fill="var(--d-fill-a)" stroke="var(--d-stroke)" stroke-width="1"/>
+          <text x="450" y="24" text-anchor="middle" font-family="var(--mono)" font-size="10" font-weight="600" fill="var(--d-label)">HeaderStripView</text>
+
+          <!-- IN pot -->
+          <circle cx="76" cy="72" r="22" fill="none" stroke="var(--d-text)" stroke-width="2"/>
+          <line x1="76" y1="52" x2="76" y2="60" stroke="var(--d-text)" stroke-width="2"/>
+          <text x="76" y="106" text-anchor="middle" font-family="var(--sans)" font-size="9" fill="var(--d-text-dim)">IN pot</text>
+
+          <!-- prev jog -->
+          <text x="180" y="76" text-anchor="middle" font-family="var(--sans)" font-size="13" fill="var(--d-text-dim)">&larr; PrevName</text>
+          <text x="180" y="92" text-anchor="middle" font-family="var(--mono)" font-size="8" fill="var(--d-label)">prev jog</text>
+
+          <!-- center: category eyebrow + title -->
+          <text x="450" y="60" text-anchor="middle" font-family="var(--sans)" font-size="9" font-weight="600" letter-spacing="1.2" fill="var(--d-text-dim)">CATEGORY EYEBROW</text>
+          <text x="450" y="82" text-anchor="middle" font-family="var(--sans)" font-size="18" font-weight="700" fill="var(--d-text)">Effect Name</text>
+          <text x="450" y="98" text-anchor="middle" font-family="var(--mono)" font-size="8" fill="var(--d-label)">title (tap to open browser)</text>
+
+          <!-- next jog -->
+          <text x="720" y="76" text-anchor="middle" font-family="var(--sans)" font-size="13" fill="var(--d-text-dim)">NextName &rarr;</text>
+          <text x="720" y="92" text-anchor="middle" font-family="var(--mono)" font-size="8" fill="var(--d-label)">next jog</text>
+
+          <!-- OUT pot -->
+          <circle cx="824" cy="72" r="22" fill="none" stroke="var(--d-text)" stroke-width="2"/>
+          <line x1="824" y1="52" x2="824" y2="60" stroke="var(--d-text)" stroke-width="2"/>
+          <text x="824" y="106" text-anchor="middle" font-family="var(--sans)" font-size="9" fill="var(--d-text-dim)">OUT pot</text>
+
+          <!-- divider -->
+          <line x1="32" y1="140" x2="868" y2="140" stroke="var(--d-stroke)" stroke-width="1"/>
+
+          <!-- tagline + chip row -->
+          <rect x="32" y="148" width="836" height="36" rx="6" fill="var(--d-fill-root)" stroke="none"/>
+          <text x="340" y="171" text-anchor="middle" font-family="var(--sans)" font-size="12" font-style="italic" fill="var(--d-text-dim)">&ldquo;tagline (centered, italic, quoted)&rdquo;</text>
+
+          <!-- chips -->
+          <rect x="668" y="156" width="56" height="20" rx="10" fill="var(--d-fill-b)" stroke="var(--d-stroke)" stroke-width="0.5"/>
+          <text x="696" y="170" text-anchor="middle" font-family="var(--sans)" font-size="9" font-weight="600" fill="var(--d-text)">STEREO</text>
+
+          <rect x="730" y="156" width="28" height="20" rx="10" fill="var(--d-fill-c)" stroke="var(--d-stroke)" stroke-width="0.5"/>
+          <text x="744" y="170" text-anchor="middle" font-family="var(--sans)" font-size="11" fill="var(--d-text)">&#9788;</text>
+
+          <rect x="764" y="156" width="28" height="20" rx="10" fill="var(--d-fill-c)" stroke="var(--d-stroke)" stroke-width="0.5"/>
+          <text x="778" y="170" text-anchor="middle" font-family="var(--sans)" font-size="11" fill="var(--d-text)">&#8634;</text>
+
+          <text x="730" y="194" text-anchor="middle" font-family="var(--mono)" font-size="8" fill="var(--d-label)">chip row</text>
+
+          <!-- ParameterGrid -->
+          <rect x="32" y="204" width="836" height="200" rx="8" fill="var(--d-fill-a)" stroke="var(--d-stroke)" stroke-width="1"/>
+          <text x="450" y="200" text-anchor="middle" font-family="var(--mono)" font-size="10" font-weight="600" fill="var(--d-label)">ParameterGrid</text>
+
+          <!-- Row 1 -->
+          <g transform="translate(52, 218)">
+            <circle cx="10" cy="10" r="12" fill="none" stroke="var(--d-text)" stroke-width="1.5"/>
+            <text x="10" y="14" text-anchor="middle" font-family="var(--sans)" font-size="11" font-weight="600" fill="var(--d-text)">1</text>
+            <text x="30" y="14" font-family="var(--sans)" font-size="12" font-weight="600" fill="var(--d-text)">ParamName</text>
+            <text x="330" y="14" text-anchor="end" font-family="var(--mono)" font-size="11" fill="var(--d-text-dim)">0.5000</text>
+            <rect x="28" y="22" width="306" height="6" rx="3" fill="var(--d-stroke)"/>
+            <circle cx="180" cy="25" r="7" fill="var(--d-text)"/>
+          </g>
+
+          <g transform="translate(440, 218)">
+            <circle cx="10" cy="10" r="12" fill="none" stroke="var(--d-text)" stroke-width="1.5"/>
+            <text x="10" y="14" text-anchor="middle" font-family="var(--sans)" font-size="11" font-weight="600" fill="var(--d-text)">2</text>
+            <text x="30" y="14" font-family="var(--sans)" font-size="12" font-weight="600" fill="var(--d-text)">ParamName</text>
+            <text x="330" y="14" text-anchor="end" font-family="var(--mono)" font-size="11" fill="var(--d-text-dim)">0.8560</text>
+            <rect x="28" y="22" width="306" height="6" rx="3" fill="var(--d-stroke)"/>
+            <circle cx="268" cy="25" r="7" fill="var(--d-text)"/>
+          </g>
+
+          <!-- Row 2 -->
+          <g transform="translate(52, 278)">
+            <circle cx="10" cy="10" r="12" fill="none" stroke="var(--d-text)" stroke-width="1.5"/>
+            <text x="10" y="14" text-anchor="middle" font-family="var(--sans)" font-size="11" font-weight="600" fill="var(--d-text)">3</text>
+            <text x="30" y="14" font-family="var(--sans)" font-size="12" font-weight="600" fill="var(--d-text)">ParamName</text>
+            <text x="330" y="14" text-anchor="end" font-family="var(--mono)" font-size="11" fill="var(--d-text-dim)">0.1500</text>
+            <rect x="28" y="22" width="306" height="6" rx="3" fill="var(--d-stroke)"/>
+            <circle cx="74" cy="25" r="7" fill="var(--d-text)"/>
+          </g>
+
+          <g transform="translate(440, 278)">
+            <circle cx="10" cy="10" r="12" fill="none" stroke="var(--d-text)" stroke-width="1.5"/>
+            <text x="10" y="14" text-anchor="middle" font-family="var(--sans)" font-size="11" font-weight="600" fill="var(--d-text)">4</text>
+            <text x="30" y="14" font-family="var(--sans)" font-size="12" font-weight="600" fill="var(--d-text)">ParamName</text>
+            <text x="330" y="14" text-anchor="end" font-family="var(--mono)" font-size="11" fill="var(--d-text-dim)">1.0000</text>
+            <rect x="28" y="22" width="306" height="6" rx="3" fill="var(--d-stroke)"/>
+            <circle cx="306" cy="25" r="7" fill="var(--d-text)"/>
+          </g>
+
+          <!-- ParameterRow label -->
+          <text x="830" y="360" text-anchor="end" font-family="var(--mono)" font-size="8" fill="var(--d-label)">ParameterRow x N</text>
+          <!-- numbered glyph label -->
+          <line x1="62" y1="250" x2="42" y2="260" stroke="var(--d-label)" stroke-width="0.75"/>
+          <text x="42" y="270" text-anchor="middle" font-family="var(--mono)" font-size="8" fill="var(--d-label)">numbered glyph</text>
+
+          <!-- divider before description -->
+          <line x1="32" y1="416" x2="868" y2="416" stroke="var(--d-stroke)" stroke-width="1" stroke-dasharray="4 3"/>
+
+          <!-- description area -->
+          <rect x="32" y="424" width="836" height="72" rx="8" fill="var(--d-fill-c)" stroke="var(--d-stroke)" stroke-width="1"/>
+          <text x="450" y="456" text-anchor="middle" font-family="var(--sans)" font-size="12" fill="var(--d-text-dim)">Long-form description from awpdoc/Effect.txt (scrollable)</text>
+          <text x="450" y="474" text-anchor="middle" font-family="var(--mono)" font-size="8" fill="var(--d-label)">description area (hidden when identical to tagline)</text>
+        </svg>
+      </div>
+
+      <ul class="callouts">
+        <li><span class="name">HeaderStripView</span><span class="desc">Persistent header band: IN pot / prev jog / category + title / next jog / OUT pot.</span></li>
+        <li><span class="name">IN pot / OUT pot</span><span class="desc">Interactive <code>RotaryPot</code>s (48pt). Vertical drag to change, double-tap to reset.</span></li>
+        <li><span class="name">title</span><span class="desc">Big semibold effect name. Tap to open the browser.</span></li>
+        <li><span class="name">category eyebrow</span><span class="desc">Small uppercase label above the title.</span></li>
+        <li><span class="name">prev / next jog</span><span class="desc">&larr; PreviousName and NextName &rarr; buttons.</span></li>
+        <li><span class="name">tagline</span><span class="desc">Centered italic curly-quoted <code>whatText</code>.</span></li>
+        <li><span class="name">chip row</span><span class="desc">STEREO/MONO info chip left, filled theme + reset button chips right.</span></li>
+        <li><span class="name">ParameterGrid</span><span class="desc">1, 2, or 3 columns depending on parameter count.</span></li>
+        <li><span class="name">ParameterRow</span><span class="desc">Circled number + name + display value + slider. Numbers work for any count (1-37).</span></li>
+        <li><span class="name">description area</span><span class="desc">Scrollable text from <code>awpdoc/&lt;Effect&gt;.txt</code>. Hidden when identical to the tagline.</span></li>
+      </ul>
+    </section>
+
+    <!-- 2. No Selection -->
+    <section id="no-selection">
+      <h2>2. No Selection placeholder</h2>
+      <p class="sub">Shown when no effect has been picked yet. Audio passes through. Rendered by <code>NoSelectionView</code>.</p>
+
+      <div class="diagram-wrap">
+        <svg viewBox="0 0 500 260" xmlns="http://www.w3.org/2000/svg">
+          <rect width="500" height="260" fill="var(--d-bg)"/>
+          <rect x="16" y="12" width="468" height="236" rx="10" fill="none" stroke="var(--d-stroke)" stroke-width="1.5"/>
+          <text x="250" y="8" text-anchor="middle" font-family="var(--mono)" font-size="10" font-weight="600" fill="var(--d-label)">NoSelectionView</text>
+
+          <!-- icon placeholder -->
+          <rect x="224" y="52" width="52" height="36" rx="6" fill="var(--d-fill-a)" stroke="var(--d-stroke)" stroke-width="1"/>
+          <line x1="236" y1="70" x2="264" y2="70" stroke="var(--d-text-dim)" stroke-width="2"/>
+          <line x1="240" y1="64" x2="240" y2="76" stroke="var(--d-text-dim)" stroke-width="2"/>
+          <line x1="252" y1="60" x2="252" y2="80" stroke="var(--d-text-dim)" stroke-width="2"/>
+
+          <text x="250" y="114" text-anchor="middle" font-family="var(--sans)" font-size="16" font-weight="600" fill="var(--d-text)">Pick an effect to begin</text>
+          <text x="250" y="136" text-anchor="middle" font-family="var(--sans)" font-size="11" fill="var(--d-text-dim)">Audio is passing through unchanged.</text>
+
+          <!-- button -->
+          <rect x="190" y="158" width="120" height="34" rx="17" fill="var(--d-fill-action)"/>
+          <text x="250" y="180" text-anchor="middle" font-family="var(--sans)" font-size="12" font-weight="600" fill="#ffffff">Browse effects</text>
+          <text x="250" y="216" text-anchor="middle" font-family="var(--mono)" font-size="8" fill="var(--d-label)">opens browser (also auto-opens on first appear)</text>
+        </svg>
+      </div>
+    </section>
+
+    <!-- 3. Browser -->
+    <section id="browser">
+      <h2>3. Browser / library</h2>
+      <p class="sub">Full-screen 3-column library. Opened by tapping the title or the "Browse effects" button. Rendered by <code>BrowserView</code>.</p>
+
+      <div class="diagram-wrap">
+        <svg viewBox="0 0 900 520" xmlns="http://www.w3.org/2000/svg">
+          <rect width="900" height="520" fill="var(--d-bg)"/>
+
+          <!-- outer frame -->
+          <rect x="12" y="12" width="876" height="496" rx="10" fill="none" stroke="var(--d-stroke)" stroke-width="1.5"/>
+          <text x="450" y="8" text-anchor="middle" font-family="var(--mono)" font-size="11" font-weight="600" fill="var(--d-label)">BrowserView</text>
+
+          <!-- Column 1: SidebarView -->
+          <rect x="16" y="16" width="220" height="488" rx="8" fill="var(--d-fill-a)" stroke="var(--d-stroke)" stroke-width="1"/>
+          <text x="126" y="12" text-anchor="middle" font-family="var(--mono)" font-size="10" font-weight="600" fill="var(--d-label)">SidebarView (280pt)</text>
+
+          <!-- close X -->
+          <circle cx="216" cy="36" r="10" fill="none" stroke="var(--d-text-dim)" stroke-width="1"/>
+          <text x="216" y="40" text-anchor="middle" font-family="var(--sans)" font-size="10" fill="var(--d-text-dim)">&times;</text>
+          <text x="200" y="54" text-anchor="end" font-family="var(--mono)" font-size="7" fill="var(--d-label)">close X</text>
+
+          <!-- CollectionTabStrip -->
+          <rect x="28" y="64" width="196" height="46" rx="6" fill="var(--d-fill-root)" stroke="var(--d-stroke)" stroke-width="0.5"/>
+          <text x="56" y="80" text-anchor="middle" font-family="var(--sans)" font-size="9" fill="var(--d-text-dim)">&#9734;</text>
+          <text x="56" y="96" text-anchor="middle" font-family="var(--sans)" font-size="7" fill="var(--d-text-dim)">Rec</text>
+          <text x="126" y="80" text-anchor="middle" font-family="var(--sans)" font-size="9" fill="var(--d-text-dim)">&#9734;</text>
+          <text x="126" y="96" text-anchor="middle" font-family="var(--sans)" font-size="7" fill="var(--d-text-dim)">Basic</text>
+          <text x="196" y="80" text-anchor="middle" font-family="var(--sans)" font-size="9" fill="var(--d-text-dim)">&#9734;</text>
+          <text x="196" y="96" text-anchor="middle" font-family="var(--sans)" font-size="7" fill="var(--d-text-dim)">Latest</text>
+          <text x="126" y="60" text-anchor="middle" font-family="var(--mono)" font-size="7" fill="var(--d-label)">CollectionTabStrip</text>
+
+          <!-- SearchField -->
+          <rect x="28" y="120" width="196" height="28" rx="14" fill="var(--d-fill-root)" stroke="var(--d-stroke)" stroke-width="0.5"/>
+          <text x="48" y="139" font-family="var(--sans)" font-size="10" fill="var(--d-text-dim)">&#128269; Search</text>
+          <text x="224" y="139" font-family="var(--mono)" font-size="7" fill="var(--d-label)">SearchField</text>
+
+          <!-- Categories header -->
+          <text x="28" y="172" font-family="var(--sans)" font-size="11" font-weight="600" fill="var(--d-text-dim)">Categories</text>
+
+          <!-- Category rows -->
+          <g transform="translate(28, 184)">
+            <circle cx="6" cy="8" r="3" fill="var(--d-text-dim)"/>
+            <text x="16" y="12" font-family="var(--sans)" font-size="10" fill="var(--d-text)">All categories (483)</text>
+            <text x="190" y="12" text-anchor="end" font-family="var(--sans)" font-size="8" fill="var(--d-text-dim)">&#9656;</text>
+          </g>
+          <g transform="translate(28, 206)">
+            <circle cx="6" cy="8" r="3" fill="#e06070"/>
+            <text x="16" y="12" font-family="var(--sans)" font-size="10" fill="var(--d-text)">Ambience (25)</text>
+            <text x="190" y="12" text-anchor="end" font-family="var(--sans)" font-size="8" fill="var(--d-text-dim)">&#9656;</text>
+          </g>
+          <g transform="translate(28, 228)">
+            <circle cx="6" cy="8" r="3" fill="#60a0e0"/>
+            <text x="16" y="12" font-family="var(--sans)" font-size="10" fill="var(--d-text)">Amp Sims (17)</text>
+            <text x="190" y="12" text-anchor="end" font-family="var(--sans)" font-size="8" fill="var(--d-text-dim)">&#9656;</text>
+          </g>
+          <g transform="translate(28, 250)">
+            <circle cx="6" cy="8" r="3" fill="#70c080"/>
+            <text x="16" y="12" font-family="var(--sans)" font-size="10" fill="var(--d-text)">Bass (10)</text>
+            <text x="190" y="12" text-anchor="end" font-family="var(--sans)" font-size="8" fill="var(--d-text-dim)">&#9656;</text>
+          </g>
+          <text x="126" y="290" text-anchor="middle" font-family="var(--sans)" font-size="10" fill="var(--d-text-dim)">...</text>
+          <text x="224" y="230" font-family="var(--mono)" font-size="7" fill="var(--d-label)">CategoryRow x N</text>
+
+          <!-- Random + About pinned bottom -->
+          <line x1="24" y1="432" x2="228" y2="432" stroke="var(--d-stroke)" stroke-width="0.5"/>
+          <rect x="24" y="438" width="208" height="28" rx="0" fill="var(--d-fill-root)"/>
+          <text x="52" y="457" font-family="var(--sans)" font-size="10" font-weight="600" fill="var(--d-text)">&#8645; Random effect</text>
+          <rect x="24" y="468" width="208" height="28" rx="0" fill="var(--d-fill-root)"/>
+          <text x="52" y="487" font-family="var(--sans)" font-size="10" font-weight="600" fill="var(--d-text)">&#9432; About Airwindows</text>
+          <text x="228" y="498" font-family="var(--mono)" font-size="7" fill="var(--d-label)">pinned bottom</text>
+
+          <!-- Divider 1 -->
+          <line x1="240" y1="16" x2="240" y2="504" stroke="var(--d-stroke)" stroke-width="1"/>
+
+          <!-- Column 2: EffectListColumn -->
+          <rect x="244" y="16" width="210" height="488" rx="8" fill="var(--d-fill-b)" stroke="var(--d-stroke)" stroke-width="1"/>
+          <text x="349" y="12" text-anchor="middle" font-family="var(--mono)" font-size="10" font-weight="600" fill="var(--d-label)">EffectListColumn</text>
+
+          <text x="256" y="44" font-family="var(--sans)" font-size="15" font-weight="600" fill="var(--d-text)">Filter (47)</text>
+          <text x="256" y="60" font-family="var(--sans)" font-size="9" fill="var(--d-text-dim)">newest first</text>
+
+          <g transform="translate(256, 76)">
+            <text x="0" y="12" font-family="var(--mono)" font-size="10" fill="var(--d-text-dim)">1.</text>
+            <text x="22" y="12" font-family="var(--sans)" font-size="11" font-weight="600" fill="var(--d-text)">Highpass</text>
+          </g>
+          <rect x="248" y="72" width="200" height="22" rx="4" fill="var(--d-text)" fill-opacity="0.05"/>
+
+          <g transform="translate(256, 100)">
+            <text x="0" y="12" font-family="var(--mono)" font-size="10" fill="var(--d-text-dim)">2.</text>
+            <text x="22" y="12" font-family="var(--sans)" font-size="11" fill="var(--d-text)">Lowpass</text>
+          </g>
+          <g transform="translate(256, 124)">
+            <text x="0" y="12" font-family="var(--mono)" font-size="10" fill="var(--d-text-dim)">3.</text>
+            <text x="22" y="12" font-family="var(--sans)" font-size="11" fill="var(--d-text)">BiquadTriple</text>
+          </g>
+          <g transform="translate(256, 148)">
+            <text x="0" y="12" font-family="var(--mono)" font-size="10" fill="var(--d-text-dim)">4.</text>
+            <text x="22" y="12" font-family="var(--sans)" font-size="11" fill="var(--d-text)">Capacitor2</text>
+          </g>
+          <text x="349" y="188" text-anchor="middle" font-family="var(--sans)" font-size="10" fill="var(--d-text-dim)">...</text>
+
+          <text x="349" y="480" text-anchor="middle" font-family="var(--mono)" font-size="7" fill="var(--d-label)">only shown after a category pick</text>
+          <text x="349" y="494" text-anchor="middle" font-family="var(--mono)" font-size="7" fill="var(--d-label)">NumberedEffectRow x N</text>
+
+          <!-- Divider 2 -->
+          <line x1="458" y1="16" x2="458" y2="504" stroke="var(--d-stroke)" stroke-width="1"/>
+
+          <!-- Column 3: EffectPreviewColumn -->
+          <rect x="462" y="16" width="422" height="488" rx="8" fill="var(--d-fill-c)" stroke="var(--d-stroke)" stroke-width="1"/>
+          <text x="673" y="12" text-anchor="middle" font-family="var(--mono)" font-size="10" font-weight="600" fill="var(--d-label)">EffectPreviewColumn</text>
+
+          <!-- Effect name -->
+          <text x="480" y="56" font-family="var(--sans)" font-size="22" font-weight="700" fill="var(--d-text)">Highpass</text>
+
+          <!-- Select button -->
+          <rect x="796" y="34" width="72" height="30" rx="15" fill="var(--d-fill-action)"/>
+          <text x="832" y="54" text-anchor="middle" font-family="var(--sans)" font-size="11" font-weight="600" fill="#ffffff">Select</text>
+          <text x="832" y="76" text-anchor="middle" font-family="var(--mono)" font-size="7" fill="var(--d-label)">Select button</text>
+
+          <!-- tagline -->
+          <text x="480" y="88" font-family="var(--sans)" font-size="11" font-style="italic" fill="var(--d-text-dim)">&ldquo;Highpass is a steep highpass filter.&rdquo;</text>
+
+          <!-- metadata pills -->
+          <rect x="480" y="102" width="52" height="18" rx="9" fill="var(--d-text)" fill-opacity="0.06"/>
+          <text x="506" y="115" text-anchor="middle" font-family="var(--sans)" font-size="8" fill="var(--d-text-dim)">Filter</text>
+          <rect x="538" y="102" width="40" height="18" rx="9" fill="var(--d-text)" fill-opacity="0.06"/>
+          <text x="558" y="115" text-anchor="middle" font-family="var(--sans)" font-size="8" fill="var(--d-text-dim)">Mono</text>
+          <rect x="584" y="102" width="68" height="18" rx="9" fill="var(--d-text)" fill-opacity="0.06"/>
+          <text x="618" y="115" text-anchor="middle" font-family="var(--sans)" font-size="8" fill="var(--d-text-dim)">2022-11-03</text>
+          <text x="480" y="138" font-family="var(--mono)" font-size="7" fill="var(--d-label)">metadata pills</text>
+
+          <!-- description text -->
+          <text x="480" y="168" font-family="var(--sans)" font-size="10" fill="var(--d-text-dim)">Long-form description text from</text>
+          <text x="480" y="184" font-family="var(--sans)" font-size="10" fill="var(--d-text-dim)">awpdoc/Highpass.txt goes here,</text>
+          <text x="480" y="200" font-family="var(--sans)" font-size="10" fill="var(--d-text-dim)">scrollable within the preview pane.</text>
+        </svg>
+      </div>
+
+      <ul class="callouts">
+        <li><span class="name">SidebarView</span><span class="desc">First column (220pt). Collections + search + categories + Random + About.</span></li>
+        <li><span class="name">close X</span><span class="desc">Top-right of the sidebar. Dismisses the browser.</span></li>
+        <li><span class="name">CollectionTabStrip</span><span class="desc">Three starred tabs: Recommended / Basic / Latest.</span></li>
+        <li><span class="name">SearchField</span><span class="desc">Rounded pill search. Filters by name / category / whatText.</span></li>
+        <li><span class="name">CategoryRow</span><span class="desc">Colored dot + name + (count) + chevron. Cyan accent when selected.</span></li>
+        <li><span class="name">Random effect button</span><span class="desc">Pinned bottom. Picks a random effect from the filtered pool.</span></li>
+        <li><span class="name">About Airwindows button</span><span class="desc">Pinned bottom. Opens AboutView as a sheet.</span></li>
+        <li><span class="name">EffectListColumn</span><span class="desc">Middle column. Only shown once a category is picked.</span></li>
+        <li><span class="name">NumberedEffectRow</span><span class="desc">"1. Highpass" style row. Tap to highlight, tap again to select.</span></li>
+        <li><span class="name">EffectPreviewColumn</span><span class="desc">Right column. Grows to fill remaining space.</span></li>
+        <li><span class="name">Select button</span><span class="desc">Blue capsule top-right of the preview pane.</span></li>
+        <li><span class="name">metadata pills</span><span class="desc">Category / Mono / date pills under the tagline.</span></li>
+      </ul>
+    </section>
+
+    <!-- 4. About -->
+    <section id="about">
+      <h2>4. About sheet</h2>
+      <p class="sub">Modal sheet from the sidebar's About button. Rendered by <code>AboutView</code>.</p>
+
+      <div class="diagram-wrap">
+        <svg viewBox="0 0 480 300" xmlns="http://www.w3.org/2000/svg">
+          <rect width="480" height="300" fill="var(--d-bg)"/>
+          <rect x="16" y="12" width="448" height="276" rx="10" fill="none" stroke="var(--d-stroke)" stroke-width="1.5"/>
+          <text x="240" y="8" text-anchor="middle" font-family="var(--mono)" font-size="10" font-weight="600" fill="var(--d-label)">AboutView</text>
+
+          <text x="32" y="42" font-family="var(--sans)" font-size="16" font-weight="600" fill="var(--d-text)">About</text>
+          <circle cx="444" cy="34" r="10" fill="none" stroke="var(--d-text-dim)" stroke-width="1"/>
+          <text x="444" y="38" text-anchor="middle" font-family="var(--sans)" font-size="10" fill="var(--d-text-dim)">&times;</text>
+
+          <line x1="24" y1="56" x2="456" y2="56" stroke="var(--d-stroke)" stroke-width="0.5"/>
+
+          <text x="32" y="78" font-family="var(--sans)" font-size="8" font-weight="600" letter-spacing="1" fill="var(--d-text-dim)">AIRWINDOWS CONSOLIDATED</text>
+          <text x="32" y="96" font-family="var(--sans)" font-size="10" fill="var(--d-text)">350+ free, open-source audio effects...</text>
+
+          <text x="32" y="126" font-family="var(--sans)" font-size="8" font-weight="600" letter-spacing="1" fill="var(--d-text-dim)">CREDITS</text>
+          <text x="32" y="144" font-family="var(--sans)" font-size="10" fill="var(--d-text-dim)">DSP</text>
+          <text x="100" y="144" font-family="var(--sans)" font-size="10" fill="var(--d-text)">Chris Johnson</text>
+          <text x="32" y="160" font-family="var(--sans)" font-size="10" fill="var(--d-text-dim)">Registry</text>
+          <text x="100" y="160" font-family="var(--sans)" font-size="10" fill="var(--d-text)">Paul Walker</text>
+          <text x="32" y="176" font-family="var(--sans)" font-size="10" fill="var(--d-text-dim)">Port</text>
+          <text x="100" y="176" font-family="var(--sans)" font-size="10" fill="var(--d-text)">AUv3 adaptation</text>
+
+          <text x="32" y="206" font-family="var(--sans)" font-size="8" font-weight="600" letter-spacing="1" fill="var(--d-text-dim)">LICENSE</text>
+          <text x="32" y="224" font-family="var(--sans)" font-size="10" fill="var(--d-text-dim)">MIT License. Free to use, modify...</text>
+
+          <text x="32" y="254" font-family="var(--sans)" font-size="8" font-weight="600" letter-spacing="1" fill="var(--d-text-dim)">THANKS</text>
+          <text x="32" y="272" font-family="var(--sans)" font-size="10" fill="var(--d-text-dim)">Enormous thanks to Chris Johnson...</text>
+        </svg>
+      </div>
+    </section>
+
+    <!-- 5. Host app -->
+    <section id="host">
+      <h2>5. Host app additions</h2>
+      <p class="sub">The standalone app embeds the same <code>AirwindowsAUView</code> but adds a floating audio passthrough toggle. Not visible when running as an AUv3 plugin.</p>
+
+      <div class="diagram-wrap">
+        <svg viewBox="0 0 500 260" xmlns="http://www.w3.org/2000/svg">
+          <rect width="500" height="260" fill="var(--d-bg)"/>
+          <rect x="16" y="12" width="468" height="236" rx="10" fill="none" stroke="var(--d-stroke)" stroke-width="1.5"/>
+          <text x="250" y="8" text-anchor="middle" font-family="var(--mono)" font-size="10" font-weight="600" fill="var(--d-label)">ContentView</text>
+
+          <!-- embedded view -->
+          <rect x="28" y="28" width="444" height="196" rx="8" fill="var(--d-fill-a)" stroke="var(--d-stroke)" stroke-width="1" stroke-dasharray="6 3"/>
+          <text x="250" y="126" text-anchor="middle" font-family="var(--sans)" font-size="13" fill="var(--d-text-dim)">AirwindowsAUView</text>
+          <text x="250" y="144" text-anchor="middle" font-family="var(--sans)" font-size="10" fill="var(--d-text-dim)">(same as plugin surface)</text>
+
+          <!-- speaker button -->
+          <circle cx="444" cy="200" r="16" fill="var(--d-fill-root)" stroke="var(--d-stroke)" stroke-width="1"/>
+          <text x="444" y="205" text-anchor="middle" font-family="var(--sans)" font-size="14" fill="var(--d-text-dim)">&#128264;</text>
+          <text x="408" y="236" text-anchor="middle" font-family="var(--mono)" font-size="8" fill="var(--d-label)">speaker button (host app only)</text>
+        </svg>
+      </div>
+
+      <ul class="callouts">
+        <li><span class="name">speaker button</span><span class="desc">Audio passthrough toggle. Mic &rarr; effect &rarr; speaker via <code>AVAudioEngine</code>.</span></li>
+      </ul>
+    </section>
+
+    <!-- Glossary -->
+    <section id="glossary">
+      <h2>6. Naming glossary</h2>
+      <p class="sub">Call things by these names and we'll know exactly what you mean.</p>
+
+      <table class="glossary">
+        <thead>
+          <tr><th>Name</th><th>Maps to</th></tr>
+        </thead>
+        <tbody>
+          <tr><td class="name">Effect Detail view</td><td><code>EffectDetailView</code> &mdash; main plugin workspace</td></tr>
+          <tr><td class="name">header strip</td><td><code>HeaderStripView</code></td></tr>
+          <tr><td class="name">IN pot / OUT pot</td><td><code>RotaryPot</code> at either end of the header</td></tr>
+          <tr><td class="name">title / effect name</td><td>Big center text &mdash; tap to open browser</td></tr>
+          <tr><td class="name">category eyebrow</td><td>Small uppercase label above the title</td></tr>
+          <tr><td class="name">prev jog / next jog</td><td>&larr; PreviousName and NextName &rarr; buttons</td></tr>
+          <tr><td class="name">tagline</td><td>Italic curly-quoted <code>whatText</code> under the header</td></tr>
+          <tr><td class="name">chip row</td><td>STEREO/MONO info chip left, filled theme + reset buttons right</td></tr>
+          <tr><td class="name">parameter grid</td><td><code>ParameterGrid</code></td></tr>
+          <tr><td class="name">parameter row</td><td><code>ParameterRow</code> &mdash; glyph + name + value + slider</td></tr>
+          <tr><td class="name">numbered glyph</td><td>Circled plain number (1, 2, 3...) next to each parameter row</td></tr>
+          <tr><td class="name">description area</td><td>Scrollable text from <code>awpdoc/</code></td></tr>
+          <tr><td class="name">no-selection view</td><td><code>NoSelectionView</code> placeholder</td></tr>
+          <tr><td class="name">browser / library</td><td><code>BrowserView</code> full-screen library</td></tr>
+          <tr><td class="name">sidebar / first column</td><td><code>SidebarView</code> &mdash; 280pt left column</td></tr>
+          <tr><td class="name">collection tabs</td><td><code>CollectionTabStrip</code> &mdash; three starred tabs</td></tr>
+          <tr><td class="name">search field</td><td>Rounded search pill</td></tr>
+          <tr><td class="name">category row</td><td><code>CategoryRow</code> &mdash; dot + name + count + chevron</td></tr>
+          <tr><td class="name">random effect button</td><td>Pinned bottom of sidebar</td></tr>
+          <tr><td class="name">about button</td><td>Pinned bottom of sidebar, opens <code>AboutView</code></td></tr>
+          <tr><td class="name">effect list / middle column</td><td><code>EffectListColumn</code> &mdash; shown after category pick</td></tr>
+          <tr><td class="name">numbered effect row</td><td><code>NumberedEffectRow</code></td></tr>
+          <tr><td class="name">preview pane / right column</td><td><code>EffectPreviewColumn</code></td></tr>
+          <tr><td class="name">Select button</td><td>Blue capsule in preview pane</td></tr>
+          <tr><td class="name">metadata pills</td><td>Category / Mono / date pills</td></tr>
+          <tr><td class="name">about sheet</td><td><code>AboutView</code> modal</td></tr>
+          <tr><td class="name">speaker button</td><td>Audio passthrough toggle &mdash; host app only</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <footer>
+      Source of truth: <code>Packages/AirwindowsUI/Sources/AirwindowsUI/*.swift</code> and <code>AirwindowsAUExtension/AirwindowsAUView.swift</code>.
+    </footer>
+
+  </div>
+</body>
+</html>

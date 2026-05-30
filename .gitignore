@@ -1,0 +1,51 @@
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+*.swp
+
+# Xcode
+build/
+DerivedData/
+*.xcuserstate
+*.xcuserdatad
+**/xcuserdata/
+*.moved-aside
+*.hmap
+*.ipa
+*.dSYM.zip
+*.dSYM
+
+# Swift Package Manager
+.build/
+.swiftpm/
+Packages/*/Package.resolved
+Packages/*/.build/
+Packages/*/.swiftpm/
+
+# Provisioning / signing — never commit anything host-specific
+*.mobileprovision
+*.provisionprofile
+*.p12
+
+# XcodeGen output — re-generated locally from project.yml
+AirwindowsAUv3/AirwindowsAUv3.xcodeproj/
+
+# Upstream airwin2rack clone — local sync source, not part of this repo.
+# The synced effects already live in AirwindowsAUv3/AirwindowsDSP/Airwin/.
+repo/
+
+# JUCE archive — vestige of an early experiment, not used by the AUv3 build.
+Juce.zip
+
+# Old screenshots / scratch
+crud/
+
+# Stray typo backup of the xcodeproj
+AirwindowsAUv3/,,.xcodeproj/
+
+# graphify analysis output
+AirwindowsAUv3/graphify-out/
+
+# Claude Code local-only state
+.claude/settings.local.json
