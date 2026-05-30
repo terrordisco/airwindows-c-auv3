@@ -1,6 +1,6 @@
 # Airwindows Consolidated AUv3
 
-A native iPadOS AUv3 plugin that wraps the entire Airwindows effects library — all 350+ of Chris Johnson's free, open-source audio effects — in a single Apple-feeling Audio Unit.
+A native iPadOS AUv3 plugin that rolls the entire Airwindows effects library — all 350+ of Chris Johnson's free, open-source audio effects — in a single Apple-feeling Audio Unit.
 
 <p align="center">
   <img src="airwindows_logo.jpg" alt="Airwindows" width="220" />
@@ -8,21 +8,24 @@ A native iPadOS AUv3 plugin that wraps the entire Airwindows effects library —
 
 > Status: **pre-release, heading into TestFlight beta.** Builds and runs on iPad in AUM, Cubasis, Logic Pro, GarageBand, and Loopy Pro. Not yet on the App Store.
 
+Updates in <a href="https://forum.loopypro.com/discussion/65612/developers-why-not-porting-airwindows-plugs-to-auv3-ios/p1">this thread</a> until I finish setting things up.
+
+
 ---
 
 ## What this is
 
 Airwindows is a legendary library of audio effects, lovingly hand-rolled by Chris Johnson and offered free to the world. It has lived on macOS, Windows, Linux, and inside VCV Rack — but until now, not on iPad.
 
-This project is an iPadOS AUv3 plugin that loads **every Airwindows effect in a single Audio Unit**, with a browser-style picker for selecting which one is active. The audio path is Chris's DSP, untouched. The UI is a thin, Apple-feeling shell on top — deeply designed to appear barely designed.
+This project is an iPadOS AUv3 plugin that rolls **every Airwindows effect in a single Audio Unit**, with a browser-style picker for selecting which one is active. The audio path is Chris's DSP, untouched. The UI is a thin, Apple-scented shell on top — obsessively designed to appear barely designed.
 
-What you get on iPad:
+Current features:
 
 - All 350+ Airwindows effects, in any AUv3 host.
 - A category browser, search, and "Recommended / Basic / Latest" curated collections.
-- Sliders or pots, your choice. Light and dark theme.
-- Effect descriptions, blog-post and YouTube links from airwindows.com.
-- AU state persistence — sessions and presets restore properly.
+- Options for comfort: choose between sliders or pots. Light and dark themes for your eyes (hi other old people). 
+- All the metadata we can muster: Effect descriptions, blog-post and YouTube links from airwindows.com.
+- AU state persistence — sessions and presets *should* restore properly.
 
 It is free, MIT-licensed for the wrapper, and welcomes contributions.
 
@@ -35,6 +38,10 @@ It is free, MIT-licensed for the wrapper, and welcomes contributions.
 - **[Sveinbjörn Pálsson](https://github.com/sveinbjornpalsson)** — iOS port and UI.
 
 Built with substantial assistance from Claude Code (Anthropic). See `CLAUDE.md` for the project's working notes and `NOTES.md` for the development journal.
+
+A note on AI: Chris' code is of course manual craftmanship. This plugin only exists because I was tired of waiting for an actual coder to do this. I can't really read code on this scale, so my methods for quality are firstly interrogating the bots, a lot, and working with the assumption that I can't really trust the outcome. I made claude document everything and add as much commentary to the code as is useful, so anyone with a bit of coding skill should be able to understand what this thing is and how it works. I look forward to hearing if this succeeded. 
+This had to be open source because that's what Airwindows is, but beyond that I think that open sourcing all vibecode is a good and neccesary safeguard. 
+Since this is open and free, anyone is free to join the project, or branch off a new project. 
 
 ---
 
