@@ -1,6 +1,6 @@
 # Beta signup landing page
 
-Single-file static page that gates the TestFlight invite link behind a tiny email + Discord form. Used to capture the tester list ourselves, since Apple's public TestFlight link doesn't tell you who joined.
+Single-file static page that gates the TestFlight invite link behind a small email form. Used to capture the tester list ourselves, since Apple's public TestFlight link doesn't tell you who joined. Also links to the project Discord below the submit button — invite, not required.
 
 ## What you need to wire up before publishing
 

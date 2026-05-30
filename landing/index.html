@@ -177,6 +177,26 @@
       cursor: progress;
     }
 
+    .discord-nudge {
+      display: block;
+      text-align: center;
+      margin-top: 14px;
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+      text-decoration: none;
+      transition: color 0.15s ease;
+    }
+
+    .discord-nudge span {
+      text-decoration: underline;
+      text-underline-offset: 2px;
+      text-decoration-thickness: 1px;
+    }
+
+    .discord-nudge:hover {
+      color: var(--text);
+    }
+
     .error {
       color: #e0345b;
       font-size: 0.875rem;
@@ -244,7 +264,7 @@
 
     <div class="card" id="signup-card">
       <h2>Join the TestFlight beta</h2>
-      <p>Enter your email and we'll send the TestFlight invite. Optional: drop your Discord handle if you'd like to join the community.</p>
+      <p>Enter your email and we'll send the TestFlight invite when the next round goes out.</p>
 
       <!--
         FORM WIRING
@@ -268,18 +288,10 @@
           />
         </div>
 
-        <div class="field">
-          <label for="discord">Discord handle <span class="optional">(optional)</span></label>
-          <input
-            type="text"
-            id="discord"
-            name="discord"
-            autocomplete="username"
-            placeholder="yourname#1234 or @yourname"
-          />
-        </div>
-
         <button type="submit" id="submit-btn">Request beta access</button>
+        <a class="discord-nudge" href="https://discord.gg/gXATXkCDm" target="_blank" rel="noopener noreferrer">
+          Once you're in, <span>join the Discord</span> →
+        </a>
         <div class="error" id="error-text" role="alert" aria-live="polite"></div>
       </form>
     </div>
@@ -324,7 +336,6 @@
         showError("");
 
         const email = form.email.value.trim();
-        const discord = form.discord.value.trim();
 
         if (!isValidEmail(email)) {
           showError("Please enter a valid email address.");
@@ -347,7 +358,6 @@
         try {
           const body = new FormData();
           body.append("email", email);
-          if (discord) body.append("discord", discord);
 
           const response = await fetch(endpoint, {
             method: "POST",
