@@ -39,7 +39,7 @@ It is free, MIT-licensed for the wrapper, and welcomes contributions.
 
 Built with substantial assistance from Claude Code (Anthropic). See `CLAUDE.md` for the project's working notes and `NOTES.md` for the development journal.
 
-# A note on AI
+### A note on AI
 Chris' code is of course manual craftmanship. This plugin only exists because I was tired of waiting for an actual coder to do this. I can't really read code on this scale, so my methods for quality are firstly interrogating the bots, a lot, and working with the assumption that I can't really trust the outcome. I made claude document everything and add as much commentary to the code as is useful, so anyone with a bit of coding skill should be able to understand what this thing is and how it works. I look forward to hearing if this succeeded. 
 This had to be open source because that's what Airwindows is, but beyond that I think that open sourcing all vibecode is a good and neccesary safeguard. 
 Since this is open and free, anyone is free to join the project, or branch off a new project. 
