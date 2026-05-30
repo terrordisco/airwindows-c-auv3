@@ -2,8 +2,6 @@
 
 ## Now
 
-- [ ] Public GitHub repo — push current source, README, LICENSE (MIT), CONTRIBUTING #chore
-- [ ] Beta feedback channel — TestFlight feedback email + GitHub issues link in About view #feature
 - [ ] Beta signup landing page — small static page gating the public TestFlight link. Form fields: email (required), Discord handle (optional, "join the Discord?" framing). On submit, page reveals the testflight.apple.com link. Stores submissions somewhere we own (Formspree / Tally / Cloudflare Pages function — TBD). Goal: own the tester list ourselves; Apple's public link doesn't expose who joined. #feature
 - [ ] App Store Connect record — register bundle IDs, app metadata, screenshots, beta description #chore
 - [ ] First TestFlight release — archive, upload to App Store Connect, distribute build to internal/external testers (Xcode-to-iPad development builds are already working) #milestone
@@ -48,6 +46,8 @@
 
 ## Done
 
+- [x] Beta feedback channel — added Feedback section in AboutView with mailto:sveinbjorn@gmail.com (subject pre-filled "Airwindows AUv3 feedback") and tappable link to github.com/terrordisco/airwindows-c-auv3/issues. New AboutLinkRow component mirrors AboutRow with a chevron affordance. Also named the iPad-port credit row "Sveinbjörn Pálsson" instead of the generic "AUv3 adaptation" placeholder (2026-05-30) #feature
+- [x] Public GitHub repo — live at github.com/terrordisco/airwindows-c-auv3. README + LICENSE (MIT) + CONTRIBUTING + .gitignore. terrordisco is the user's GitHub org for music projects. Pushed private first, flipped public after inspection (2026-05-30) #chore
 - [x] Code accessibility pass — file-level headers added to 19 entry-point + shared-UI files explaining the framework split, threading model, parameter address layout, dual-processor pattern, three-language stack (Swift → ObjC → ObjC++ → C++), override-JSON layer, and where each SwiftUI component sits in the hierarchy. Existing type-level docstrings left intact. Fixed one wrong inline comment in AirwindowsAudioUnit.mm (2026-05-30) #chore
 - [x] State persistence re-verified after the 2026-05-08 setFullState ordering fix — opens, runs, audio passes through in AUM, Logic, Loopy Pro, Cubasis, GarageBand (2026-05-30) #feature
 - [x] Test in other AUv3 hosts — Cubasis, GarageBand, Logic Pro, Loopy Pro, AUM all load, render UI, pass audio (2026-05-30) #feature

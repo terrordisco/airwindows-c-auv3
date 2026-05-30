@@ -54,7 +54,7 @@ public struct AboutView: View {
                         VStack(alignment: .leading, spacing: 8) {
                             AboutRow(label: "DSP", value: "Chris Johnson — airwindows.com")
                             AboutRow(label: "Registry", value: "Paul Walker — baconpaul/airwin2rack")
-                            AboutRow(label: "iPad port", value: "AUv3 adaptation")
+                            AboutRow(label: "iPad port", value: "Sveinbjörn Pálsson")
                         }
                     }
 
@@ -63,6 +63,23 @@ public struct AboutView: View {
                             .font(.system(size: 13))
                             .foregroundStyle(.secondary)
                             .lineSpacing(3)
+                    }
+
+                    AboutSection(title: "Feedback") {
+                        VStack(alignment: .leading, spacing: 8) {
+                            AboutLinkRow(
+                                label: "Email",
+                                display: "sveinbjorn@gmail.com",
+                                // swiftlint:disable:next force_unwrapping
+                                url: URL(string: "mailto:sveinbjorn@gmail.com?subject=Airwindows%20AUv3%20feedback")!
+                            )
+                            AboutLinkRow(
+                                label: "Report bug",
+                                display: "github.com/terrordisco/airwindows-c-auv3",
+                                // swiftlint:disable:next force_unwrapping
+                                url: URL(string: "https://github.com/terrordisco/airwindows-c-auv3/issues")!
+                            )
+                        }
                     }
 
                     AboutSection(title: "Thanks") {
@@ -110,6 +127,33 @@ private struct AboutRow: View {
             Text(value)
                 .font(.system(size: 13))
                 .foregroundStyle(.primary)
+            Spacer()
+        }
+    }
+}
+
+/// Tappable variant of AboutRow. Used by the Feedback section to launch
+/// mailto: / https:// URLs through the system openURL handler.
+private struct AboutLinkRow: View {
+    let label: String
+    let display: String
+    let url: URL
+
+    var body: some View {
+        HStack(alignment: .firstTextBaseline) {
+            Text(label)
+                .font(.system(size: 13, weight: .medium))
+                .foregroundStyle(.secondary)
+                .frame(width: 100, alignment: .leading)
+            Link(destination: url) {
+                HStack(spacing: 4) {
+                    Text(display)
+                        .font(.system(size: 13))
+                    Image(systemName: "arrow.up.right")
+                        .font(.system(size: 10, weight: .semibold))
+                }
+            }
+            .accessibilityLabel("\(label): \(display)")
             Spacer()
         }
     }
