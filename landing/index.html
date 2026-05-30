@@ -1,0 +1,373 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Airwindows Consolidated AUv3 — Beta</title>
+  <meta name="description" content="Native iPadOS AUv3 plugin wrapping all 350+ Airwindows effects. Join the TestFlight beta." />
+  <meta name="theme-color" content="#0e0e10" media="(prefers-color-scheme: dark)" />
+  <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="Airwindows Consolidated AUv3 — Beta" />
+  <meta property="og:description" content="All 350+ Airwindows effects in a single AUv3 plugin. iPad-first, free, MIT-licensed. Join the beta." />
+  <meta property="og:type" content="website" />
+  <meta property="og:image" content="airwindows_logo.jpg" />
+
+  <link rel="icon" href="airwindows_logo.jpg" />
+
+  <style>
+    /* ---------- Tokens ---------- */
+    :root {
+      --bg: #ffffff;
+      --surface: #f7f7f8;
+      --text: #18181b;
+      --text-secondary: rgba(24, 24, 27, 0.65);
+      --border: rgba(0, 0, 0, 0.08);
+      --accent: #2173f5;
+      --accent-hover: #1f66db;
+      --shadow: 0 8px 32px rgba(0, 0, 0, 0.06);
+      --radius: 14px;
+      --max-width: 560px;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #0e0e10;
+        --surface: #1a1a1d;
+        --text: #f4f4f5;
+        --text-secondary: rgba(244, 244, 245, 0.65);
+        --border: rgba(255, 255, 255, 0.1);
+        --shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+      }
+    }
+
+    /* ---------- Reset ---------- */
+    *, *::before, *::after { box-sizing: border-box; }
+    body { margin: 0; }
+
+    /* ---------- Base ---------- */
+    html { -webkit-text-size-adjust: 100%; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", system-ui, sans-serif;
+      font-size: 16px;
+      line-height: 1.55;
+      color: var(--text);
+      background: var(--bg);
+      min-height: 100dvh;
+      display: grid;
+      place-items: center;
+      padding: 32px 20px;
+    }
+
+    main {
+      width: 100%;
+      max-width: var(--max-width);
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+
+    .logo {
+      width: 96px;
+      height: 96px;
+      border-radius: 22px;
+      object-fit: cover;
+      box-shadow: var(--shadow);
+      margin-bottom: 20px;
+    }
+
+    h1 {
+      font-size: clamp(1.75rem, 1.4rem + 1.5vw, 2.25rem);
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin: 0 0 10px;
+    }
+
+    .tagline {
+      color: var(--text-secondary);
+      margin: 0;
+      font-size: 1.0625rem;
+    }
+
+    /* ---------- Card ---------- */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 28px;
+      box-shadow: var(--shadow);
+    }
+
+    .card h2 {
+      font-size: 1.125rem;
+      font-weight: 600;
+      margin: 0 0 6px;
+    }
+
+    .card p {
+      color: var(--text-secondary);
+      margin: 0 0 24px;
+      font-size: 0.9375rem;
+    }
+
+    /* ---------- Form ---------- */
+    .field {
+      margin-bottom: 16px;
+    }
+
+    label {
+      display: block;
+      font-size: 0.8125rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+      margin-bottom: 6px;
+      letter-spacing: 0.01em;
+    }
+
+    .optional {
+      font-weight: 400;
+      color: var(--text-secondary);
+      opacity: 0.7;
+    }
+
+    input[type="email"],
+    input[type="text"] {
+      width: 100%;
+      font: inherit;
+      font-size: 1rem;
+      padding: 12px 14px;
+      color: var(--text);
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+      -webkit-appearance: none;
+      appearance: none;
+    }
+
+    input:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(33, 115, 245, 0.18);
+    }
+
+    button[type="submit"] {
+      width: 100%;
+      font: inherit;
+      font-size: 1rem;
+      font-weight: 600;
+      padding: 13px 16px;
+      color: white;
+      background: var(--accent);
+      border: 0;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: background-color 0.15s ease, transform 0.05s ease;
+      -webkit-appearance: none;
+      appearance: none;
+    }
+
+    button[type="submit"]:hover { background: var(--accent-hover); }
+    button[type="submit"]:active { transform: translateY(1px); }
+    button[type="submit"]:disabled {
+      opacity: 0.55;
+      cursor: progress;
+    }
+
+    .error {
+      color: #e0345b;
+      font-size: 0.875rem;
+      margin-top: 12px;
+      min-height: 1em;
+    }
+
+    /* ---------- Reveal ---------- */
+    .reveal {
+      display: none;
+      text-align: center;
+    }
+
+    .reveal.visible {
+      display: block;
+    }
+
+    .reveal h2 {
+      margin: 0 0 8px;
+    }
+
+    .reveal p {
+      color: var(--text-secondary);
+      margin: 0 0 22px;
+    }
+
+    .reveal-link {
+      display: inline-block;
+      padding: 13px 22px;
+      background: var(--accent);
+      color: white;
+      text-decoration: none;
+      border-radius: 10px;
+      font-weight: 600;
+      transition: background-color 0.15s ease;
+    }
+
+    .reveal-link:hover { background: var(--accent-hover); }
+
+    /* ---------- Footer ---------- */
+    footer {
+      text-align: center;
+      margin-top: 28px;
+      font-size: 0.8125rem;
+      color: var(--text-secondary);
+    }
+
+    footer a {
+      color: inherit;
+      text-decoration: underline;
+      text-underline-offset: 2px;
+    }
+
+    /* Hidden state used by JS */
+    [hidden] { display: none !important; }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <img class="logo" src="airwindows_logo.jpg" alt="Airwindows" />
+      <h1>Airwindows Consolidated AUv3</h1>
+      <p class="tagline">All 350+ Airwindows effects in a single AUv3 plugin. iPad-first, free, MIT-licensed.</p>
+    </header>
+
+    <div class="card" id="signup-card">
+      <h2>Join the TestFlight beta</h2>
+      <p>Enter your email and we'll send the TestFlight invite. Optional: drop your Discord handle if you'd like to join the community.</p>
+
+      <!--
+        FORM WIRING
+        -----------
+        Set data-endpoint to a Formspree (or Tally / Netlify / etc.) URL that
+        accepts a POST with form fields. The reveal-on-success flow below is
+        endpoint-agnostic.
+        Example: https://formspree.io/f/xxxxxxxx
+      -->
+      <form id="signup-form" data-endpoint="REPLACE_WITH_YOUR_FORM_ENDPOINT" novalidate>
+        <div class="field">
+          <label for="email">Email</label>
+          <input
+            type="email"
+            id="email"
+            name="email"
+            required
+            autocomplete="email"
+            inputmode="email"
+            placeholder="you@example.com"
+          />
+        </div>
+
+        <div class="field">
+          <label for="discord">Discord handle <span class="optional">(optional)</span></label>
+          <input
+            type="text"
+            id="discord"
+            name="discord"
+            autocomplete="username"
+            placeholder="yourname#1234 or @yourname"
+          />
+        </div>
+
+        <button type="submit" id="submit-btn">Request beta access</button>
+        <div class="error" id="error-text" role="alert" aria-live="polite"></div>
+      </form>
+    </div>
+
+    <div class="card reveal" id="reveal-card" aria-live="polite">
+      <h2>You're in.</h2>
+      <p>Tap below to open the TestFlight invite on your iPad.</p>
+      <!-- TestFlight URL placeholder — replace once the public link is live. -->
+      <a class="reveal-link" id="testflight-link" href="REPLACE_WITH_TESTFLIGHT_URL" target="_blank" rel="noopener noreferrer">
+        Open in TestFlight
+      </a>
+    </div>
+
+    <footer>
+      Source on <a href="https://github.com/terrordisco/airwindows-c-auv3" target="_blank" rel="noopener noreferrer">GitHub</a>
+      &nbsp;·&nbsp;
+      Sound by <a href="https://www.airwindows.com" target="_blank" rel="noopener noreferrer">Chris Johnson</a>
+    </footer>
+  </main>
+
+  <script>
+    (function () {
+      "use strict";
+
+      const form = document.getElementById("signup-form");
+      const errorText = document.getElementById("error-text");
+      const submitBtn = document.getElementById("submit-btn");
+      const signupCard = document.getElementById("signup-card");
+      const revealCard = document.getElementById("reveal-card");
+
+      function showError(message) {
+        errorText.textContent = message || "";
+      }
+
+      function isValidEmail(value) {
+        // Lightweight check — server-side validation is the real gatekeeper.
+        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+      }
+
+      form.addEventListener("submit", async function (event) {
+        event.preventDefault();
+        showError("");
+
+        const email = form.email.value.trim();
+        const discord = form.discord.value.trim();
+
+        if (!isValidEmail(email)) {
+          showError("Please enter a valid email address.");
+          return;
+        }
+
+        const endpoint = form.dataset.endpoint;
+        if (!endpoint || endpoint === "REPLACE_WITH_YOUR_FORM_ENDPOINT") {
+          // Local-dev fallback — reveal anyway so the flow can be tested
+          // before the form endpoint is wired up.
+          console.warn("[signup] No form endpoint configured; revealing without submitting.");
+          signupCard.hidden = true;
+          revealCard.classList.add("visible");
+          return;
+        }
+
+        submitBtn.disabled = true;
+        submitBtn.textContent = "Sending…";
+
+        try {
+          const body = new FormData();
+          body.append("email", email);
+          if (discord) body.append("discord", discord);
+
+          const response = await fetch(endpoint, {
+            method: "POST",
+            body: body,
+            headers: { Accept: "application/json" }
+          });
+
+          if (!response.ok) {
+            throw new Error("Server returned " + response.status);
+          }
+
+          signupCard.hidden = true;
+          revealCard.classList.add("visible");
+        } catch (err) {
+          submitBtn.disabled = false;
+          submitBtn.textContent = "Request beta access";
+          showError("Something went wrong. Please try again, or email sveinbjorn@gmail.com.");
+        }
+      });
+    })();
+  </script>
+</body>
+</html>
