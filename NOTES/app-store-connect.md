@@ -28,10 +28,6 @@ Alternates:
 
 **Music**
 
-### Secondary Category
-
-**Productivity** — covers "tools used in a workflow." Utilities is also fine.
-
 ### Age Rating
 
 **4+** — no objectionable content of any kind.
@@ -45,15 +41,21 @@ Check: **No, my app does not contain, show, or access third-party content** (the
 ## App Store description (max 4000)
 
 ```
-All 350+ free Airwindows effects in a single AUv3 plugin for iPad.
+Airwindows Consolidated is all 350+ free Airwindows effects in a single AUv3 plugin for iPad.
 
-Airwindows is a legendary library of hand-crafted audio effects by Chris Johnson — quirky, musical, and freely shared with the world for over a decade. Until now, none of them ran on iPad. This plugin changes that: every Airwindows effect, in one AUv3, in any AUv3-capable host.
+Airwindows is a legendary library of hand-crafted audio effects by Chris Johnson. 
 
-Drop it into AUM, Cubasis, GarageBand, Logic Pro, Loopy Pro — anywhere AUv3 plugins are accepted — and you get a browser of 350+ effects sorted by category, search, and curated collections (Recommended, Basic, Latest). Tap an effect to load it. Tweak parameters with sliders or rotary pots, your choice. Read what the effect is for, hop to the matching blog post or YouTube demo from airwindows.com.
+Chris releases one effect per week, funded by his patreon, which you can download for all desktop OSes from his website, Airwindows.com. With every plugin he does an intro video. Often these plugins are incremental upgrades on previous work, based on new discoveries or ideas. Chris still keeps the previous versions though for compatability, and for those who fall in love with a certain version of an effect.  
 
-The sound is Chris Johnson's, untouched. The wrapper is a thin, Apple-feeling Swift shell on top — deeply designed to appear barely designed.
+Following his work has become a pastime for many, and even more appreciate his often quixotic approaches to DSP. The effects for desktop are all without UI, they appear in your DAW looking however that DAW dresses up a plugin by default. Therefore you are forced to trust your ears. This version tries to stay faithful to that. Since iOS and iOS daws do not seem to have that same default ui, this plugin seeks to emulate a generic apple layout. With some enhancements for user ease. 
 
-WHAT YOU GET
+Among those enhancements are links to both his site and his youtube videos for each effect, a choice of slider or pot control of parameters, day and night mode for your eyes, random effect, and a slew of other little tweaks and nibbles.
+
+Some of the enhancements come from Paul Walker's original Airwindows Consolidated, which is available through the Airwindows website and on GitHub. 
+
+This app is and will always be free and open source, you can access the code, get support and contribute on our GitHub.
+
+FEATURES: 
 
 • All 350+ Airwindows effects, in any AUv3 host
 • Category browser, search, and curated collections
@@ -69,7 +71,7 @@ CREDITS
 • Consolidated registry: Paul Walker (baconpaul/airwin2rack)
 • iPad port: Sveinbjörn Pálsson
 
-Shipping under the Airwindows name with Chris's blessing.
+Thanks to Chris for allowing us to use the Airwindows name. 
 
 OPEN SOURCE
 
@@ -78,14 +80,13 @@ The entire wrapper is open source under MIT. Source, build instructions, and con
 If you find a bug, file an issue. If you want to contribute UI polish, accessibility, or host-compat testing, you're very welcome.
 ```
 
-Character count: ~1500. Well under the 4000 limit, leaves room for additions.
 
 ---
 
 ## Keywords (max 100, comma-separated)
 
 ```
-audio,effects,plugin,AUv3,AU,audiounit,DSP,airwindows,reverb,EQ,compressor,saturation,tape,console,distortion
+audio,effects,plugin,AUv3,reverb,EQ,compressor,saturation,tape,console,distortion,filter
 ```
 
 (99 chars including commas.) No need to include words already in the App Name or Subtitle — Apple indexes those automatically.

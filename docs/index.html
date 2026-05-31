@@ -284,12 +284,12 @@
       <!--
         FORM WIRING
         -----------
-        Set data-endpoint to a Formspree (or Tally / Netlify / etc.) URL that
-        accepts a POST with form fields. The reveal-on-success flow below is
-        endpoint-agnostic.
-        Example: https://formspree.io/f/xxxxxxxx
+        data-endpoint points at our Cloudflare Worker's /signup route. The
+        Worker code lives in `signup-worker/` at the repo root. It accepts a
+        JSON POST `{ email }` and stores the submission in KV.
+        Example: https://airwindows-beta-signup.<account>.workers.dev/signup
       -->
-      <form id="signup-form" data-endpoint="REPLACE_WITH_YOUR_FORM_ENDPOINT" novalidate>
+      <form id="signup-form" data-endpoint="https://airwindows-beta-signup.svei.workers.dev/signup" novalidate>
         <div class="field">
           <label for="email">Email</label>
           <input
@@ -363,10 +363,10 @@
         }
 
         const endpoint = form.dataset.endpoint;
-        if (!endpoint || endpoint === "REPLACE_WITH_YOUR_FORM_ENDPOINT") {
+        if (!endpoint || endpoint.startsWith("REPLACE_WITH_")) {
           // Local-dev fallback — reveal anyway so the flow can be tested
-          // before the form endpoint is wired up.
-          console.warn("[signup] No form endpoint configured; revealing without submitting.");
+          // before the Worker URL is wired up.
+          console.warn("[signup] No Worker endpoint configured; revealing without submitting.");
           signupCard.hidden = true;
           revealCard.classList.add("visible");
           return;
@@ -376,13 +376,10 @@
         submitBtn.textContent = "Sending…";
 
         try {
-          const body = new FormData();
-          body.append("email", email);
-
           const response = await fetch(endpoint, {
             method: "POST",
-            body: body,
-            headers: { Accept: "application/json" }
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email: email })
           });
 
           if (!response.ok) {

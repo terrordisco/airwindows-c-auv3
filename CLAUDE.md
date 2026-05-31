@@ -20,7 +20,7 @@ Native iOS AUv3 plugin wrapping all 350+ Airwindows effects. Swift/SwiftUI + C++
 
 - `NOTES.md` — development journal, architecture decisions, UI specs
 - `ROADMAP.md` — standardized todo/roadmap (see below)
-- `docs/views.html` — UI terminology reference with diagrams
+- `NOTES/views.html` — UI terminology reference with diagrams
 - `project.yml` — XcodeGen config (generates .xcodeproj)
 
 ## Roadmap

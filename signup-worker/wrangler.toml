@@ -1,0 +1,15 @@
+name = "airwindows-beta-signup"
+main = "src/index.js"
+compatibility_date = "2026-01-01"
+
+# Bind a KV namespace as `SIGNUPS` so the Worker can read/write submissions.
+# Create it with:
+#   wrangler kv:namespace create SIGNUPS
+# then paste the returned id below.
+[[kv_namespaces]]
+binding = "SIGNUPS"
+id = "25ad6a4616544215af5912411738d15c"
+
+# The EXPORT_KEY secret gates the /export endpoint. Set it once with:
+#   wrangler secret put EXPORT_KEY
+# (Wrangler prompts for the value; never paste secrets into this file.)
