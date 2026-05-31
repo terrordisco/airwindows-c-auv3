@@ -12,10 +12,22 @@ settings:
     SWIFT_VERSION: "5.9"
     CODE_SIGN_STYLE: Automatic
     DEVELOPMENT_TEAM: CV7UBF55FQ
+    MARKETING_VERSION: "0.1"
+    CURRENT_PROJECT_VERSION: "1"
 
 packages:
   AirwindowsUI:
     path: Packages/AirwindowsUI
+
+schemes:
+  AirwindowsApp:
+    build:
+      targets:
+        AirwindowsApp: all
+    run:
+      config: Debug
+    archive:
+      config: Release
 
 targets:
   AirwindowsApp:
@@ -40,6 +52,8 @@ targets:
         CODE_SIGN_ENTITLEMENTS: ""
         TARGETED_DEVICE_FAMILY: "2"
         SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD: false
+        SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD: false
+        SUPPORTS_MACCATALYST: false
     dependencies:
       - target: AirwindowsDSP
         embed: true
@@ -66,9 +80,16 @@ targets:
         CODE_SIGN_ENTITLEMENTS: ""
         APPLICATION_EXTENSION_API_ONLY: true
         TARGETED_DEVICE_FAMILY: "2"
+        SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD: false
+        SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD: false
+        SUPPORTS_MACCATALYST: false
+        LD_RUNPATH_SEARCH_PATHS:
+          - "@executable_path/Frameworks"
+          - "@executable_path/../../Frameworks"
     dependencies:
       - target: AirwindowsDSP
-        embed: true
+        embed: false
+        link: true
       - package: AirwindowsUI
       - sdk: AudioToolbox.framework
       - sdk: AVFoundation.framework
@@ -109,9 +130,8 @@ targets:
         GCC_WARN_UNUSED_VARIABLE: false
         CLANG_WARN_DOCUMENTATION_COMMENTS: false
         APPLICATION_EXTENSION_API_ONLY: true
-        SKIP_INSTALL: false
+        SKIP_INSTALL: true
         DYLIB_INSTALL_NAME_BASE: "@rpath"
-        INSTALL_PATH: "$(LOCAL_LIBRARY_DIR)/Frameworks"
         TARGETED_DEVICE_FAMILY: "2"
         OTHER_CPLUSPLUSFLAGS:
           - "-Wno-multichar"
