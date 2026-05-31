@@ -2,9 +2,7 @@
 
 ## Now
 
-- [ ] Beta signup landing page — small static page gating the public TestFlight link. Form fields: email (required), Discord handle (optional, "join the Discord?" framing). On submit, page reveals the testflight.apple.com link. Stores submissions somewhere we own (Formspree / Tally / Cloudflare Pages function — TBD). Goal: own the tester list ourselves; Apple's public link doesn't expose who joined. #feature
-- [ ] App Store Connect record — register bundle IDs, app metadata, screenshots, beta description #chore
-- [ ] First TestFlight release — archive, upload to App Store Connect, distribute build to internal/external testers (Xcode-to-iPad development builds are already working) #milestone
+(empty — beta is live, awaiting tester feedback)
 
 ## Next
 
@@ -46,6 +44,9 @@
 
 ## Done
 
+- [x] First TestFlight release — 0.1 build 1 uploaded to App Store Connect, processed, approved for external testing. Public link live at testflight.apple.com/join/NgQkcU5h. Fixed three archive-validator gotchas along the way: MARKETING_VERSION/CURRENT_PROJECT_VERSION had to be set in build settings (Info.plist literals weren't enough for Xcode 16), AirwindowsDSP needed SKIP_INSTALL=YES (embedded frameworks shouldn't be installable products), and the extension was duplicating the framework instead of linking-only against the host app's copy (`@executable_path/../../Frameworks` added to LD_RUNPATH_SEARCH_PATHS). Mac (Designed for iPad), Mac Catalyst, and Vision Pro all explicitly excluded — iPad-only (2026-05-31) #milestone
+- [x] App Store Connect record — bundle IDs registered under com.terrordisco.*, app record created, metadata + categories + age rating + privacy questionnaire + Privacy Policy URL all filled. Copyright reads "2026 Chris Johnson, Paul Walker, Sveinbjörn Pálsson" — ordered by contribution weight, not legal claim. Description rewritten in user's voice (Chris's weekly cadence, Patreon, no-UI desktop convention, "trust your ears"). App Store version 1.0 stays unsubmitted; TestFlight cycle uses 0.x builds (2026-05-31) #chore
+- [x] Beta signup landing page — live at terrordisco.github.io/airwindows-c-auv3/ via GitHub Pages on main /docs. Captures emails before revealing TestFlight link so we own the tester list (Apple's public link tells us nothing). Discord pill alongside, not required. Self-hosted Cloudflare Worker + KV backend at airwindows-beta-signup.svei.workers.dev because third-party form services cap at 50–100 submissions/month and we'd rather own the data. Worker code lives in signup-worker/, ~80 lines. Privacy policy at /privacy.html doubles as the ASC-required URL (2026-05-31) #feature
 - [x] Beta feedback channel — added Feedback section in AboutView with mailto:sveinbjorn@gmail.com (subject pre-filled "Airwindows AUv3 feedback") and tappable link to github.com/terrordisco/airwindows-c-auv3/issues. New AboutLinkRow component mirrors AboutRow with a chevron affordance. Also named the iPad-port credit row "Sveinbjörn Pálsson" instead of the generic "AUv3 adaptation" placeholder (2026-05-30) #feature
 - [x] Public GitHub repo — live at github.com/terrordisco/airwindows-c-auv3. README + LICENSE (MIT) + CONTRIBUTING + .gitignore. terrordisco is the user's GitHub org for music projects. Pushed private first, flipped public after inspection (2026-05-30) #chore
 - [x] Code accessibility pass — file-level headers added to 19 entry-point + shared-UI files explaining the framework split, threading model, parameter address layout, dual-processor pattern, three-language stack (Swift → ObjC → ObjC++ → C++), override-JSON layer, and where each SwiftUI component sits in the hierarchy. Existing type-level docstrings left intact. Fixed one wrong inline comment in AirwindowsAudioUnit.mm (2026-05-30) #chore
