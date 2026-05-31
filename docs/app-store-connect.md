@@ -157,10 +157,11 @@ If you'd like to chat: the Discord invite is in the welcome email and on the sig
 
 | Target | Bundle ID |
 |---|---|
-| Standalone app | `com.terrordisco.airwindows.app` (or `com.terrordisco.airwindows-c-auv3`) |
-| AUv3 extension | `com.terrordisco.airwindows.app.extension` |
+| Standalone app | `com.terrordisco.airwindows.consolidated` |
+| AUv3 extension | `com.terrordisco.airwindows.consolidated.auv3` |
+| DSP framework | `com.terrordisco.airwindows.consolidated.dsp` |
 
-Confirm these match what's in `project.yml` (`AirwindowsAUv3/project.yml`).
+These are the live values in `AirwindowsAUv3/project.yml`. Register the app + extension in App Store Connect; the framework bundle ID doesn't need registration (it's an internal embedded framework).
 
 ---
 

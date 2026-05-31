@@ -32,7 +32,7 @@ import SwiftUI
 import AudioToolbox
 import os
 
-private let log = Logger(subsystem: "com.airwindows.consolidated", category: "AUv3")
+private let log = Logger(subsystem: "com.terrordisco.airwindows.consolidated", category: "AUv3")
 
 @MainActor
 public class AUv3ViewController: AUViewController, AUAudioUnitFactory {

@@ -69,7 +69,7 @@
 #include "../Airwin/AirwinRegistry.h"
 
 static os_log_t airwindowsLog() {
-    static os_log_t log = os_log_create("com.airwindows.consolidated", "AudioUnit");
+    static os_log_t log = os_log_create("com.terrordisco.airwindows.consolidated", "AudioUnit");
     return log;
 }
 
