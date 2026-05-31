@@ -11,7 +11,7 @@
     <key>CFBundleInfoDictionaryVersion</key>
     <string>6.0</string>
     <key>CFBundleDisplayName</key>
-    <string>Airwindows</string>
+    <string>Airwindows Consolidated AUv3</string>
     <key>CFBundleName</key>
     <string>$(PRODUCT_NAME)</string>
     <key>CFBundlePackageType</key>
@@ -28,7 +28,7 @@
             <array>
                 <dict>
                     <key>name</key>
-                    <string>Airwindows: Consolidated</string>
+                    <string>Airwindows Consolidated AUv3</string>
                     <key>description</key>
                     <string>350+ Airwindows audio effects</string>
                     <key>manufacturer</key>

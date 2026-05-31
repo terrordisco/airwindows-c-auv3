@@ -10,15 +10,11 @@ All character counts noted are Apple's hard limits.
 
 ### App Name (max 30)
 
-Pick one:
+**`Airwindows Consolidated AUv3`** (28 chars) — the long, official name. Used on the App Store listing, in search results, and anywhere Apple shows the product name.
 
-| Option | Chars | Note |
-|---|---|---|
-| `Airwindows AUv3` | 15 | Most discoverable for "AUv3" search |
-| `Airwindows Consolidated` | 22 | Echoes the upstream airwin2rack name |
-| `Airwindows` | 10 | Cleanest, but may collide with anything Chris does later |
+The shorter **`Airwindows AUv3`** is set as `CFBundleDisplayName` in `AirwindowsApp/Info.plist` and is what shows up under the home screen icon (iOS truncates anything longer there anyway).
 
-**Recommended: `Airwindows AUv3`** — short, search-friendly, unambiguous that this is the iOS AUv3 port.
+The AU plugin name shown in hosts (AUM, Logic, etc.) is also `Airwindows Consolidated AUv3`, set in the extension's `Info.plist` under `NSExtensionAttributes.AudioComponents.name`.
 
 ### Subtitle (max 30)
 

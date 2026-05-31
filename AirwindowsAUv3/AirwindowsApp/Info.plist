@@ -12,6 +12,12 @@
     <string>6.0</string>
     <key>CFBundleName</key>
     <string>$(PRODUCT_NAME)</string>
+    <!-- CFBundleDisplayName is the label shown under the icon on the iOS
+         home screen and in Settings. We use the short form here; the long
+         form ("Airwindows Consolidated AUv3") is set on App Store Connect
+         and shown on the App Store listing. -->
+    <key>CFBundleDisplayName</key>
+    <string>Airwindows AUv3</string>
     <key>CFBundlePackageType</key>
     <string>APPL</string>
     <key>CFBundleShortVersionString</key>

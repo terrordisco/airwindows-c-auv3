@@ -54,7 +54,7 @@ final class AudioEngine {
         AUAudioUnit.registerSubclass(
             AirwindowsAudioUnit.self,
             as: desc,
-            name: "Airwindows: Consolidated",
+            name: "Airwindows Consolidated AUv3",
             version: 1
         )
 
