@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Privacy — Airwindows Consolidated AUv3</title>
+  <meta name="theme-color" content="#0e0e10" media="(prefers-color-scheme: dark)" />
+  <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
+  <link rel="icon" href="airwindows_logo.jpg" />
+
+  <style>
+    :root {
+      --bg: #ffffff;
+      --surface: #f7f7f8;
+      --text: #18181b;
+      --text-secondary: rgba(24, 24, 27, 0.65);
+      --border: rgba(0, 0, 0, 0.08);
+      --max-width: 640px;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #0e0e10;
+        --surface: #1a1a1d;
+        --text: #f4f4f5;
+        --text-secondary: rgba(244, 244, 245, 0.65);
+        --border: rgba(255, 255, 255, 0.1);
+      }
+    }
+
+    *, *::before, *::after { box-sizing: border-box; }
+    body { margin: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", system-ui, sans-serif;
+      font-size: 16px;
+      line-height: 1.6;
+      color: var(--text);
+      background: var(--bg);
+      padding: 48px 24px;
+    }
+
+    main {
+      max-width: var(--max-width);
+      margin: 0 auto;
+    }
+
+    h1 {
+      font-size: clamp(1.625rem, 1.3rem + 1.5vw, 2rem);
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin: 0 0 8px;
+    }
+
+    .updated {
+      color: var(--text-secondary);
+      font-size: 0.9375rem;
+      margin: 0 0 32px;
+    }
+
+    h2 {
+      font-size: 1.125rem;
+      font-weight: 600;
+      margin: 28px 0 8px;
+    }
+
+    p, li {
+      color: var(--text);
+    }
+
+    p {
+      margin: 0 0 14px;
+    }
+
+    ul {
+      margin: 0 0 14px;
+      padding-left: 1.25rem;
+    }
+
+    a {
+      color: inherit;
+    }
+
+    footer {
+      margin-top: 48px;
+      padding-top: 20px;
+      border-top: 1px solid var(--border);
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Privacy Policy</h1>
+    <p class="updated">Airwindows Consolidated AUv3 &middot; Last updated 2026-05-31</p>
+
+    <p>
+      Airwindows Consolidated AUv3 is a free, open-source iPadOS AUv3 audio plugin.
+      We don&rsquo;t want your data and we don&rsquo;t collect it.
+    </p>
+
+    <h2>What the app does not do</h2>
+    <ul>
+      <li>No analytics, tracking, telemetry, or third-party SDKs.</li>
+      <li>No advertising or ad networks.</li>
+      <li>No user accounts, login, or cloud sync.</li>
+      <li>No data sent to any server we operate, ever.</li>
+    </ul>
+
+    <h2>Audio data</h2>
+    <p>
+      Audio you route through the plugin is processed entirely on-device by Chris
+      Johnson&rsquo;s Airwindows DSP. It is not recorded, stored, or transmitted.
+    </p>
+    <p>
+      The standalone host app offers an optional &ldquo;monitor through microphone&rdquo; button
+      that lets you audition effects on live mic input. The microphone audio is
+      processed locally in real time and discarded; it is never saved or sent
+      anywhere. The microphone is only active while you&rsquo;ve enabled the button.
+    </p>
+
+    <h2>On-device storage</h2>
+    <p>
+      The app stores a small number of UI preferences (theme, control style,
+      collection filter) in standard iOS user defaults on your device. These never
+      leave your device.
+    </p>
+
+    <h2>TestFlight beta</h2>
+    <p>
+      During the public TestFlight beta, Apple may collect crash logs, device
+      information, and tester feedback you submit through TestFlight itself. That
+      data flow is governed by
+      <a href="https://www.apple.com/legal/privacy/data/en/test-flight/" target="_blank" rel="noopener noreferrer">Apple&rsquo;s TestFlight privacy policy</a>,
+      not by us. We see only the aggregate stability information Apple shows us in
+      App Store Connect.
+    </p>
+
+    <h2>Beta signup form</h2>
+    <p>
+      If you join the beta via our signup page, your email address is stored only
+      so we can send you the TestFlight invite. We do not share or sell it. When the
+      app ships publicly on the App Store the signup form will be retired and any
+      collected emails will be deleted.
+    </p>
+
+    <h2>Children</h2>
+    <p>
+      The app is rated 4+ and contains no inappropriate content, but it is not
+      directed at children and we do not knowingly collect any data about minors
+      (or anyone).
+    </p>
+
+    <h2>Open source</h2>
+    <p>
+      The entire app is open source under the MIT license. You can read every line
+      it runs at
+      <a href="https://github.com/terrordisco/airwindows-c-auv3" target="_blank" rel="noopener noreferrer">github.com/terrordisco/airwindows-c-auv3</a>.
+      If you find any data-collection behavior in the code, file an issue &mdash; it&rsquo;s a bug.
+    </p>
+
+    <h2>Contact</h2>
+    <p>
+      Questions about this policy: <a href="mailto:sveinbjorn@gmail.com">sveinbjorn@gmail.com</a>.
+    </p>
+
+    <footer>
+      &larr; <a href="index.html">Back to the beta signup</a>
+    </footer>
+  </main>
+</body>
+</html>
