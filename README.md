@@ -6,9 +6,12 @@ A native iPadOS AUv3 plugin that rolls the entire Airwindows effects library —
   <img src="airwindows_logo.jpg" alt="Airwindows" width="220" />
 </p>
 
-> Status: **pre-release, heading into TestFlight beta.** Builds and runs on iPad in AUM, Cubasis, Logic Pro, GarageBand, and Loopy Pro. Not yet on the App Store.
+> Status: **in TestFlight beta.** Builds and runs on iPad in AUM, Cubasis, Logic Pro, GarageBand, and Loopy Pro. Not yet on the App Store. Join the TestFlight beta <a href="https://terrordisco.github.io/airwindows-c-auv3/">here!</a>
 
-Updates in <a href="https://forum.loopypro.com/discussion/65612/developers-why-not-porting-airwindows-plugs-to-auv3-ios/p1">this thread</a> until I finish setting things up.
+General chat in <a href="https://forum.loopypro.com/discussion/65612/developers-why-not-porting-airwindows-plugs-to-auv3-ios/p1">this thread</a> on the Loopy Pro forum.
+
+Discord is <a href="https://discord.com/invite/gXATXkCDm">here</a>. Still setting things up there.
+
 
 
 ---
