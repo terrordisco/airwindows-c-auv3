@@ -13,6 +13,14 @@
 #import <AudioToolbox/AudioToolbox.h>
 #import <AVFoundation/AVFoundation.h>
 
+/// Posted (on the main thread) after the AU finishes restoring host/document
+/// state, so the SwiftUI view model can re-read the now-restored effect and
+/// parameters. Apple suppresses parameter observers during state restore AND
+/// the host may restore state *after* the view model has already configured —
+/// so a one-shot read at configure time can miss the restored effect entirely.
+/// The view model observes this and calls its refresh. `object` is the AU.
+extern NSString * const AirwindowsAudioUnitDidRestoreStateNotification;
+
 @interface AirwindowsAudioUnit : AUAudioUnit
 
 // Current effect info (readable from Swift for UI)

@@ -290,9 +290,15 @@ private struct PotInteractionModifier: ViewModifier {
                             }
                         }
                 )
-                .onTapGesture(count: 2) {
-                    value = defaultValue
-                }
+                // Must be simultaneous: the drag above uses minimumDistance 0,
+                // so it claims the touch on contact and a plain onTapGesture
+                // would never fire. A double-tap has no movement, so it can't
+                // be confused with a real drag.
+                .simultaneousGesture(
+                    TapGesture(count: 2).onEnded {
+                        value = defaultValue
+                    }
+                )
         } else {
             content
         }

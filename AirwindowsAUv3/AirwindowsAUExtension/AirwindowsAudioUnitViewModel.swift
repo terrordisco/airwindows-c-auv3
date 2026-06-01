@@ -71,9 +71,16 @@ final class AirwindowsAudioUnitViewModel {
 
     private weak var audioUnit: AirwindowsAudioUnit?
     private var parameterObserverToken: AUParameterObserverToken?
+    private var stateRestoreObserver: NSObjectProtocol?
     private var ignoreParameterEcho: Bool = false
 
     init() {}
+
+    deinit {
+        if let stateRestoreObserver {
+            NotificationCenter.default.removeObserver(stateRestoreObserver)
+        }
+    }
 
     func configure(with audioUnit: AirwindowsAudioUnit) {
         self.audioUnit = audioUnit
@@ -89,6 +96,23 @@ final class AirwindowsAudioUnitViewModel {
                 self?.handleParameterChange(address: address, value: value)
             }
         })
+
+        // Re-read the AU whenever it restores host/document state. Some hosts
+        // (Cubasis) restore the project AFTER this configure() runs, so the
+        // refreshEffectInfo() below sees "no effect"; the AU posts this once it
+        // has actually restored, and we re-sync. See
+        // AirwindowsAudioUnitDidRestoreStateNotification.
+        if let stateRestoreObserver {
+            NotificationCenter.default.removeObserver(stateRestoreObserver)
+        }
+        // The ObjC `…Notification` constant is imported as a Notification.Name.
+        stateRestoreObserver = NotificationCenter.default.addObserver(
+            forName: .AirwindowsAudioUnitDidRestoreState,
+            object: audioUnit,
+            queue: .main
+        ) { [weak self] _ in
+            self?.refreshEffectInfo()
+        }
 
         refreshEffectInfo()
     }
@@ -200,6 +224,15 @@ final class AirwindowsAudioUnitViewModel {
 
     func selectEffect(at index: Int) {
         guard let au = audioUnit else { return }
+        // Re-selecting the effect that's already active must NOT reseed
+        // defaults. This is the common case after a host (Cubasis, AUM, …)
+        // restores a project: the plugin opens to the browser with the
+        // restored effect highlighted, and tapping it to return to its
+        // parameter page would otherwise wipe the restored values back to
+        // defaults. The browser closes via its own onClose, so a no-op here
+        // still navigates correctly. (The Reset chip calls the AU directly,
+        // so it still reloads defaults on demand.)
+        guard index != effectIndex else { return }
         au.selectEffect(at: index)
         effectIndex = index
         refreshEffectInfo()
@@ -284,11 +317,17 @@ final class AirwindowsAudioUnitViewModel {
             effectIsMono = false
         }
 
-        // Load documentation from bundle
-        if let docURL = Bundle(for: AirwindowsAudioUnit.self).url(
-            forResource: effectName, withExtension: "txt", subdirectory: "awpdoc"
+        // Load the longform awpdoc documentation. The awpdoc `.txt` files ship
+        // flat at the framework bundle root (xcodegen adds the folder as a
+        // group, not a folder reference), so the lookup must NOT pass
+        // `subdirectory:` — see `description(for:)` for the same rule. Falls
+        // back to the short tagline when no awpdoc file exists.
+        if let info = currentBrowseModel {
+            effectDescription = description(for: info)
+        } else if let docURL = Bundle(for: AirwindowsAudioUnit.self).url(
+            forResource: effectName, withExtension: "txt"
         ) {
-            effectDescription = (try? String(contentsOf: docURL, encoding: .utf8)) ?? ""
+            effectDescription = (try? String(contentsOf: docURL, encoding: .utf8)) ?? effectWhatText
         } else {
             effectDescription = effectWhatText
         }

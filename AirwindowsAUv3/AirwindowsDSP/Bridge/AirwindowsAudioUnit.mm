@@ -73,6 +73,9 @@ static os_log_t airwindowsLog() {
     return log;
 }
 
+NSString * const AirwindowsAudioUnitDidRestoreStateNotification =
+    @"AirwindowsAudioUnitDidRestoreStateNotification";
+
 static const NSInteger kMaxEffectParams = 37;
 static const AUParameterAddress kEffectIndexAddress = 37;
 static const AUParameterAddress kInputLevelAddress = 38;
@@ -603,6 +606,22 @@ static const AUParameterAddress kOutputLevelAddress = 39;
     return state;
 }
 
+- (NSDictionary<NSString *, id> *)fullStateForDocument {
+    NSMutableDictionary *state = [NSMutableDictionary dictionaryWithDictionary:[self fullState]];
+    NSDictionary<NSString *, id> *documentState = [super fullStateForDocument];
+    if (documentState) {
+        [state addEntriesFromDictionary:documentState];
+    }
+    // documentState may overwrite our custom keys if super and we collide; we
+    // don't expect that, but re-stamp the critical ones to be safe.
+    NSInteger idx = _effectIndex.load();
+    if (idx >= 0 && idx < (NSInteger)AirwinRegistry::registry.size()) {
+        state[@"effectName"] = [NSString stringWithUTF8String:AirwinRegistry::registry[idx].name.c_str()];
+    }
+    state[@"effectIndex"] = @(idx);
+    return state;
+}
+
 - (void)setFullState:(NSDictionary<NSString *, id> *)fullState {
     // Two delivery paths feed this method, with very different dictionaries:
     //
@@ -623,7 +642,16 @@ static const AUParameterAddress kOutputLevelAddress = 39;
     // effect would never actually switch and the UI would show
     // "Pick an effect" — which is exactly what was happening.
     [super setFullState:fullState];
+    [self applyRestoredStateFromDictionary:fullState];
+}
 
+// Applies our custom restore on top of whatever super just rewrote into the
+// parameter tree. Split out of -setFullState: so the *ForDocument variant
+// (used by Cubasis and other project-based hosts) can run the SAME side
+// effects after calling ITS matching super — see -setFullStateForDocument:.
+// The dictionary may carry our custom keys (path 1) or only super's blob
+// (path 2); both are handled below.
+- (void)applyRestoredStateFromDictionary:(NSDictionary<NSString *, id> *)fullState {
     // Step 1: figure out the target effect. Prefer custom keys (path 1);
     // otherwise read the parameter tree (path 2). Treat -1 / out-of-range
     // as "no effect" to preserve the unselected initial state.
@@ -645,7 +673,6 @@ static const AUParameterAddress kOutputLevelAddress = 39;
             targetIndex = (NSInteger)v;
         }
     }
-
     // Step 2: snapshot the parameter values BEFORE selectEffectAtIndex runs.
     // selectEffectAtIndex reseeds _paramValues with the new effect's
     // defaults — fine for user-driven switches, wrong here. Prefer our
@@ -699,6 +726,38 @@ static const AUParameterAddress kOutputLevelAddress = 39;
         AUParameter *p = [self.parameterTree parameterWithAddress:kOutputLevelAddress];
         if (p) _outputLevel = p.value;
     }
+
+    // Tell the UI the AU's state changed underneath it. The host may have
+    // restored this state AFTER the view model already configured and read a
+    // stale (often "no effect") index, and Apple doesn't fire parameter
+    // observers during restore — so without this nudge the parameter page can
+    // stay blank even though the effect is correctly loaded (this was the exact
+    // Cubasis symptom). Posted on the main thread because the observer touches
+    // @Observable UI state.
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [[NSNotificationCenter defaultCenter]
+            postNotificationName:AirwindowsAudioUnitDidRestoreStateNotification
+                          object:self];
+    });
+}
+
+// Document-level state. Hosts split into two camps for project persistence:
+// AUM and friends call -fullState / -setFullState:, while others — Cubasis
+// most notably — persist a project through the *ForDocument variants. The
+// getter -fullStateForDocument lives up near -fullState; here is the matching
+// setter. Without this bridge, a Cubasis project reload comes back with no
+// effect selected even though AUM restores fine.
+- (void)setFullStateForDocument:(NSDictionary<NSString *, id> *)fullStateForDocument {
+    // Call the MATCHING super (NOT -setFullState:) so super restores the
+    // parameter tree from the *document*-format blob. Cubasis was observed to
+    // preserve our custom keys here, but the param-tree blob (which carries the
+    // effectIndex at address 37) is the canonical, host-agnostic record — so we
+    // route through super's document variant and then run the same side effects
+    // to switch the processor and apply the restored values. The UI sync after
+    // restore is handled by the notification posted in
+    // -applyRestoredStateFromDictionary:.
+    [super setFullStateForDocument:fullStateForDocument];
+    [self applyRestoredStateFromDictionary:fullStateForDocument];
 }
 
 - (BOOL)supportsUserPresets {

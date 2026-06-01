@@ -164,9 +164,14 @@ private struct DoubleTapResetModifier: ViewModifier {
 
     func body(content: Content) -> some View {
         if let defaultValue {
-            content.onTapGesture(count: 2) {
-                value = defaultValue
-            }
+            // Must be simultaneous: the fader's drag uses minimumDistance 0 and
+            // claims the touch on contact, so a plain onTapGesture would never
+            // fire. A double-tap has no movement, so it won't trip the drag.
+            content.simultaneousGesture(
+                TapGesture(count: 2).onEnded {
+                    value = defaultValue
+                }
+            )
         } else {
             content
         }

@@ -33,6 +33,9 @@ public struct EffectDetailView: View {
     /// Per-parameter step count. 0 = continuous; N≥2 = stepped/popup.
     /// Empty array means all-continuous.
     public let parameterStepCounts: [Int]
+    /// Per-parameter default values, used for double-tap-to-reset on each
+    /// fader/pot. Empty array → controls fall back to 0.5.
+    public let parameterDefaults: [Double]
     public let description: String
     public let previousName: String?
     public let nextName: String?
@@ -59,6 +62,7 @@ public struct EffectDetailView: View {
         parameterDisplays: [String],
         parameterLabels: [String],
         parameterStepCounts: [Int] = [],
+        parameterDefaults: [Double] = [],
         description: String,
         previousName: String?,
         nextName: String?,
@@ -82,6 +86,7 @@ public struct EffectDetailView: View {
         self.parameterDisplays = parameterDisplays
         self.parameterLabels = parameterLabels
         self.parameterStepCounts = parameterStepCounts
+        self.parameterDefaults = parameterDefaults
         self.description = description
         self.previousName = previousName
         self.nextName = nextName
@@ -195,6 +200,7 @@ public struct EffectDetailView: View {
                     parameterLabels: parameterLabels,
                     parameterValues: $parameterValues,
                     parameterStepCounts: parameterStepCounts,
+                    parameterDefaults: parameterDefaults,
                     useRotaryPots: useRotaryPots
                 )
                 .padding(.horizontal, 24)
@@ -219,11 +225,9 @@ public struct EffectDetailView: View {
                     .opacity(0.4)
 
                 ScrollView {
-                    Text(description)
-                        .font(.system(size: 17))
-                        .foregroundStyle(.secondary)
-                        .lineSpacing(3)
-                        .frame(maxWidth: .infinity, alignment: .leading)
+                    // Promotes the awpdoc's leading `# ` line into a heading
+                    // instead of showing the literal `#`. See EffectDescriptionText.
+                    EffectDescriptionText(description)
                         .padding(.horizontal, 24)
                         .padding(.vertical, 18)
                 }

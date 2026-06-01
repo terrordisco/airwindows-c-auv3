@@ -28,6 +28,11 @@ struct AirwindowsAUView: View {
     @Bindable var viewModel: AirwindowsAudioUnitViewModel
 
     @State private var showBrowser: Bool = false
+    /// True when the browser was force-opened at launch because nothing was
+    /// selected yet. If a host then restores an effect late (Cubasis restores
+    /// AFTER launch), we use this to dismiss the browser and land on the
+    /// restored effect's page instead of leaving it covering the workspace.
+    @State private var browserOpenedAtLaunch: Bool = false
     @AppStorage("airwindows.darkMode") private var isDarkMode: Bool = false
 
     /// Tri-state control-style preference, persisted globally:
@@ -92,10 +97,30 @@ struct AirwindowsAUView: View {
                 .environment(\.colorScheme, isDarkMode ? .dark : .light)
             }
             .task {
-                // Always open the browser on launch — the user must pick an
-                // effect. Uses .task (not onAppear) so the view is fully in the
-                // hierarchy before the fullScreenCover transition fires.
-                showBrowser = true
+                // Open the browser on launch ONLY when nothing is selected —
+                // a clean first launch, where the user must pick something and
+                // we want to show the breadth of the plugin. When a host has
+                // already restored a session with an effect active (AUM), skip
+                // the browser and land straight on that effect's page. Some
+                // hosts (Cubasis) restore LATER, after this runs — that case is
+                // handled by the onChange below. Uses .task (not onAppear) so
+                // the view is fully in the hierarchy before the fullScreenCover
+                // transition fires.
+                if viewModel.hasSelection {
+                    showBrowser = false
+                } else {
+                    showBrowser = true
+                    browserOpenedAtLaunch = true
+                }
+            }
+            .onChange(of: viewModel.effectIndex) { _, newIndex in
+                // A late host restore (Cubasis) brought in an effect after we
+                // auto-opened the browser at launch. Dismiss it so we land on
+                // the restored effect's parameter page, "exactly as left".
+                if browserOpenedAtLaunch, newIndex >= 0 {
+                    browserOpenedAtLaunch = false
+                    showBrowser = false
+                }
             }
     }
 
@@ -109,6 +134,7 @@ struct AirwindowsAUView: View {
                 parameterDisplays: viewModel.parameterDisplays,
                 parameterLabels: viewModel.parameterLabels,
                 parameterStepCounts: viewModel.parameterStepCounts,
+                parameterDefaults: viewModel.parameterDefaults,
                 description: viewModel.effectDescription,
                 previousName: viewModel.previousEffectInCategory?.name,
                 nextName: viewModel.nextEffectInCategory?.name,

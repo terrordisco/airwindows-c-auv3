@@ -26,6 +26,9 @@ public struct ParameterRow: View {
     /// 0 = continuous parameter; N≥2 = stepped/popup. Forwarded to the
     /// LinearFader / RotaryPot so they render step dots and snap on release.
     public let stepCount: Int
+    /// The value a fresh instance of this effect assigns to this parameter.
+    /// Double-tapping the fader or pot resets to it.
+    public let defaultValue: Double
     @Binding public var value: Double
 
     public init(
@@ -35,7 +38,8 @@ public struct ParameterRow: View {
         label: String,
         value: Binding<Double>,
         useRotaryPots: Bool = false,
-        stepCount: Int = 0
+        stepCount: Int = 0,
+        defaultValue: Double = 0.5
     ) {
         self.index = index
         self.name = name
@@ -43,6 +47,7 @@ public struct ParameterRow: View {
         self.label = label
         self.useRotaryPots = useRotaryPots
         self.stepCount = stepCount
+        self.defaultValue = defaultValue
         self._value = value
     }
 
@@ -101,7 +106,7 @@ public struct ParameterRow: View {
                 value: $value,
                 label: "",
                 size: 56,
-                defaultValue: 0.5,
+                defaultValue: defaultValue,
                 stepCount: stepCount
             )
 
@@ -139,7 +144,8 @@ public struct ParameterRow: View {
             }
 
             // Custom fader: relative-drag, no touch-teleport. See LinearFader.swift.
-            LinearFader(value: $value, stepCount: stepCount)
+            // Double-tap resets to the effect's default for this parameter.
+            LinearFader(value: $value, defaultValue: defaultValue, stepCount: stepCount)
         }
     }
 
@@ -170,6 +176,10 @@ public struct ParameterGrid: View {
     /// Non-zero entries flag stepped/popup parameters; the corresponding row
     /// renders step dots and snaps on release.
     public let parameterStepCounts: [Int]
+    /// Per-parameter default values (what a fresh effect instance assigns).
+    /// Drives double-tap-to-reset on each fader/pot. Empty array or missing
+    /// entries fall back to 0.5.
+    public let parameterDefaults: [Double]
     public let useRotaryPots: Bool
     @Binding public var parameterValues: [Double]
 
@@ -180,6 +190,7 @@ public struct ParameterGrid: View {
         parameterLabels: [String],
         parameterValues: Binding<[Double]>,
         parameterStepCounts: [Int] = [],
+        parameterDefaults: [Double] = [],
         useRotaryPots: Bool = false
     ) {
         self.parameterCount = parameterCount
@@ -187,6 +198,7 @@ public struct ParameterGrid: View {
         self.parameterDisplays = parameterDisplays
         self.parameterLabels = parameterLabels
         self.parameterStepCounts = parameterStepCounts
+        self.parameterDefaults = parameterDefaults
         self.useRotaryPots = useRotaryPots
         self._parameterValues = parameterValues
     }
@@ -226,13 +238,18 @@ public struct ParameterGrid: View {
                     }
                 ),
                 useRotaryPots: useRotaryPots,
-                stepCount: safeStepCount(at: i)
+                stepCount: safeStepCount(at: i),
+                defaultValue: safeDefault(at: i)
             )
         }
     }
 
     private func safeStepCount(at i: Int) -> Int {
         parameterStepCounts.indices.contains(i) ? parameterStepCounts[i] : 0
+    }
+
+    private func safeDefault(at i: Int) -> Double {
+        parameterDefaults.indices.contains(i) ? parameterDefaults[i] : 0.5
     }
 
     /// Bounds for an adaptive pot column. Wider cells with tighter spacing

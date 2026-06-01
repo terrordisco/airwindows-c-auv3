@@ -392,11 +392,8 @@ private struct EffectPreviewColumn: View {
                 // realize there's more content below the fold (the default
                 // SwiftUI behavior only flashes the indicator on scroll).
                 ScrollView {
-                    Text(description.isEmpty ? effect.whatText : description)
-                        .font(.system(size: 17))
-                        .foregroundStyle(.secondary)
-                        .lineSpacing(4)
-                        .frame(maxWidth: .infinity, alignment: .leading)
+                    // Leading `# ` line renders as a heading; see EffectDescriptionText.
+                    EffectDescriptionText(description.isEmpty ? effect.whatText : description)
                         .padding(.horizontal, 28)
                         .padding(.vertical, 20)
                 }

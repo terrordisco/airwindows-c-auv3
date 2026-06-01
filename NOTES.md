@@ -116,6 +116,40 @@ Saving (`fullState`) writes BOTH our custom keys and lets super contribute
 its data blob — that way path 1 hosts can use the friendlier custom keys
 while path 2 hosts still recover via the tree blob.
 
+**Cubasis "No effect selected" on reopen (2026-06-01) — a UI-sync race, NOT
+a persistence failure.** Device `os_log` (Console.app, subsystem
+`com.terrordisco.airwindows.consolidated`) proved Cubasis *was* restoring
+correctly: it calls `setFullStateForDocument:` with our custom keys intact
+(`effectName=Distance`, `effectIndex=161`) and the AU resolved the right
+effect. The bug was timing:
+
+1. Cubasis mounts the plugin; the view model's `configure()` reads
+   `currentEffectIndex` → **-1** (nothing restored yet) → UI shows
+   "No effect selected".
+2. Cubasis restores state ~270ms LATER. Apple **does not fire parameter
+   observers during state restore**, and our code skipped `selectEffectAtIndex`
+   (the index already matched), so the view model never learned the effect
+   loaded. It stayed on its stale read.
+
+Fixes:
+- AU posts `AirwindowsAudioUnitDidRestoreState` (main thread) at the end of
+  `-applyRestoredStateFromDictionary:`; the view model observes it and calls
+  `refreshEffectInfo()`. Host-agnostic — covers any host that restores after
+  the view mounts.
+- Launch logic (`AirwindowsAUView`): open the browser only when nothing is
+  selected; an `onChange(of: effectIndex)` dismisses the auto-opened browser
+  when a late restore brings in an effect, so you land on the param page.
+- Added matching `fullStateForDocument`/`setFullStateForDocument:` overrides.
+  AUM uses plain `fullState`; Cubasis uses the `*ForDocument` variant. The
+  setter calls the MATCHING super so the param-tree blob restores, then runs
+  the shared `applyRestoredStateFromDictionary:`.
+
+Lesson: support BOTH the document and non-document state APIs, and never
+assume a one-shot read at `configure()` sees restored state — the host may
+restore *after* the view is live. A blank UI over a correctly-loaded engine
+is a sync bug, not a persistence bug; device `os_log` is the fastest way to
+tell them apart.
+
 ## Build & Deploy
 
 ```bash
