@@ -48,10 +48,21 @@ public struct EffectDetailView: View {
     public let onNext: () -> Void
     public let onTitleTap: () -> Void
     public let onReset: () -> Void
+    /// Optional — when provided, a Randomize chip appears next to Reset.
+    public let onRandomize: (() -> Void)?
+    /// Optional undo/redo. When provided, Undo/Redo chips appear left of
+    /// Random/Reset, dimmed and inert when their stack is empty.
+    public let onUndo: (() -> Void)?
+    public let onRedo: (() -> Void)?
+    public let canUndo: Bool
+    public let canRedo: Bool
     public let isDarkMode: Bool
     public let onToggleTheme: (() -> Void)?
     public let useRotaryPots: Bool
     public let onToggleControlStyle: (() -> Void)?
+    /// Optional — when provided, a favorite star appears right of the name box
+    /// and toggles this effect's membership in the shared favorites store.
+    public let favorites: FavoritesStore?
 
     @Environment(\.colorScheme) private var scheme
 
@@ -75,10 +86,16 @@ public struct EffectDetailView: View {
         onNext: @escaping () -> Void,
         onTitleTap: @escaping () -> Void,
         onReset: @escaping () -> Void,
+        onRandomize: (() -> Void)? = nil,
+        onUndo: (() -> Void)? = nil,
+        onRedo: (() -> Void)? = nil,
+        canUndo: Bool = false,
+        canRedo: Bool = false,
         isDarkMode: Bool = false,
         onToggleTheme: (() -> Void)? = nil,
         useRotaryPots: Bool = false,
-        onToggleControlStyle: (() -> Void)? = nil
+        onToggleControlStyle: (() -> Void)? = nil,
+        favorites: FavoritesStore? = nil
     ) {
         self.effect = effect
         self.parameterCount = parameterCount
@@ -99,10 +116,16 @@ public struct EffectDetailView: View {
         self.onNext = onNext
         self.onTitleTap = onTitleTap
         self.onReset = onReset
+        self.onRandomize = onRandomize
+        self.onUndo = onUndo
+        self.onRedo = onRedo
+        self.canUndo = canUndo
+        self.canRedo = canRedo
         self.isDarkMode = isDarkMode
         self.onToggleTheme = onToggleTheme
         self.useRotaryPots = useRotaryPots
         self.onToggleControlStyle = onToggleControlStyle
+        self.favorites = favorites
     }
 
     public var body: some View {
@@ -135,7 +158,11 @@ public struct EffectDetailView: View {
                 outputDisplay: outputDisplay,
                 onPrevious: onPrevious,
                 onNext: onNext,
-                onTitleTap: onTitleTap
+                onTitleTap: onTitleTap,
+                isFavorite: favorites?.isFavorite(effect.name) ?? false,
+                onToggleFavorite: favorites.map { store in
+                    { store.toggle(effect.name) }
+                }
             )
 
             Divider()
@@ -176,6 +203,38 @@ public struct EffectDetailView: View {
                     )
                 }
 
+                // Undo/Redo sit left of the destructive Random/Reset pair.
+                // They dim and stop responding when their history is empty,
+                // so the row never loses its shape but reads as unavailable.
+                if let onUndo {
+                    FilledIconChip(
+                        systemName: "arrow.uturn.backward",
+                        text: "Undo",
+                        accessibility: "Undo last change",
+                        isEnabled: canUndo,
+                        action: onUndo
+                    )
+                }
+
+                if let onRedo {
+                    FilledIconChip(
+                        systemName: "arrow.uturn.forward",
+                        text: "Redo",
+                        accessibility: "Redo",
+                        isEnabled: canRedo,
+                        action: onRedo
+                    )
+                }
+
+                if let onRandomize {
+                    FilledIconChip(
+                        systemName: "dice",
+                        text: "Random",
+                        accessibility: "Randomize parameters",
+                        action: onRandomize
+                    )
+                }
+
                 FilledIconChip(
                     systemName: "arrow.counterclockwise",
                     text: "Reset",
@@ -192,19 +251,40 @@ public struct EffectDetailView: View {
             // no exposed parameters (dithers, console fixed buses, etc.),
             // a centered empty-state mirroring the "No effect selected"
             // placeholder used by the browser's preview column.
+            //
+            // With parameters present, the grid and the description scroll
+            // together as one field. Empty space scrolls with one finger; a
+            // touch landing on a fader/pot drives that control instead of
+            // scrolling (so two controls can be grabbed at once). See
+            // ParameterScrollView.
             if parameterCount > 0 {
-                ParameterGrid(
-                    parameterCount: parameterCount,
-                    parameterNames: parameterNames,
-                    parameterDisplays: parameterDisplays,
-                    parameterLabels: parameterLabels,
-                    parameterValues: $parameterValues,
-                    parameterStepCounts: parameterStepCounts,
-                    parameterDefaults: parameterDefaults,
-                    useRotaryPots: useRotaryPots
-                )
-                .padding(.horizontal, 24)
-                .padding(.bottom, 22)
+                ParameterScrollView {
+                    VStack(alignment: .leading, spacing: 0) {
+                        ParameterGrid(
+                            parameterCount: parameterCount,
+                            parameterNames: parameterNames,
+                            parameterDisplays: parameterDisplays,
+                            parameterLabels: parameterLabels,
+                            parameterValues: $parameterValues,
+                            parameterStepCounts: parameterStepCounts,
+                            parameterDefaults: parameterDefaults,
+                            useRotaryPots: useRotaryPots
+                        )
+                        .padding(.horizontal, 24)
+                        .padding(.bottom, 22)
+
+                        if shouldShowDescription {
+                            Divider()
+                                .opacity(0.4)
+
+                            // Promotes the awpdoc's leading `# ` line into a
+                            // heading instead of showing the literal `#`.
+                            EffectDescriptionText(description)
+                                .padding(.horizontal, 24)
+                                .padding(.vertical, 18)
+                        }
+                    }
+                }
             } else {
                 VStack {
                     Spacer()
@@ -214,26 +294,22 @@ public struct EffectDetailView: View {
                     Spacer()
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
-            }
 
-            // Only show the full description block if it's different from
-            // the tagline already shown above (many effects have no awpdoc
-            // file and the ViewModel falls back to `whatText`, causing a
-            // duplicate when we render both).
-            if shouldShowDescription {
-                Divider()
-                    .opacity(0.4)
+                // No faders here to clash with, so this description keeps
+                // ordinary single-finger scrolling.
+                if shouldShowDescription {
+                    Divider()
+                        .opacity(0.4)
 
-                ScrollView {
-                    // Promotes the awpdoc's leading `# ` line into a heading
-                    // instead of showing the literal `#`. See EffectDescriptionText.
-                    EffectDescriptionText(description)
-                        .padding(.horizontal, 24)
-                        .padding(.vertical, 18)
+                    ScrollView {
+                        EffectDescriptionText(description)
+                            .padding(.horizontal, 24)
+                            .padding(.vertical, 18)
+                    }
+                    .scrollIndicators(.automatic)
+                } else {
+                    Spacer(minLength: 0)
                 }
-                .scrollIndicators(.automatic)
-            } else {
-                Spacer(minLength: 0)
             }
         }
         .background(AirwindowsPalette.surface(scheme))
@@ -314,6 +390,7 @@ private struct FilledIconChip: View {
     let systemName: String
     let text: String?
     let accessibility: String
+    let isEnabled: Bool
     let action: () -> Void
 
     @Environment(\.colorScheme) private var scheme
@@ -322,11 +399,13 @@ private struct FilledIconChip: View {
         systemName: String,
         text: String? = nil,
         accessibility: String,
+        isEnabled: Bool = true,
         action: @escaping () -> Void
     ) {
         self.systemName = systemName
         self.text = text
         self.accessibility = accessibility
+        self.isEnabled = isEnabled
         self.action = action
     }
 
@@ -349,6 +428,10 @@ private struct FilledIconChip: View {
             )
         }
         .buttonStyle(.plain)
+        .disabled(!isEnabled)
+        // Dim the whole chip when there's nothing to do, matching the
+        // standard "unavailable control" affordance.
+        .opacity(isEnabled ? 1 : 0.3)
         .accessibilityLabel(accessibility)
     }
 }

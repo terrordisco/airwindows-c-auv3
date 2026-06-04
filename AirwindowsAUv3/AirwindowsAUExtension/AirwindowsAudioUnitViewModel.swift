@@ -74,6 +74,57 @@ final class AirwindowsAudioUnitViewModel {
     private var stateRestoreObserver: NSObjectProtocol?
     private var ignoreParameterEcho: Bool = false
 
+    // MARK: - Undo / Redo
+    //
+    // A single global history of full state snapshots — effect index plus all
+    // parameter values and the two level controls. Every *user-initiated*
+    // change (fader/pot move, Randomize, Reset, switching effects) records the
+    // pre-change state so it can be walked back, and across effect boundaries:
+    // undoing past a "switch effect" returns you to the previous effect with
+    // its exact values. Host automation and preset restore (the AU→UI path in
+    // handleParameterChange) are deliberately NOT recorded — the host owns that
+    // timeline, not us.
+    //
+    // Continuous drags would otherwise flood the stack with one entry per
+    // render tick, so consecutive edits to the *same* control within a short
+    // window coalesce into one undo step (one step per gesture, roughly).
+    private struct StateSnapshot {
+        let effectIndex: Int
+        let parameterValues: [Double]
+        let inputLevel: Double
+        let outputLevel: Double
+    }
+
+    /// Identifies what changed, so same-control edits can coalesce while a
+    /// different control (or a discrete action) always starts a fresh step.
+    private enum ChangeKind: Equatable {
+        case parameter(Int)
+        case inputLevel
+        case outputLevel
+        case randomize
+        case reset
+        case effect
+    }
+
+    private var undoStack: [StateSnapshot] = []
+    private var redoStack: [StateSnapshot] = []
+    private var lastChangeKind: ChangeKind?
+    private var lastChangeTime: TimeInterval = 0
+    /// Set while we replay a snapshot so the writes we make don't themselves
+    /// get recorded as new history.
+    private var suppressUndoRecording: Bool = false
+
+    /// Consecutive edits to the same control within this window fold into one
+    /// undo step. Long enough to absorb a continuous drag, short enough that
+    /// two deliberate nudges stay separate.
+    private static let undoCoalesceWindow: TimeInterval = 0.6
+    /// Cap so a marathon session can't grow history without bound. Snapshots
+    /// are tiny (≈40 doubles) so this is generous.
+    private static let maxUndoDepth = 100
+
+    var canUndo: Bool { !undoStack.isEmpty }
+    var canRedo: Bool { !redoStack.isEmpty }
+
     init() {}
 
     deinit {
@@ -233,6 +284,7 @@ final class AirwindowsAudioUnitViewModel {
         // still navigates correctly. (The Reset chip calls the AU directly,
         // so it still reloads defaults on demand.)
         guard index != effectIndex else { return }
+        recordChange(.effect)
         au.selectEffect(at: index)
         effectIndex = index
         refreshEffectInfo()
@@ -261,6 +313,7 @@ final class AirwindowsAudioUnitViewModel {
 
     func setParameterValue(_ value: Double, at index: Int) {
         guard let au = audioUnit, index < 37 else { return }
+        recordChange(.parameter(index))
         parameterValues[index] = value
 
         ignoreParameterEcho = true
@@ -273,6 +326,7 @@ final class AirwindowsAudioUnitViewModel {
 
     func setInputLevel(_ value: Double) {
         guard let au = audioUnit else { return }
+        recordChange(.inputLevel)
         inputLevel = value
         ignoreParameterEcho = true
         defer { ignoreParameterEcho = false }
@@ -283,6 +337,7 @@ final class AirwindowsAudioUnitViewModel {
 
     func setOutputLevel(_ value: Double) {
         guard let au = audioUnit else { return }
+        recordChange(.outputLevel)
         outputLevel = value
         ignoreParameterEcho = true
         defer { ignoreParameterEcho = false }
@@ -291,14 +346,119 @@ final class AirwindowsAudioUnitViewModel {
         }
     }
 
+    /// Randomize all of the current effect's parameters. Continuous parameters
+    /// get a uniform value in 0...1; stepped/popup parameters snap to a random
+    /// valid case center so they always land on a real setting rather than
+    /// between two. In/Out levels are deliberately left alone — randomizing gain
+    /// is rarely useful and risks a sudden volume jump.
+    func randomizeParameters() {
+        guard audioUnit != nil else { return }
+        // One undo step for the whole randomize, not one per parameter.
+        recordChange(.randomize)
+        suppressUndoRecording = true
+        defer { suppressUndoRecording = false }
+        for i in 0..<parameterCount {
+            let stepCount = i < parameterStepCounts.count ? parameterStepCounts[i] : 0
+            let value: Double
+            if stepCount >= 2 {
+                // Bin center for a randomly chosen case k of N — matches the
+                // snap targets used by the stepped fader/pot.
+                let k = Int.random(in: 0..<stepCount)
+                value = (Double(k) + 0.5) / Double(stepCount)
+            } else {
+                value = Double.random(in: 0...1)
+            }
+            setParameterValue(value, at: i)
+        }
+    }
+
     /// Reset all of the current effect's parameters to the values the registry
     /// generator provides on a fresh instance.
     func resetParameters() {
         guard let au = audioUnit else { return }
+        // Snapshot the pre-reset values so the reset is undoable.
+        recordChange(.reset)
         // Re-selecting the current effect re-loads its default parameter values
         // via the registry generator, which is the simplest correct path.
         au.selectEffect(at: effectIndex)
         refreshEffectInfo()
+    }
+
+    // MARK: - Undo / Redo engine
+
+    private func captureSnapshot() -> StateSnapshot {
+        StateSnapshot(
+            effectIndex: effectIndex,
+            parameterValues: parameterValues,
+            inputLevel: inputLevel,
+            outputLevel: outputLevel
+        )
+    }
+
+    /// Records the current state as an undo point *before* a mutating action is
+    /// applied. Call at the top of every user-initiated mutator. Consecutive
+    /// edits to the same control within `undoCoalesceWindow` are folded into the
+    /// step already on the stack rather than pushing a new one.
+    private func recordChange(_ kind: ChangeKind) {
+        guard !suppressUndoRecording else { return }
+
+        let now = Date().timeIntervalSinceReferenceDate
+        let coalesces: Bool
+        switch kind {
+        case .parameter, .inputLevel, .outputLevel:
+            coalesces = kind == lastChangeKind
+                && (now - lastChangeTime) < Self.undoCoalesceWindow
+        case .randomize, .reset, .effect:
+            // Discrete actions are always their own undo step.
+            coalesces = false
+        }
+        lastChangeKind = kind
+        lastChangeTime = now
+
+        guard !coalesces else { return }
+
+        undoStack.append(captureSnapshot())
+        if undoStack.count > Self.maxUndoDepth {
+            undoStack.removeFirst(undoStack.count - Self.maxUndoDepth)
+        }
+        // Any fresh change invalidates the redo timeline.
+        redoStack.removeAll()
+    }
+
+    func undo() {
+        guard let snapshot = undoStack.popLast() else { return }
+        redoStack.append(captureSnapshot())
+        applySnapshot(snapshot)
+    }
+
+    func redo() {
+        guard let snapshot = redoStack.popLast() else { return }
+        undoStack.append(captureSnapshot())
+        applySnapshot(snapshot)
+    }
+
+    /// Replays a captured state. Writes go through the normal setters (so the
+    /// AU parameter tree and the displayed values stay in sync) but recording
+    /// is suppressed so the replay doesn't spawn new history. After a replay we
+    /// also drop the coalescing tracker, so the next real edit starts cleanly.
+    private func applySnapshot(_ snapshot: StateSnapshot) {
+        suppressUndoRecording = true
+        defer {
+            suppressUndoRecording = false
+            lastChangeKind = nil
+        }
+
+        if snapshot.effectIndex != effectIndex, let au = audioUnit {
+            au.selectEffect(at: snapshot.effectIndex)
+            effectIndex = snapshot.effectIndex
+            refreshEffectInfo()
+        }
+
+        for i in 0..<min(parameterCount, snapshot.parameterValues.count) {
+            setParameterValue(snapshot.parameterValues[i], at: i)
+        }
+        setInputLevel(snapshot.inputLevel)
+        setOutputLevel(snapshot.outputLevel)
     }
 
     func refreshEffectInfo() {

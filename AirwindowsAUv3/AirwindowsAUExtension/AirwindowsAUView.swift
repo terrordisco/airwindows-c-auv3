@@ -27,6 +27,11 @@ import AirwindowsUI
 struct AirwindowsAUView: View {
     @Bindable var viewModel: AirwindowsAudioUnitViewModel
 
+    /// Shared favorites store (App Group backed). One instance per process,
+    /// passed into both the browser and the detail view so the star and the
+    /// pinned "Favorites" category stay in sync.
+    @State private var favorites = FavoritesStore()
+
     @State private var showBrowser: Bool = false
     /// True when the browser was force-opened at launch because nothing was
     /// selected yet. If a host then restores an effect late (Cubasis restores
@@ -89,6 +94,7 @@ struct AirwindowsAUView: View {
                     descriptionProvider: { effect in
                         viewModel.description(for: effect)
                     },
+                    favorites: favorites,
                     onSelect: { effect in
                         viewModel.selectEffect(at: effect.registryIndex)
                     },
@@ -162,10 +168,16 @@ struct AirwindowsAUView: View {
                 onNext: { viewModel.selectNextEffect() },
                 onTitleTap: { showBrowser = true },
                 onReset: { viewModel.resetParameters() },
+                onRandomize: { viewModel.randomizeParameters() },
+                onUndo: { viewModel.undo() },
+                onRedo: { viewModel.redo() },
+                canUndo: viewModel.canUndo,
+                canRedo: viewModel.canRedo,
                 isDarkMode: isDarkMode,
                 onToggleTheme: { isDarkMode.toggle() },
                 useRotaryPots: effectiveUseRotaryPots,
-                onToggleControlStyle: { toggleControlStyle() }
+                onToggleControlStyle: { toggleControlStyle() },
+                favorites: favorites
             )
         } else {
             NoSelectionView(onBrowse: { showBrowser = true })

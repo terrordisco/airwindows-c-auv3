@@ -22,6 +22,9 @@ public struct BrowserView: View {
     public let descriptionProvider: (EffectBrowseModel) -> String
     public let onSelect: (EffectBrowseModel) -> Void
     public let onClose: () -> Void
+    /// Optional — drives the pinned "Favorites" pseudo-category in the sidebar
+    /// and the star toggle in the preview pane.
+    public let favorites: FavoritesStore?
 
     @Environment(\.colorScheme) private var scheme
     @State private var collection: EffectCollection = .all
@@ -38,6 +41,10 @@ public struct BrowserView: View {
     private static let newCategoryName = "New"
     private static let newCategoryLimit = 8
 
+    /// Sentinel `selectedCategory` value for the favorites pseudo-category.
+    /// Chosen to never collide with a real category name or the "" all-sentinel.
+    private static let favoritesCategoryName = "\u{2605} Favorites"
+
     public init(
         allEffects: [EffectBrowseModel],
         categories: [String],
@@ -45,6 +52,7 @@ public struct BrowserView: View {
         initialCategory: String? = nil,
         initialHighlight: EffectBrowseModel? = nil,
         descriptionProvider: @escaping (EffectBrowseModel) -> String = { $0.whatText },
+        favorites: FavoritesStore? = nil,
         onSelect: @escaping (EffectBrowseModel) -> Void,
         onClose: @escaping () -> Void
     ) {
@@ -53,6 +61,7 @@ public struct BrowserView: View {
         self.countsByCategory = countsByCategory
         self.initialHighlight = initialHighlight
         self.descriptionProvider = descriptionProvider
+        self.favorites = favorites
         self.onSelect = onSelect
         self.onClose = onClose
         // Treat empty string the same as nil — no category preselected.
@@ -73,7 +82,12 @@ public struct BrowserView: View {
                 totalCount: filteredAll.count,
                 onClose: onClose,
                 onAboutTap: { showAbout = true },
-                onRandomTap: pickRandom
+                onRandomTap: pickRandom,
+                favoritesCount: favoriteEffects.count,
+                isFavoritesSelected: selectedCategory == Self.favoritesCategoryName,
+                onSelectFavorites: favorites == nil ? nil : {
+                    selectedCategory = Self.favoritesCategoryName
+                }
             )
             .frame(width: 280)
 
@@ -110,6 +124,7 @@ public struct BrowserView: View {
                     ? (highlighted ?? effectsInCurrentCategory.first)
                     : nil,
                 description: highlighted.flatMap { descriptionProvider($0) } ?? "",
+                favorites: favorites,
                 onSelect: { effect in
                     onSelect(effect)
                     onClose()
@@ -118,6 +133,18 @@ public struct BrowserView: View {
             .frame(maxWidth: .infinity)
         }
         .background(AirwindowsPalette.surface(scheme))
+        .onAppear {
+            // Pick up favorites changed by the other process (app ↔ plugin).
+            favorites?.refresh()
+        }
+        .onChange(of: favoriteEffects.count) { _, newCount in
+            // If the user un-stars their last favorite while viewing the
+            // Favorites pseudo-category, fall back to "All categories" so the
+            // middle column isn't an orphaned empty list.
+            if newCount == 0, selectedCategory == Self.favoritesCategoryName {
+                selectedCategory = ""
+            }
+        }
         .onChange(of: selectedCategory) { _, newCat in
             // "By category" sort only makes sense for "All categories"
             if newCat != "" && sortMode == .byCategory {
@@ -160,9 +187,19 @@ public struct BrowserView: View {
         Array(filteredAll.sorted(by: .newestFirst).prefix(Self.newCategoryLimit))
     }
 
+    /// Effects in the current filter pool that the user has favorited.
+    /// Empty when there's no store. Drives both the sidebar row count and the
+    /// favorites pseudo-category listing.
+    private var favoriteEffects: [EffectBrowseModel] {
+        guard let favorites else { return [] }
+        return filteredAll.filter { favorites.isFavorite($0.name) }
+    }
+
     private var effectsInCurrentCategory: [EffectBrowseModel] {
         let pool: [EffectBrowseModel]
-        if selectedCategory == Self.newCategoryName {
+        if selectedCategory == Self.favoritesCategoryName {
+            pool = favoriteEffects
+        } else if selectedCategory == Self.newCategoryName {
             // Pseudo-category: 8 newest. Re-applies the user-chosen sortMode
             // afterward so toggling alphabetical etc. still re-orders them.
             pool = newCategoryEffects
@@ -202,6 +239,9 @@ public struct BrowserView: View {
     private func middleColumnLabel(for selection: String) -> String {
         if selection.isEmpty {
             return "All effects (\(effectsInCurrentCategory.count))"
+        }
+        if selection == Self.favoritesCategoryName {
+            return "Favorites (\(effectsInCurrentCategory.count))"
         }
         return "\(selection) (\(effectsInCurrentCategory.count))"
     }
@@ -344,12 +384,13 @@ private struct NumberedEffectRow: View {
 private struct EffectPreviewColumn: View {
     let effect: EffectBrowseModel?
     let description: String
+    let favorites: FavoritesStore?
     let onSelect: (EffectBrowseModel) -> Void
 
     var body: some View {
         if let effect {
             VStack(alignment: .leading, spacing: 0) {
-                // Header row: name + Select button
+                // Header row: name + favorite star + Select button
                 HStack(alignment: .firstTextBaseline) {
                     Text(effect.name)
                         .font(.system(size: 40, weight: .semibold))
@@ -357,6 +398,21 @@ private struct EffectPreviewColumn: View {
                         .minimumScaleFactor(0.6)
 
                     Spacer()
+
+                    if let favorites {
+                        let isFav = favorites.isFavorite(effect.name)
+                        Button {
+                            favorites.toggle(effect.name)
+                        } label: {
+                            Image(systemName: isFav ? "star.fill" : "star")
+                                .font(.system(size: 20, weight: .medium))
+                                .foregroundStyle(isFav ? Color.yellow : Color.secondary)
+                                .frame(width: 40, height: 40)
+                                .contentShape(Rectangle())
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityLabel(isFav ? "Remove \(effect.name) from favorites" : "Add \(effect.name) to favorites")
+                    }
 
                     Button {
                         onSelect(effect)

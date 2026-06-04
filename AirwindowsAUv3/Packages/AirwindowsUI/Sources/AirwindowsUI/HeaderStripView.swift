@@ -32,6 +32,8 @@ public struct HeaderStripView: View {
     private let onPrevious: () -> Void
     private let onNext: () -> Void
     private let onTitleTap: () -> Void
+    private let isFavorite: Bool
+    private let onToggleFavorite: (() -> Void)?
 
     public init(
         category: String,
@@ -44,7 +46,9 @@ public struct HeaderStripView: View {
         outputDisplay: String,
         onPrevious: @escaping () -> Void,
         onNext: @escaping () -> Void,
-        onTitleTap: @escaping () -> Void
+        onTitleTap: @escaping () -> Void,
+        isFavorite: Bool = false,
+        onToggleFavorite: (() -> Void)? = nil
     ) {
         self.category = category
         self.effectName = effectName
@@ -57,6 +61,8 @@ public struct HeaderStripView: View {
         self.onPrevious = onPrevious
         self.onNext = onNext
         self.onTitleTap = onTitleTap
+        self.isFavorite = isFavorite
+        self.onToggleFavorite = onToggleFavorite
     }
 
     public var body: some View {
@@ -119,6 +125,23 @@ public struct HeaderStripView: View {
             .buttonStyle(.plain)
             .accessibilityLabel("\(category), \(effectName), tap to browse effects")
             .fixedSize(horizontal: true, vertical: false)
+
+            // Favorite star — sits immediately right of the name box. Filled
+            // yellow when favorited (the platform convention users read at a
+            // glance), hollow secondary otherwise. Only present when the caller
+            // wires a toggle.
+            if let onToggleFavorite {
+                Button(action: onToggleFavorite) {
+                    Image(systemName: isFavorite ? "star.fill" : "star")
+                        .font(.system(size: 19, weight: .medium))
+                        .foregroundStyle(isFavorite ? Color.yellow : Color.secondary)
+                        .frame(width: 36, height: 36)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .padding(.leading, 8)
+                .accessibilityLabel(isFavorite ? "Remove \(effectName) from favorites" : "Add \(effectName) to favorites")
+            }
 
             Spacer(minLength: 12)
 

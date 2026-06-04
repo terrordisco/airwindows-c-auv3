@@ -102,6 +102,8 @@ public struct ParameterRow: View {
             }
 
             // Empty label — the name already sits in the header above.
+            // `.scrollDragControl()` keeps a touch that lands on the pot from
+            // scrolling the workspace, so the drag adjusts the value instead.
             RotaryPot(
                 value: $value,
                 label: "",
@@ -109,6 +111,7 @@ public struct ParameterRow: View {
                 defaultValue: defaultValue,
                 stepCount: stepCount
             )
+            .scrollDragControl()
 
             Text(formattedValue)
                 .font(.system(size: 13).monospacedDigit())
@@ -145,7 +148,10 @@ public struct ParameterRow: View {
 
             // Custom fader: relative-drag, no touch-teleport. See LinearFader.swift.
             // Double-tap resets to the effect's default for this parameter.
+            // `.scrollDragControl()` keeps a touch that lands on the fader from
+            // scrolling the workspace, so the drag adjusts the value instead.
             LinearFader(value: $value, defaultValue: defaultValue, stepCount: stepCount)
+                .scrollDragControl()
         }
     }
 
@@ -212,11 +218,11 @@ public struct ParameterGrid: View {
             // column is constrained between `potColumnMinWidth` and
             // `potColumnMaxWidth` so the cells stay tight around the 56pt pot
             // instead of stretching like the slider rows do.
-            LazyVGrid(columns: potColumns, alignment: .center, spacing: 22) {
+            LazyVGrid(columns: potColumns, alignment: .center, spacing: rowSpacing) {
                 rows
             }
         } else {
-            LazyVGrid(columns: sliderColumns, alignment: .leading, spacing: 22) {
+            LazyVGrid(columns: sliderColumns, alignment: .leading, spacing: rowSpacing) {
                 rows
             }
         }
@@ -260,6 +266,12 @@ public struct ParameterGrid: View {
     private let potColumnMinWidth: CGFloat = 115
     private let potColumnMaxWidth: CGFloat = 140
     private let potColumnSpacing: CGFloat = 18
+
+    /// Vertical gap between rows. Deliberately roomy: the gaps double as the
+    /// single-finger scroll handles for `ParameterScrollView` (a touch on a
+    /// control adjusts it instead of scrolling), so there has to be empty space
+    /// to grab between the controls.
+    private let rowSpacing: CGFloat = 32
 
     private var potColumns: [GridItem] {
         [

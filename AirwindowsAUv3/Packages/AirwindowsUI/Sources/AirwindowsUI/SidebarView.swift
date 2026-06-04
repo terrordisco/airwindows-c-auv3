@@ -28,6 +28,11 @@ public struct SidebarView: View {
     public let onClose: (() -> Void)?
     public let onAboutTap: (() -> Void)?
     public let onRandomTap: (() -> Void)?
+    /// Favorites pseudo-category. The row is pinned above "All categories" and
+    /// only appears once at least one effect is favorited (count > 0).
+    public let favoritesCount: Int
+    public let isFavoritesSelected: Bool
+    public let onSelectFavorites: (() -> Void)?
 
     @Environment(\.colorScheme) private var scheme
 
@@ -40,7 +45,10 @@ public struct SidebarView: View {
         totalCount: Int,
         onClose: (() -> Void)? = nil,
         onAboutTap: (() -> Void)? = nil,
-        onRandomTap: (() -> Void)? = nil
+        onRandomTap: (() -> Void)? = nil,
+        favoritesCount: Int = 0,
+        isFavoritesSelected: Bool = false,
+        onSelectFavorites: (() -> Void)? = nil
     ) {
         self._collection = collection
         self._searchText = searchText
@@ -51,6 +59,9 @@ public struct SidebarView: View {
         self.onClose = onClose
         self.onAboutTap = onAboutTap
         self.onRandomTap = onRandomTap
+        self.favoritesCount = favoritesCount
+        self.isFavoritesSelected = isFavoritesSelected
+        self.onSelectFavorites = onSelectFavorites
     }
 
     public var body: some View {
@@ -94,6 +105,16 @@ public struct SidebarView: View {
             // Category list
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: 0) {
+                    // Favorites pinned above "All categories" — only once the
+                    // user has starred something, so it never reads as an empty
+                    // dead end. A star icon stands in for the category dot.
+                    if favoritesCount > 0, let onSelectFavorites {
+                        FavoritesSidebarRow(
+                            count: favoritesCount,
+                            isSelected: isFavoritesSelected,
+                            action: onSelectFavorites
+                        )
+                    }
                     CategoryRow(
                         title: "All categories",
                         count: totalCount,
@@ -288,6 +309,47 @@ private struct SidebarActionButton: View {
         }
         .buttonStyle(.plain)
         .background(Color.secondary.opacity(0.08))
+    }
+}
+
+/// Favorites row — same metrics as `CategoryRow` but with a star glyph in
+/// place of the colored category dot, so it reads as special and pinned.
+private struct FavoritesSidebarRow: View {
+    let count: Int
+    let isSelected: Bool
+    let action: () -> Void
+
+    private static let accent = AirwindowsPalette.accent
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 12) {
+                Image(systemName: "star.fill")
+                    .font(.system(size: 12))
+                    .foregroundStyle(isSelected ? Self.accent : Color.yellow)
+                    .frame(width: 8)
+
+                HStack(alignment: .firstTextBaseline, spacing: 6) {
+                    Text("Favorites")
+                        .font(.system(size: 20, weight: isSelected ? .semibold : .regular))
+                        .foregroundStyle(isSelected ? Self.accent : Color.primary)
+                        .lineLimit(1)
+                    Text("(\(count))")
+                        .font(.system(size: 17).monospacedDigit())
+                        .foregroundStyle(isSelected ? Self.accent.opacity(0.85) : Color.secondary)
+                }
+
+                Spacer()
+
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundStyle(isSelected ? Self.accent : Color.secondary.opacity(0.5))
+            }
+            .padding(.horizontal, 18)
+            .padding(.vertical, 11)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
     }
 }
 
