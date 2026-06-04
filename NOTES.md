@@ -2,7 +2,7 @@
 
 ## Project Status — WORKING on iPad
 - AUv3 loads and processes audio in AUM
-- All 504 Airwindows effects compiled and functional (was 483 — registry filter fix)
+- All 512 Airwindows effects compiled and functional (504 + 8 from 2026-05-30 upstream sync)
 - SwiftUI interface with effect browser, parameter sliders, descriptions
 - App icon (Airwindows cat) included
 - Browser opens clean (no preselected category/effect) on every launch
@@ -168,6 +168,87 @@ open AirwindowsAUv3.xcodeproj
 | AirwindowsDSP/Bridge/ | ObjC++ bridge + AUAudioUnit | 4 files |
 | AirwindowsDSP/Airwin/ | C++ DSP effects + registry | 1518 files |
 | AirwindowsDSP/Documentation/ | Effect descriptions | 511 files |
+
+## Recent Changes (2026-06-01)
+
+### Upstream effect sync — 2026-03-30 → 2026-05-30 (504 → 512 effects)
+- Ran `repo/scripts/updateToLatest.sh` (airwindows submodule `596edf3eb` →
+  `1bac4c238` "BitDualPan"; `configure.pl` regenerated `repo/src/`). Then synced
+  into the app: `rsync --delete repo/src/autogen_airwin/` → app (1519 → 1543
+  files), `cp ModuleAdd.h`, `cp repo/res/awpdoc/*.txt` → app awpdoc (preserving
+  our scraped-only files, which upstream doesn't have).
+- **8 new effects, 0 removed:** ADClip9 (Clipping), BezEQ3 (Filter), Suzan
+  (Filter), kCyberCity (Reverb) — all classified + have awpdoc. kRockstar,
+  Longhand, PurestConsole4Buss, PurestConsole4Channel — Unclassified, no blog
+  post yet. 19 existing effects got DSP bugfixes; ~20 awpdoc updated; new awpdoc
+  for BitDualPan + WoodenBox (2 former best-guess orphans now documented).
+- **Category overrides added:** kRockstar → Reverb (k-prefix reverb family),
+  PurestConsole4Buss/Channel → Consoles (family rule). Longhand → Effects is a
+  **pure placeholder** — it has only Input/Output/Dry-Wet, no whatText, no post;
+  flagged in `category_overrides.json` `_comment` for reclassification.
+- **awpdoc cross-check:** upstream now ships clean awpdoc for 3 of our 10 scraped
+  effects (Baxandall3, ClipOnly3, SoftClock3) — those now use upstream's official
+  text. The other 7 (C5RawChannel, ConsoleX2Buss/Channel/Pre, Density3,
+  Dynamics3, LRConvolve3) still have no upstream awpdoc; our cleaned scraped
+  versions remain.
+- Re-ran `fetch_effect_links.py` (497 posts, 484 videos; +22/−2 lines, no links
+  lost). 4 new effects got post+video links; kRockstar/Longhand/PurestConsole4*
+  have no matched post (among the 15 postless effects) → no description yet.
+- `xcodegen generate` + full rebuild: **BUILD SUCCEEDED** (simulator). Not yet
+  run on device (iPad unplugged) and **not committed** — awaiting review.
+- Loose ends for review: Longhand category (placeholder), and the 4 postless new
+  effects have no description (blog posts may not exist yet, or slug-matcher
+  missed them).
+
+### Scrollable parameter + description field (`ParameterScrollView`)
+- The effect workspace packs draggable faders/pots and longform description text
+  into one tall column. With a normal ScrollView a single-finger fader/pot drag
+  and a scroll are indistinguishable, so they fight — a tweak can scroll instead.
+- **Final model:** empty space scrolls with one finger; a touch that *starts on a
+  control* drives that control and never scrolls. `ParameterScrollView` (in
+  AirwindowsUI) wraps the grid + description as one field; faders/pots are tagged
+  `.scrollDragControl()`. Grid `rowSpacing` widened to 32 so there's empty space
+  to grab between controls.
+- **Why not two fingers (scrubbed):** the obvious idea — reserve scrolling for
+  two fingers so one finger always adjusts — breaks a core mixing gesture:
+  grabbing two pots/sliders at once. Any two-finger scroll would hijack it. So
+  scrolling is single-finger-on-empty-space only.
+- Implementation: stock SwiftUI `ScrollView` (native momentum/bounce/indicators/
+  sizing). A zero-size probe walks up to the backing `UIScrollView`; a
+  `TouchDownObserver` (a UIGestureRecognizer that reports the first touch's
+  location then immediately `.failed`s, so it never competes) sets the pan's
+  `minimumNumberOfTouches` to a value out of reach (6) the instant a touch lands
+  on a registered control region, and back to 1 for empty space. Raising it
+  *disables* scrolling for that gesture rather than "requiring more fingers", so
+  two fingers on two controls both adjust — nothing scrolls. Control frames
+  tracked via a weak `NSHashTable`.
+- Dead ends along the way (kept as a warning): (1) introspect a SwiftUI
+  ScrollView + min-touches=2 → two fingers scrolled text but not over controls
+  (SwiftUI's gesture wins exclusively over the pan). (2) Custom UIScrollView +
+  `SimultaneousPanDelegate` proxy to force simultaneous recognition → **crashed**
+  with `NSInvalidArgumentException: UIScrollView's built-in pan gesture
+  recognizer must have its scroll view as its delegate` — you may not replace the
+  pan's delegate. Both abandoned when the two-finger idea itself was scrubbed.
+- Scoped to this container only: browser/sidebar lists keep ordinary scrolling.
+  No-parameter effects keep their plain single-finger description ScrollView.
+- macOS build path falls back to a plain `ScrollView` under `#if canImport(UIKit)`.
+
+### Website crud stripped from scraped descriptions
+- 10 longform descriptions were scraped from airwindows.com by
+  `fetch_missing_descriptions.py` (not Chris's upstream awpdoc) and carried the
+  whole blog post: a `TL;DW:` line, `Foo.zip (...) standalone` / `... in
+  Airwindows Consolidated (CLAP, ...)` / github-release leading metadata, and a
+  trailing download block (`download 64 Bit Windows VSTs.zip` ... `Mediafire
+  Backup` ... MIT line ... `Date/Author/Category/Tag/Comments`).
+- New `scripts/awpdoc_cleanup.py` strips both ends and promotes a `TL;DW:`
+  summary into a `# ` heading (matching the upstream convention). Discriminator:
+  upstream awpdoc opens with `# `; scraped files don't — exactly the 10 cleaned.
+  The same `clean_description()` is now imported by
+  `fetch_missing_descriptions.py` so future scrapes stay clean.
+- Affected: Baxandall3, C5RawChannel, ClipOnly3, ConsoleX2Buss, ConsoleX2Channel,
+  ConsoleX2Pre, Density3, Dynamics3, LRConvolve3, SoftClock3. Copy may still want
+  a human final pass (e.g. ConsoleX2Buss keeps a couple of fragmentary lead-in
+  lines).
 
 ## Recent Changes (2026-05-13)
 
