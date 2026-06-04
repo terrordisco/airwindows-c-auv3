@@ -2,7 +2,7 @@
 
 ## Problem Statement
 
-Airwindows is a legendary library of 350+ free, open-source audio effects built by Chris Johnson — but they don't exist on iPad. Musicians working on iPadOS have no way to access these effects in their DAW sessions. This project brings the full Airwindows library to iOS as a native AUv3 plugin with an interface that feels like Apple built it.
+Airwindows is a legendary library of 500+ free, open-source audio effects built by Chris Johnson — but they don't exist on iPad. Musicians working on iPadOS have no way to access these effects in their DAW sessions. This project brings the full Airwindows library to iOS as a native AUv3 plugin with an interface that feels like Apple built it.
 
 ## Evidence
 
@@ -13,7 +13,7 @@ Airwindows is a legendary library of 350+ free, open-source audio effects built 
 
 ## Proposed Solution
 
-A native Swift/SwiftUI + C++ AUv3 plugin that wraps all 350+ Airwindows effects with zero external dependencies. The UI should feel like a default Apple component — deeply designed to appear barely designed. The project is free, open source (MIT), and community-oriented. It never touches the DSP; it is a window into Chris's work, not a fork.
+A native Swift/SwiftUI + C++ AUv3 plugin that wraps all 500+ Airwindows effects with zero external dependencies. The UI should feel like a default Apple component — deeply designed to appear barely designed. The project is free, open source (MIT), and community-oriented. It never touches the DSP; it is a window into Chris's work, not a fork.
 
 ## Key Hypothesis
 
@@ -42,7 +42,7 @@ We believe a beautifully native, Apple-feeling AUv3 wrapper around all Airwindow
 - [ ] Has Chris been contacted? Need to compose and send a letter explaining the project, philosophy, and asking for his blessing
 - [ ] Is there a space beyond what Chris does himself — additional curation, documentation, community features — that he'd welcome?
 - [ ] TestFlight behavior on real iPad hardware — touch target sizes, gesture feel, performance with complex effects
-- [ ] App Store review — will Apple have issues with 350+ effects in one plugin, bundle size, or the extension architecture?
+- [ ] App Store review — will Apple have issues with 500+ effects in one plugin, bundle size, or the extension architecture?
 - [ ] Auto-update mechanism — how to pull weekly new effects from upstream without requiring a full App Store review cycle
 - [ ] How to present "vibecoded with AI" transparently — commit history tells the story, README states it plainly, CONTRIBUTING.md explains the workflow
 
@@ -70,7 +70,7 @@ Minimalists who believe one of each plugin type is enough. This is a library for
 
 | Priority | Capability | Rationale |
 |----------|------------|-----------|
-| Must | All 350+ effects loadable and processing audio | The whole point — complete library |
+| Must | All 500+ effects loadable and processing audio | The whole point — complete library |
 | Must | Apple-native UI feel (looks like Apple built it) | Design philosophy — invisible design |
 | Must | Effect browser with categories and search | Discovery is core to the experience |
 | Must | State persistence (save/restore in hosts, presets) | Basic professional reliability — AU fullState already implemented |
@@ -104,7 +104,7 @@ Adjust parameters → Star it if it's magic → Move on
 
 **Feasibility**: HIGH
 
-All hard technical problems are solved: 350+ C++ effects compile, AU loads in hosts, audio processes correctly, SwiftUI UI is functional, state save/restore is implemented.
+All hard technical problems are solved: 500+ C++ effects compile, AU loads in hosts, audio processes correctly, SwiftUI UI is functional, state save/restore is implemented.
 
 **Architecture Notes**
 - Zero external dependencies — only Apple frameworks (AudioToolbox, AVFoundation, CoreAudioKit, SwiftUI)
@@ -117,7 +117,7 @@ All hard technical problems are solved: 350+ C++ effects compile, AU loads in ho
 
 | Risk | Likelihood | Mitigation |
 |------|------------|------------|
-| App Store rejection (bundle size, 350+ effects) | LOW | Apple has precedent for large plugin libraries; test with TestFlight first |
+| App Store rejection (bundle size, 500+ effects) | LOW | Apple has precedent for large plugin libraries; test with TestFlight first |
 | Performance on older iPads with complex effects | MEDIUM | Profile on hardware; potentially flag heavy effects |
 | Auto-update from upstream breaking builds | MEDIUM | CI pipeline, pinned upstream commits, weekly build verification |
 | Apple AUv3 API changes in future iOS versions | LOW | Standard Apple deprecation cycle; maintain iOS 17+ target |
@@ -189,7 +189,7 @@ Phases 1 (Chris) and 2 (hardware testing) can run in parallel — you don't need
 
 | Decision | Choice | Alternatives | Rationale |
 |----------|--------|--------------|-----------|
-| UI philosophy | "Apple built this" — invisible design | Skeuomorphic audio UI, Chris's raw style, custom branded | Matches iPad platform expectations; makes 350 effects approachable |
+| UI philosophy | "Apple built this" — invisible design | Skeuomorphic audio UI, Chris's raw style, custom branded | Matches iPad platform expectations; makes 500 effects approachable |
 | Dependencies | Zero — Apple frameworks only | AudioKit, JUCE | Simpler build, no licensing complexity, smaller binary, full control |
 | Licensing | MIT | GPL, proprietary | Matches upstream Airwindows license; maximally open |
 | AI transparency | Commit history + README mention | Hide it, prominent disclaimer, separate doc | Honest without being apologetic; the code speaks for itself |
@@ -207,7 +207,7 @@ Phases 1 (Chris) and 2 (hardware testing) can run in parallel — you don't need
 
 **Technical Context**
 - Upstream consolidation (baconpaul/airwin2rack) provides clean C++ registry architecture
-- All 350+ effects compile and run on iOS
+- All 500+ effects compile and run on iOS
 - State persistence (fullState/setFullState) is already implemented in the AU
 - SwiftUI UI framework is functional with effect browser, parameter controls, and theme system
 - No architectural blockers — remaining work is polish, features, and packaging

@@ -44,7 +44,7 @@ public struct AboutView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 22) {
                     AboutSection(title: "Airwindows Consolidated") {
-                        Text("350+ free, open-source audio effects by Chris Johnson, packaged as a single AUv3 plugin for iPad.")
+                        Text("500+ free, open-source audio effects by Chris Johnson, packaged as a single AUv3 plugin for iPad.")
                             .font(.system(size: 14))
                             .foregroundStyle(.primary)
                             .lineSpacing(3)

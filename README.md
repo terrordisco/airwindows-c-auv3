@@ -1,6 +1,6 @@
 # Airwindows Consolidated AUv3
 
-A native iPadOS AUv3 plugin that rolls the entire Airwindows effects library — all 350+ of Chris Johnson's free, open-source audio effects — in a single Apple-scented Audio Unit.
+A native iPadOS AUv3 plugin that rolls the entire Airwindows effects library — all 500+ of Chris Johnson's free, open-source audio effects — in a single Apple-scented Audio Unit.
 
 <p align="center">
   <img src="airwindows_logo.jpg" alt="Airwindows" width="220" />
@@ -26,7 +26,7 @@ This project is an iPadOS AUv3 plugin that rolls **every Airwindows effect in a 
 
 Current features:
 
-- All 350+ Airwindows effects, in any AUv3 host.
+- All 500+ Airwindows effects, in any AUv3 host.
 - A category browser, search, and "Recommended / Basic / Latest" curated collections.
 - Options for comfort: choose between sliders or pots. Light and dark themes for your eyes (hi other old people). 
 - All the metadata we can muster: Effect descriptions, blog-post and YouTube links from airwindows.com.

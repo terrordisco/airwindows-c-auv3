@@ -1,6 +1,6 @@
 # Airwindows Consolidated AUv3
 
-Native iOS AUv3 plugin wrapping all 350+ Airwindows effects. Swift/SwiftUI + C++ DSP, zero external dependencies. iPad-first, free, open source (MIT).
+Native iOS AUv3 plugin wrapping all 500+ Airwindows effects. Swift/SwiftUI + C++ DSP, zero external dependencies. iPad-first, free, open source (MIT).
 
 ## Design Philosophy
 
@@ -12,7 +12,7 @@ Native iOS AUv3 plugin wrapping all 350+ Airwindows effects. Swift/SwiftUI + C++
 
 - **3 Xcode targets**: AirwindowsApp (host shell), AirwindowsAUExtension (AUv3 plugin), AirwindowsDSP (shared framework)
 - **AirwindowsUI** local Swift package in `Packages/AirwindowsUI/` — all SwiftUI views and Theme
-- **C++ DSP** in `AirwindowsDSP/Airwin/autogen_airwin/` — 350+ effects from upstream baconpaul/airwin2rack
+- **C++ DSP** in `AirwindowsDSP/Airwin/autogen_airwin/` — 500+ effects from upstream baconpaul/airwin2rack
 - **Bridge** in `AirwindowsDSP/Bridge/` — ObjC++ interop between Swift and C++
 - **AUAudioUnit subclass lives in the framework** (not the extension) so the C++ static registry populates once
 

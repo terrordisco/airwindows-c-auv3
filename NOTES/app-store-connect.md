@@ -18,10 +18,10 @@ The AU plugin name shown in hosts (AUM, Logic, etc.) is also `Airwindows Consoli
 
 ### Subtitle (max 30)
 
-`350+ Airwindows effects, free` (29) — **recommended**
+`500+ Airwindows effects, free` (29) — **recommended**
 
 Alternates:
-- `All 350+ effects in one AUv3` (29)
+- `All 500+ effects in one AUv3` (29)
 - `Chris Johnson's full DSP toolkit` (32 — too long, cut to "Chris Johnson's DSP toolkit" at 27)
 
 ### Primary Category
@@ -41,7 +41,7 @@ Check: **No, my app does not contain, show, or access third-party content** (the
 ## App Store description (max 4000)
 
 ```
-Airwindows Consolidated is all 350+ free Airwindows effects in a single AUv3 plugin for iPad.
+Airwindows Consolidated is all 500+ free Airwindows effects in a single AUv3 plugin for iPad.
 
 Airwindows is a legendary library of hand-crafted audio effects by Chris Johnson. 
 
@@ -57,7 +57,7 @@ This app is and will always be free and open source, you can access the code, ge
 
 FEATURES: 
 
-• All 350+ Airwindows effects, in any AUv3 host
+• All 500+ Airwindows effects, in any AUv3 host
 • Category browser, search, and curated collections
 • Sliders or rotary pots — your choice
 • Light and dark themes
@@ -108,7 +108,7 @@ audio,effects,plugin,AUv3,reverb,EQ,compressor,saturation,tape,console,distortio
 Use this for time-sensitive blurbs. For the launch:
 
 ```
-350+ legendary Airwindows audio effects, free, in a single AUv3 plugin for iPad. Shipping under Chris Johnson's name with his blessing. Open source.
+500+ legendary Airwindows audio effects, free, in a single AUv3 plugin for iPad. Shipping under Chris Johnson's name with his blessing. Open source.
 ```
 
 (149 chars.)
@@ -120,7 +120,7 @@ Use this for time-sensitive blurbs. For the launch:
 ### Beta App Description (max 4000)
 
 ```
-Airwindows Consolidated AUv3 is a free, open-source iPad audio plugin that wraps all 350+ Airwindows effects by Chris Johnson in a single AUv3.
+Airwindows Consolidated AUv3 is a free, open-source iPad audio plugin that wraps all 500+ Airwindows effects by Chris Johnson in a single AUv3.
 
 This is a pre-release beta. The audio engine is mature (the DSP itself has been battle-tested for years across desktop platforms), but the iOS wrapper around it is new. The goal of this beta is to confirm the plugin loads and behaves correctly in every major AUv3 host on iPad, and to gather UI feedback before public release.
 
