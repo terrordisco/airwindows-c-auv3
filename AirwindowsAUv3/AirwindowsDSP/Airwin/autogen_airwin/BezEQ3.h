@@ -1,11 +1,11 @@
 /* ========================================
- *  X2Buss - X2Buss.h
+ *  BezEQ3 - BezEQ3.h
  *  Created 8/12/11 by SPIAdmin 
  *  Copyright (c) Airwindows, Airwindows uses the MIT license
  * ======================================== */
 
-#ifndef __X2Buss_X2Buss_H
-#define __X2Buss_X2Buss_H
+#ifndef __BezEQ3_BezEQ3_H
+#define __BezEQ3_BezEQ3_H
 
 #ifndef __audioeffect__
 #include "../airwin_consolidated_base.h"
@@ -15,7 +15,7 @@
 #include <string>
 #include <math.h>
 
-namespace airwinconsolidated::X2Buss {
+namespace airwinconsolidated::BezEQ3 {
 enum {
 	kParamA =0,
 	kParamB =1,
@@ -25,22 +25,20 @@ enum {
 	kParamF =5,
 	kParamG =6,
 	kParamH =7,
-	kParamI =8,
-	kParamJ =9,
-  kNumParameters = 10
+  kNumParameters = 8
 }; //
 
 const int kNumPrograms = 0;
 const int kNumInputs = 2;
 const int kNumOutputs = 2;
-const unsigned long kUniqueId = 'x2bs';    //Change this to what the AU identity is!
+const unsigned long kUniqueId = 'bzes';    //Change this to what the AU identity is!
 
-class X2Buss : 
+class BezEQ3 : 
     public AudioEffectX 
 {
 public:
-    X2Buss(audioMasterCallback audioMaster);
-    ~X2Buss();
+    BezEQ3(audioMasterCallback audioMaster);
+    ~BezEQ3();
     virtual bool getEffectName(char* name);                       // The plug-in name
     virtual VstPlugCategory getPlugCategory();                    // The general category for the plug-in
     virtual bool getProductString(char* text);                    // This is a unique plug-in string provided by Steinberg
@@ -71,77 +69,18 @@ private:
     float F;
     float G;
     float H;
-    float I;
-    float J;
 
 	enum {
-		biq_freq,
-		biq_reso,
-		biq_a0,
-		biq_a1,
-		biq_a2,
-		biq_b1,
-		biq_b2,
-		biq_sL1,
-		biq_sL2,
-		biq_sR1,
-		biq_sR2,
-		biq_total
-	}; //coefficient interpolating filter, stereo
-	double highA[biq_total];
-	double highB[biq_total];
-	double highC[biq_total];
-	double highLIIR;
-	double highRIIR;
-	
-	double midA[biq_total];
-	double midB[biq_total];
-	double midC[biq_total];
-	double midLIIR;
-	double midRIIR;
-	
-	double lowA[biq_total];
-	double lowB[biq_total];
-	double lowC[biq_total];
-	double lowLIIR;
-	double lowRIIR;
-	//SmoothEQ2
-	
-	enum {
-		bez_AL,
-		bez_BL,
-		bez_CL,
-		bez_InL,
-		bez_UnInL,
-		bez_SampL,
-		bez_AR,
-		bez_BR,
-		bez_CR,
-		bez_InR,
-		bez_UnInR,
-		bez_SampR,
-		bez_cycle,
+		bez_HMAL, bez_HMBL, bez_HMCL, bez_HMDL,
+		bez_MAL, bez_MBL, bez_MCL, bez_MDL,
+		bez_LMAL, bez_LMBL, bez_LMCL, bez_LMDL,
+		bez_HMAR, bez_HMBR, bez_HMCR, bez_HMDR, bez_HMcycle,
+		bez_MAR, bez_MBR, bez_MCR, bez_MDR, bez_Mcycle,
+		bez_LMAR, bez_LMBR, bez_LMCR, bez_LMDR, bez_LMcycle,
 		bez_total
 	}; //the new undersampling. bez signifies the bezier curve reconstruction
-	double bezCompF[bez_total];
-	double bezMaxF;
-	double bezCompS[bez_total];
-	//Dynamics2
+	double bezEQ[bez_total][3];
 	
-	double lastSampleL;
-	double intermediateL[18];
-	double slewL[34];
-	bool wasPosClipL;
-	bool wasNegClipL;
-	double lastSampleR;
-	double intermediateR[18];
-	double slewR[34];
-	bool wasPosClipR;
-	bool wasNegClipR; //Stereo ClipOnly3	
-	
-	double inTrimA;
-	double inTrimB;
-
 	uint32_t fpdL;
 	uint32_t fpdR;
 	//default stuff

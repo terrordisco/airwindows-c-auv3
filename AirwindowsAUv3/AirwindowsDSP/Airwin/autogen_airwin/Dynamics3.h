@@ -21,7 +21,7 @@ enum {
 	kParamB =1,
 	kParamC =2,
 	kParamD =3,
-	kNumParameters = 4
+  kNumParameters = 4
 }; //
 
 const int kNumPrograms = 0;
@@ -61,19 +61,19 @@ private:
     float B;
     float C;
     float D;
-	
+
 	enum {
 		bez_A,
 		bez_B,
 		bez_C,
 		bez_Ctrl,
 		bez_cycle,
+		bez_min,
+		bez_comp,
 		bez_total
 	}; //the new undersampling. bez signifies the bezier curve reconstruction
 	double bezComp[bez_total];
-	double bezMax;
-	double bezMin;
-	double bezGate;
+	//Dynamics3
 	
 	uint32_t fpdL;
 	uint32_t fpdR;

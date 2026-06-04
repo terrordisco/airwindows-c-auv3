@@ -1,34 +1,25 @@
 /* ========================================
- *  TapeHack2 - TapeHack2.h
+ *  Longhand - Longhand.h
  *  Copyright (c) airwindows, Airwindows uses the MIT license
  * ======================================== */
 
-#ifndef __TapeHack2_H
-#include "TapeHack2.h"
+#ifndef __Longhand_H
+#include "Longhand.h"
 #endif
 #include <cmath>
 #include <cstdlib>
 #include <algorithm>
-namespace airwinconsolidated::TapeHack2 {
+namespace airwinconsolidated::Longhand {
 
-AudioEffect* createEffectInstance(audioMasterCallback audioMaster) {return new TapeHack2(audioMaster);}
+AudioEffect* createEffectInstance(audioMasterCallback audioMaster) {return new Longhand(audioMaster);}
 
-TapeHack2::TapeHack2(audioMasterCallback audioMaster) :
+Longhand::Longhand(audioMasterCallback audioMaster) :
     AudioEffectX(audioMaster, kNumPrograms, kNumParameters)
 {
-	A = 0.1;
+	A = 0.445;
 	B = 1.0;
 	C = 1.0;
 
-	for (int x = 0; x < 33; x++) {avg32L[x] = 0.0; post32L[x] = 0.0; avg32R[x] = 0.0; post32R[x] = 0.0;}
-	for (int x = 0; x < 17; x++) {avg16L[x] = 0.0; post16L[x] = 0.0; avg16R[x] = 0.0; post16R[x] = 0.0;}
-	for (int x = 0; x < 9; x++) {avg8L[x] = 0.0; post8L[x] = 0.0; avg8R[x] = 0.0; post8R[x] = 0.0;}
-	for (int x = 0; x < 5; x++) {avg4L[x] = 0.0; post4L[x] = 0.0; avg4R[x] = 0.0; post4R[x] = 0.0;}
-	for (int x = 0; x < 3; x++) {avg2L[x] = 0.0; post2L[x] = 0.0; avg2R[x] = 0.0; post2R[x] = 0.0;}
-	avgPos = 0;
-	lastDarkL = 0.0; lastDarkR = 0.0;
-	//preTapeHack
-	
 	fpdL = 1.0; while (fpdL < 16386) fpdL = rand()*UINT32_MAX;
 	fpdR = 1.0; while (fpdR < 16386) fpdR = rand()*UINT32_MAX;
 	//this is reset: values being initialized only once. Startup values, whatever they are.
@@ -45,10 +36,10 @@ TapeHack2::TapeHack2(audioMasterCallback audioMaster) :
     vst_strncpy (_programName, "Default", kVstMaxProgNameLen); // default program name
 }
 
-TapeHack2::~TapeHack2() {}
-VstInt32 TapeHack2::getVendorVersion () {return 1000;}
-void TapeHack2::setProgramName(char *name) {vst_strncpy (_programName, name, kVstMaxProgNameLen);}
-void TapeHack2::getProgramName(char *name) {vst_strncpy (name, _programName, kVstMaxProgNameLen);}
+Longhand::~Longhand() {}
+VstInt32 Longhand::getVendorVersion () {return 1000;}
+void Longhand::setProgramName(char *name) {vst_strncpy (_programName, name, kVstMaxProgNameLen);}
+void Longhand::getProgramName(char *name) {vst_strncpy (name, _programName, kVstMaxProgNameLen);}
 //airwindows likes to ignore this stuff. Make your own programs, and make a different plugin rather than
 //trying to do versioning and preventing people from using older versions. Maybe they like the old one!
 
@@ -59,7 +50,7 @@ static float pinParameter(float data)
 	return data;
 }
 
-void TapeHack2::setParameter(VstInt32 index, float value) {
+void Longhand::setParameter(VstInt32 index, float value) {
     switch (index) {
         case kParamA: A = value; break;
         case kParamB: B = value; break;
@@ -68,7 +59,7 @@ void TapeHack2::setParameter(VstInt32 index, float value) {
     }
 }
 
-float TapeHack2::getParameter(VstInt32 index) {
+float Longhand::getParameter(VstInt32 index) {
     switch (index) {
         case kParamA: return A; break;
         case kParamB: return B; break;
@@ -77,7 +68,7 @@ float TapeHack2::getParameter(VstInt32 index) {
     } return 0.0; //we only need to update the relevant name, this is simple to manage
 }
 
-void TapeHack2::getParameterName(VstInt32 index, char *text) {
+void Longhand::getParameterName(VstInt32 index, char *text) {
     switch (index) {
         case kParamA: vst_strncpy (text, "Input", kVstMaxParamStrLen); break;
 		case kParamB: vst_strncpy (text, "Output", kVstMaxParamStrLen); break;
@@ -86,7 +77,7 @@ void TapeHack2::getParameterName(VstInt32 index, char *text) {
     } //this is our labels for displaying in the VST host
 }
 
-void TapeHack2::getParameterDisplay(VstInt32 index, char *text) {
+void Longhand::getParameterDisplay(VstInt32 index, char *text) {
     switch (index) {
         case kParamA: float2string (A, text, kVstMaxParamStrLen); break;
         case kParamB: float2string (B, text, kVstMaxParamStrLen); break;
@@ -95,7 +86,7 @@ void TapeHack2::getParameterDisplay(VstInt32 index, char *text) {
 	} //this displays the values and handles 'popups' where it's discrete choices
 }
 
-void TapeHack2::getParameterLabel(VstInt32 index, char *text) {
+void Longhand::getParameterLabel(VstInt32 index, char *text) {
     switch (index) {
         case kParamA: vst_strncpy (text, "", kVstMaxParamStrLen); break;
         case kParamB: vst_strncpy (text, "", kVstMaxParamStrLen); break;
@@ -104,23 +95,23 @@ void TapeHack2::getParameterLabel(VstInt32 index, char *text) {
     }
 }
 
-VstInt32 TapeHack2::canDo(char *text) 
+VstInt32 Longhand::canDo(char *text) 
 { return (_canDo.find(text) == _canDo.end()) ? -1: 1; } // 1 = yes, -1 = no, 0 = don't know
 
-bool TapeHack2::getEffectName(char* name) {
-    vst_strncpy(name, "TapeHack2", kVstMaxProductStrLen); return true;
+bool Longhand::getEffectName(char* name) {
+    vst_strncpy(name, "Longhand", kVstMaxProductStrLen); return true;
 }
 
-VstPlugCategory TapeHack2::getPlugCategory() {return kPlugCategEffect;}
+VstPlugCategory Longhand::getPlugCategory() {return kPlugCategEffect;}
 
-bool TapeHack2::getProductString(char* text) {
-  	vst_strncpy (text, "airwindows TapeHack2", kVstMaxProductStrLen); return true;
+bool Longhand::getProductString(char* text) {
+  	vst_strncpy (text, "airwindows Longhand", kVstMaxProductStrLen); return true;
 }
 
-bool TapeHack2::getVendorString(char* text) {
+bool Longhand::getVendorString(char* text) {
   	vst_strncpy (text, "airwindows", kVstMaxVendorStrLen); return true;
 }
-bool TapeHack2::parameterTextToValue(VstInt32 index, const char *text, float &value) {
+bool Longhand::parameterTextToValue(VstInt32 index, const char *text, float &value) {
     switch(index) {
     case kParamA: { auto b = string2float(text, value); return b; break; }
     case kParamB: { auto b = string2float(text, value); return b; break; }
@@ -129,7 +120,7 @@ bool TapeHack2::parameterTextToValue(VstInt32 index, const char *text, float &va
     }
     return false;
 }
-bool TapeHack2::canConvertParameterTextToValue(VstInt32 index) {
+bool Longhand::canConvertParameterTextToValue(VstInt32 index) {
     switch(index) {
         case kParamA: return true;
         case kParamB: return true;

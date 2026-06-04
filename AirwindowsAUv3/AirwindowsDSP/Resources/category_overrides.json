@@ -1,5 +1,5 @@
 {
-  "_comment": "Manual category overrides applied at the bridge boundary so we never have to edit the upstream-generated ModuleAdd.h. Mostly: assigning real categories to effects that arrive labelled 'Unclassified'. Family rule: an effect named X3 inherits X2's category; an effect named ConsoleY{Buss,Channel,Pre} goes under 'Consoles'. The 6 truly orphan effects (no whatText, no awpdoc, no predecessor) are best-guess and should be reviewed.",
+  "_comment": "Manual category overrides applied at the bridge boundary so we never have to edit the upstream-generated ModuleAdd.h. Mostly: assigning real categories to effects that arrive labelled 'Unclassified'. Family rule: an effect named X3 inherits X2's category; an effect named ConsoleY{Buss,Channel,Pre} goes under 'Consoles'. The truly orphan effects (no whatText, no awpdoc, no predecessor) are best-guess and should be reviewed: BitDualPan, CStrip, PearLiteEQ, PunchyDeluxe, PunchyGuitar, WoodenBox, X2Buss, and Longhand. Longhand (added 2026-06-01 upstream sync) has only Input/Output/Dry-Wet and no blog post yet — 'Effects' is a pure placeholder; reclassify once Chris documents it.",
 
   "Baxandall3": "Filter",
   "BitDualPan": "Stereo",
@@ -17,11 +17,15 @@
   "Density3": "Distortion",
   "Dynamics3": "Dynamics",
   "LRConvolve3": "Utility",
+  "Longhand": "Effects",
   "Pafnuty": "Filter",
   "PearLiteEQ": "Filter",
   "PunchyDeluxe": "Dynamics",
   "PunchyGuitar": "Dynamics",
+  "PurestConsole4Buss": "Consoles",
+  "PurestConsole4Channel": "Consoles",
   "SoftClock3": "Utility",
   "WoodenBox": "Ambience",
-  "X2Buss": "Consoles"
+  "X2Buss": "Consoles",
+  "kRockstar": "Reverb"
 }

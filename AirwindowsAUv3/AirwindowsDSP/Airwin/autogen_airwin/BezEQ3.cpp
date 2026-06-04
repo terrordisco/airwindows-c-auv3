@@ -1,19 +1,19 @@
 /* ========================================
- *  ToTape9 - ToTape9.h
+ *  BezEQ3 - BezEQ3.h
  *  Copyright (c) airwindows, Airwindows uses the MIT license
  * ======================================== */
 
-#ifndef __ToTape9_H
-#include "ToTape9.h"
+#ifndef __BezEQ3_H
+#include "BezEQ3.h"
 #endif
 #include <cmath>
 #include <cstdlib>
 #include <algorithm>
-namespace airwinconsolidated::ToTape9 {
+namespace airwinconsolidated::BezEQ3 {
 
-AudioEffect* createEffectInstance(audioMasterCallback audioMaster) {return new ToTape9(audioMaster);}
+AudioEffect* createEffectInstance(audioMasterCallback audioMaster) {return new BezEQ3(audioMaster);}
 
-ToTape9::ToTape9(audioMasterCallback audioMaster) :
+BezEQ3::BezEQ3(audioMasterCallback audioMaster) :
     AudioEffectX(audioMaster, kNumPrograms, kNumParameters)
 {
 	A = 0.5;
@@ -24,52 +24,9 @@ ToTape9::ToTape9(audioMasterCallback audioMaster) :
 	F = 0.5;
 	G = 0.5;
 	H = 0.5;
-	I = 0.5;
 
-	iirEncL = 0.0; iirDecL = 0.0;
-	compEncL = 1.0; compDecL = 1.0;
-	avgEncL = 0.0; avgDecL = 0.0;
-	
-	iirEncR = 0.0; iirDecR = 0.0;
-	compEncR = 1.0; compDecR = 1.0;
-	avgEncR = 0.0; avgDecR = 0.0;
-	
-	for (int temp = 0; temp < 1001; temp++) {dL[temp] = 0.0;dR[temp] = 0.0;}
-	sweepL = M_PI;
-	sweepR = M_PI;
-	nextmaxL = 0.5;	
-	nextmaxR = 0.5;
-	gcount = 0;	
-	
-	for (int x = 0; x < gslew_total; x++) gslew[x] = 0.0;
-	
-	hysteresisL = 0.0;
-	hysteresisR = 0.0;
-	
-	headBumpL = 0.0;
-	headBumpR = 0.0;
-	for (int x = 0; x < hdb_total; x++) {hdbA[x] = 0.0;hdbB[x] = 0.0;}
-	//from ZBandpass, so I can use enums with it
-	
-	for (int x = 0; x < 33; x++) {avg32L[x] = 0.0; post32L[x] = 0.0; avg32R[x] = 0.0; post32R[x] = 0.0;}
-	for (int x = 0; x < 17; x++) {avg16L[x] = 0.0; post16L[x] = 0.0; avg16R[x] = 0.0; post16R[x] = 0.0;}
-	for (int x = 0; x < 9; x++) {avg8L[x] = 0.0; post8L[x] = 0.0; avg8R[x] = 0.0; post8R[x] = 0.0;}
-	for (int x = 0; x < 5; x++) {avg4L[x] = 0.0; post4L[x] = 0.0; avg4R[x] = 0.0; post4R[x] = 0.0;}
-	for (int x = 0; x < 3; x++) {avg2L[x] = 0.0; post2L[x] = 0.0; avg2R[x] = 0.0; post2R[x] = 0.0;}
-	avgPos = 0;
-	lastDarkL = 0.0; lastDarkR = 0.0;
-	//preTapeHack	
-	
-	lastSampleL = 0.0;
-	wasPosClipL = false;
-	wasNegClipL = false;
-	lastSampleR = 0.0;
-	wasPosClipR = false;
-	wasNegClipR = false;
-	for (int x = 0; x < 17; x++) {intermediateL[x] = 0.0; intermediateR[x] = 0.0;}
-	for (int x = 0; x < 33; x++) {slewL[x] = 0.0; slewR[x] = 0.0;}
-	//this is reset: values being initialized only once. Startup values, whatever they are.
-	
+	for (int x = 0; x < bez_total; x++) {for (int y = 0; y < 3; y++) bezEQ[x][y] = 0.0;}
+
 	fpdL = 1.0; while (fpdL < 16386) fpdL = rand()*UINT32_MAX;
 	fpdR = 1.0; while (fpdR < 16386) fpdR = rand()*UINT32_MAX;
 	//this is reset: values being initialized only once. Startup values, whatever they are.
@@ -86,10 +43,10 @@ ToTape9::ToTape9(audioMasterCallback audioMaster) :
     vst_strncpy (_programName, "Default", kVstMaxProgNameLen); // default program name
 }
 
-ToTape9::~ToTape9() {}
-VstInt32 ToTape9::getVendorVersion () {return 1000;}
-void ToTape9::setProgramName(char *name) {vst_strncpy (_programName, name, kVstMaxProgNameLen);}
-void ToTape9::getProgramName(char *name) {vst_strncpy (name, _programName, kVstMaxProgNameLen);}
+BezEQ3::~BezEQ3() {}
+VstInt32 BezEQ3::getVendorVersion () {return 1000;}
+void BezEQ3::setProgramName(char *name) {vst_strncpy (_programName, name, kVstMaxProgNameLen);}
+void BezEQ3::getProgramName(char *name) {vst_strncpy (name, _programName, kVstMaxProgNameLen);}
 //airwindows likes to ignore this stuff. Make your own programs, and make a different plugin rather than
 //trying to do versioning and preventing people from using older versions. Maybe they like the old one!
 
@@ -100,7 +57,7 @@ static float pinParameter(float data)
 	return data;
 }
 
-void ToTape9::setParameter(VstInt32 index, float value) {
+void BezEQ3::setParameter(VstInt32 index, float value) {
     switch (index) {
         case kParamA: A = value; break;
         case kParamB: B = value; break;
@@ -110,12 +67,11 @@ void ToTape9::setParameter(VstInt32 index, float value) {
         case kParamF: F = value; break;
         case kParamG: G = value; break;
         case kParamH: H = value; break;
-        case kParamI: I = value; break;
         default: break; // unknown parameter, shouldn't happen!
     }
 }
 
-float ToTape9::getParameter(VstInt32 index) {
+float BezEQ3::getParameter(VstInt32 index) {
     switch (index) {
         case kParamA: return A; break;
         case kParamB: return B; break;
@@ -125,27 +81,25 @@ float ToTape9::getParameter(VstInt32 index) {
         case kParamF: return F; break;
         case kParamG: return G; break;
         case kParamH: return H; break;
-        case kParamI: return I; break;
         default: break; // unknown parameter, shouldn't happen!
     } return 0.0; //we only need to update the relevant name, this is simple to manage
 }
 
-void ToTape9::getParameterName(VstInt32 index, char *text) {
+void BezEQ3::getParameterName(VstInt32 index, char *text) {
     switch (index) {
-        case kParamA: vst_strncpy (text, "Input", kVstMaxParamStrLen); break;
-		case kParamB: vst_strncpy (text, "Tilt", kVstMaxParamStrLen); break;
-		case kParamC: vst_strncpy (text, "Shape", kVstMaxParamStrLen); break;
-		case kParamD: vst_strncpy (text, "Flutter", kVstMaxParamStrLen); break;
-		case kParamE: vst_strncpy (text, "FlutSpd", kVstMaxParamStrLen); break;
-		case kParamF: vst_strncpy (text, "Bias", kVstMaxParamStrLen); break;
-		case kParamG: vst_strncpy (text, "HeadBmp", kVstMaxParamStrLen); break;
-		case kParamH: vst_strncpy (text, "HeadFrq", kVstMaxParamStrLen); break;
-		case kParamI: vst_strncpy (text, "Output", kVstMaxParamStrLen); break;
+        case kParamA: vst_strncpy (text, "High", kVstMaxParamStrLen); break;
+		case kParamB: vst_strncpy (text, "HMid", kVstMaxParamStrLen); break;
+		case kParamC: vst_strncpy (text, "LMid", kVstMaxParamStrLen); break;
+		case kParamD: vst_strncpy (text, "Bass", kVstMaxParamStrLen); break;
+		case kParamE: vst_strncpy (text, "HighF", kVstMaxParamStrLen); break;
+		case kParamF: vst_strncpy (text, "HMidF", kVstMaxParamStrLen); break;
+		case kParamG: vst_strncpy (text, "LMidF", kVstMaxParamStrLen); break;
+		case kParamH: vst_strncpy (text, "BassF", kVstMaxParamStrLen); break;
         default: break; // unknown parameter, shouldn't happen!
     } //this is our labels for displaying in the VST host
 }
 
-void ToTape9::getParameterDisplay(VstInt32 index, char *text) {
+void BezEQ3::getParameterDisplay(VstInt32 index, char *text) {
     switch (index) {
         case kParamA: float2string (A, text, kVstMaxParamStrLen); break;
         case kParamB: float2string (B, text, kVstMaxParamStrLen); break;
@@ -154,13 +108,12 @@ void ToTape9::getParameterDisplay(VstInt32 index, char *text) {
         case kParamE: float2string (E, text, kVstMaxParamStrLen); break;
         case kParamF: float2string (F, text, kVstMaxParamStrLen); break;
         case kParamG: float2string (G, text, kVstMaxParamStrLen); break;
-        case kParamH: float2string (((H*H)*175.0)+25.0, text, kVstMaxParamStrLen); break;
-        case kParamI: float2string (I, text, kVstMaxParamStrLen); break;
+        case kParamH: float2string (H, text, kVstMaxParamStrLen); break;
         default: break; // unknown parameter, shouldn't happen!
 	} //this displays the values and handles 'popups' where it's discrete choices
 }
 
-void ToTape9::getParameterLabel(VstInt32 index, char *text) {
+void BezEQ3::getParameterLabel(VstInt32 index, char *text) {
     switch (index) {
         case kParamA: vst_strncpy (text, "", kVstMaxParamStrLen); break;
         case kParamB: vst_strncpy (text, "", kVstMaxParamStrLen); break;
@@ -169,29 +122,28 @@ void ToTape9::getParameterLabel(VstInt32 index, char *text) {
         case kParamE: vst_strncpy (text, "", kVstMaxParamStrLen); break;
         case kParamF: vst_strncpy (text, "", kVstMaxParamStrLen); break;
         case kParamG: vst_strncpy (text, "", kVstMaxParamStrLen); break;
-        case kParamH: vst_strncpy (text, "hz", kVstMaxParamStrLen); break;
-        case kParamI: vst_strncpy (text, "", kVstMaxParamStrLen); break;
+        case kParamH: vst_strncpy (text, "", kVstMaxParamStrLen); break;
 		default: break; // unknown parameter, shouldn't happen!
     }
 }
 
-VstInt32 ToTape9::canDo(char *text) 
+VstInt32 BezEQ3::canDo(char *text) 
 { return (_canDo.find(text) == _canDo.end()) ? -1: 1; } // 1 = yes, -1 = no, 0 = don't know
 
-bool ToTape9::getEffectName(char* name) {
-    vst_strncpy(name, "ToTape9", kVstMaxProductStrLen); return true;
+bool BezEQ3::getEffectName(char* name) {
+    vst_strncpy(name, "BezEQ3", kVstMaxProductStrLen); return true;
 }
 
-VstPlugCategory ToTape9::getPlugCategory() {return kPlugCategEffect;}
+VstPlugCategory BezEQ3::getPlugCategory() {return kPlugCategEffect;}
 
-bool ToTape9::getProductString(char* text) {
-  	vst_strncpy (text, "airwindows ToTape9", kVstMaxProductStrLen); return true;
+bool BezEQ3::getProductString(char* text) {
+  	vst_strncpy (text, "airwindows BezEQ3", kVstMaxProductStrLen); return true;
 }
 
-bool ToTape9::getVendorString(char* text) {
+bool BezEQ3::getVendorString(char* text) {
   	vst_strncpy (text, "airwindows", kVstMaxVendorStrLen); return true;
 }
-bool ToTape9::parameterTextToValue(VstInt32 index, const char *text, float &value) {
+bool BezEQ3::parameterTextToValue(VstInt32 index, const char *text, float &value) {
     switch(index) {
     case kParamA: { auto b = string2float(text, value); return b; break; }
     case kParamB: { auto b = string2float(text, value); return b; break; }
@@ -200,13 +152,12 @@ bool ToTape9::parameterTextToValue(VstInt32 index, const char *text, float &valu
     case kParamE: { auto b = string2float(text, value); return b; break; }
     case kParamF: { auto b = string2float(text, value); return b; break; }
     case kParamG: { auto b = string2float(text, value); return b; break; }
-    case kParamH: { auto b = string2float(text, value); if (b) { value = sqrt(std::max((value - 25.0) / (175.0), 0.)); } return b; break; }
-    case kParamI: { auto b = string2float(text, value); return b; break; }
+    case kParamH: { auto b = string2float(text, value); return b; break; }
 
     }
     return false;
 }
-bool ToTape9::canConvertParameterTextToValue(VstInt32 index) {
+bool BezEQ3::canConvertParameterTextToValue(VstInt32 index) {
     switch(index) {
         case kParamA: return true;
         case kParamB: return true;
@@ -216,7 +167,6 @@ bool ToTape9::canConvertParameterTextToValue(VstInt32 index) {
         case kParamF: return true;
         case kParamG: return true;
         case kParamH: return true;
-        case kParamI: return true;
 
     }
     return false;

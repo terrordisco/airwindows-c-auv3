@@ -7,6 +7,10 @@
     "post": "https://www.airwindows.com/adclip8/",
     "video": "https://www.youtube.com/watch?v=YKZ9jDB2dtA"
   },
+  "ADClip9": {
+    "post": "https://www.airwindows.com/adclip9/",
+    "video": "https://www.youtube.com/watch?v=3l1Mmdmy1pM"
+  },
   "ADT": {
     "post": "https://www.airwindows.com/adt-vst/",
     "video": "https://www.youtube.com/watch?v=E934a55KfDY"
@@ -114,6 +118,10 @@
     "post": "https://www.airwindows.com/bezeq2/",
     "video": "https://www.youtube.com/watch?v=R-4Mgm2k67w"
   },
+  "BezEQ3": {
+    "post": "https://www.airwindows.com/bezeq3/",
+    "video": "https://www.youtube.com/watch?v=6wgLDThos5o"
+  },
   "BeziComp": {
     "post": "https://www.airwindows.com/bezicomp/",
     "video": "https://www.youtube.com/watch?v=aZPQlRebO1o"
@@ -157,6 +165,10 @@
   "BiquadTriple": {
     "post": "https://www.airwindows.com/biquadtriple/",
     "video": "https://www.youtube.com/watch?v=2m8FT5pNMiE"
+  },
+  "BitDualPan": {
+    "post": "https://www.airwindows.com/bitdualpan/",
+    "video": "https://www.youtube.com/watch?v=3xZWJNUFI8M"
   },
   "BitGlitter": {
     "post": "https://www.airwindows.com/bitglitter-vst/",
@@ -1469,8 +1481,8 @@
     "video": "https://www.youtube.com/watch?v=Psasd6U5ito"
   },
   "SoftClock3": {
-    "post": "https://www.airwindows.com/softclock2/",
-    "video": "https://www.youtube.com/watch?v=Psasd6U5ito"
+    "post": "https://www.airwindows.com/softclock3/",
+    "video": "https://www.youtube.com/watch?v=7UInu_vk1Uc"
   },
   "SoftGate": {
     "post": "https://www.airwindows.com/softgate-vst/",
@@ -1553,6 +1565,10 @@
   "SurgeTide": {
     "post": "https://www.airwindows.com/surgetide/",
     "video": "https://www.youtube.com/watch?v=w2jcrwc8oE0"
+  },
+  "Suzan": {
+    "post": "https://www.airwindows.com/suzan/",
+    "video": "https://www.youtube.com/watch?v=ZwUuQKpP8s8"
   },
   "SweetWide": {
     "post": "https://www.airwindows.com/sweetwide/",
@@ -1905,6 +1921,10 @@
   "kCosmos": {
     "post": "https://www.airwindows.com/kcosmos/",
     "video": "https://www.youtube.com/watch?v=ZeD27tQWnLk"
+  },
+  "kCyberCity": {
+    "post": "https://www.airwindows.com/kcybercity/",
+    "video": "https://www.youtube.com/watch?v=jrORiAEpzec"
   },
   "kGuitarHall": {
     "post": "https://www.airwindows.com/kguitarhall/",
