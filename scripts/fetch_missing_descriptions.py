@@ -29,6 +29,10 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 from urllib.error import HTTPError, URLError
 
+# Shared crud stripper (download blocks, leading metadata, WordPress footer).
+# Both files live in scripts/, which is sys.path[0] when this is run directly.
+from awpdoc_cleanup import clean_description
+
 REPO_ROOT = Path(__file__).resolve().parent.parent
 LINKS_JSON = REPO_ROOT / "AirwindowsAUv3" / "AirwindowsDSP" / "Resources" / "effect_links.json"
 AWPDOC_DIR = REPO_ROOT / "AirwindowsAUv3" / "AirwindowsDSP" / "Documentation" / "awpdoc"
@@ -153,7 +157,9 @@ def fetch_post(name: str, post_url: str) -> tuple[str, str | None, str | None]:
         print(f"  [warn] {name} ({post_url}): {exc}")
         return name, None, None
     time.sleep(THROTTLE_SECONDS)
-    return name, extract_description(html), extract_video_id(html)
+    # Strip website chrome (download lists, leading metadata, WordPress footer)
+    # the raw extraction leaves behind. See scripts/awpdoc_cleanup.py.
+    return name, clean_description(extract_description(html)), extract_video_id(html)
 
 
 def main() -> None:

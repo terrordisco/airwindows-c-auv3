@@ -49,3 +49,7 @@ AirwindowsAUv3/graphify-out/
 
 # Claude Code local-only state
 .claude/settings.local.json
+
+# Python bytecode (from scripts/)
+__pycache__/
+*.pyc

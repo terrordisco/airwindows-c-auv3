@@ -1,4 +1,4 @@
-TL;DW: The original Console5 with DC offset (and a very minimal, defeatable DC remover)
+# The original Console5 with DC offset (and a very minimal, defeatable DC remover)
 
 C5RawConsole
 

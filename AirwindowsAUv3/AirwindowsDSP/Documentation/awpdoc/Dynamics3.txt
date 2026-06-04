@@ -1,8 +1,4 @@
-TL;DW: Dynamics2 is the compressor gate for new Console plugins!
-
-Dynamics2 in Airwindows Consolidated under ‘Dynamics’ (CLAP, AU, VST3, LV2)
-
-Dynamics2.zip (711k) standalone(AU, VST2)
+# Dynamics2 is the compressor gate for new Console plugins!
 
 Dynamics is the compressor/gate found in ConsoleX. Well, what’s new in compression between last year and this year? BeziComp is what. BeziComp is out, and is my Bezier curve stuff as applied to a compressor. The curve is simply tracking the loudness of the signal and using it as control points.
 
@@ -21,51 +17,3 @@ But on a recent livestream, at the end of the day, I asked what people wanted th
 AU versions contain an extra ‘Dynamics2Mono’ version, which is coded N to N, meaning it will run pure mono, but also unlinked stereo and any larger number of channels you like (all the AU plugins with ‘mono’ in the name do this).
 
 Let me know how this works for you! There’s time to fuss with it a little more, before it’s 2026 and it gets built into Console systems!
-
-Airwindows Consolidated Download
-
-Most recent VCV Rack Module
-
-download 64 Bit Windows VSTs.zip
-
-download Signed M1/Intel Mac AUs.dmg
-
-download Signed M1/Intel Mac VSTs.dmg
-
-download LinuxVSTs.zip
-
-download LinuxARMVSTs.zip for the Pi
-
-download Retro 32 Bit Windows VSTs.zip
-
-download Retro PPC/32/64 Mac AUs.zip
-
-download Retro PPC/32/64 Mac VSTs.zip
-
-Mediafire Backup of all downloads
-
-All this is free and open source under the MIT license, brought to you by my Patreon .
-
-Date
-
-November 16, 2025
-
-Author
-
-Chris
-
-Category
-
-Dynamics
-
-Tag
-
-Compressors +
-
-GetSampleRate
-
-Zero Latency
-
-Comments
-
-1 Comment
