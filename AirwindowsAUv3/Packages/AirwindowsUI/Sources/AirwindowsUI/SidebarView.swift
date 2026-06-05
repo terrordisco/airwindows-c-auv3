@@ -326,7 +326,7 @@ private struct FavoritesSidebarRow: View {
             HStack(spacing: 12) {
                 Image(systemName: "star.fill")
                     .font(.system(size: 12))
-                    .foregroundStyle(isSelected ? Self.accent : Color.yellow)
+                    .foregroundStyle(isSelected ? Self.accent : Color.primary)
                     .frame(width: 8)
 
                 HStack(alignment: .firstTextBaseline, spacing: 6) {

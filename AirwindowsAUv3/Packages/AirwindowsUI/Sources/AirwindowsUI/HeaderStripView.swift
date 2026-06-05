@@ -127,14 +127,15 @@ public struct HeaderStripView: View {
             .fixedSize(horizontal: true, vertical: false)
 
             // Favorite star — sits immediately right of the name box. Filled
-            // yellow when favorited (the platform convention users read at a
-            // glance), hollow secondary otherwise. Only present when the caller
-            // wires a toggle.
+            // with the primary tint when favorited (white in dark mode,
+            // near-black in light — scheme-aware so it never vanishes against
+            // the near-white surface), hollow secondary otherwise. Only present
+            // when the caller wires a toggle.
             if let onToggleFavorite {
                 Button(action: onToggleFavorite) {
                     Image(systemName: isFavorite ? "star.fill" : "star")
                         .font(.system(size: 19, weight: .medium))
-                        .foregroundStyle(isFavorite ? Color.yellow : Color.secondary)
+                        .foregroundStyle(isFavorite ? Color.primary : Color.secondary)
                         .frame(width: 36, height: 36)
                         .contentShape(Rectangle())
                 }

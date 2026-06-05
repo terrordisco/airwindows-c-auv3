@@ -406,7 +406,7 @@ private struct EffectPreviewColumn: View {
                         } label: {
                             Image(systemName: isFav ? "star.fill" : "star")
                                 .font(.system(size: 20, weight: .medium))
-                                .foregroundStyle(isFav ? Color.yellow : Color.secondary)
+                                .foregroundStyle(isFav ? Color.primary : Color.secondary)
                                 .frame(width: 40, height: 40)
                                 .contentShape(Rectangle())
                         }
