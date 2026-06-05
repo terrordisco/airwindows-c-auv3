@@ -348,7 +348,18 @@ static const AUParameterAddress kOutputLevelAddress = 39;
     }
 
     _activeParamCount = MIN(reg.nParams, (int)kMaxEffectParams);
+
+    // Per-instance short name tracks the active effect (Peter's request): when
+    // a host shows several Airwindows instances side by side, the short name
+    // lets the user tell them apart. `audioUnitShortName` has no setter, so we
+    // override its getter (below) and post manual KVO here so an observing host
+    // refreshes its label. Whether a given host picks the change up at runtime
+    // or only reads the name at instantiation is host-dependent — we do our
+    // part and let it update if it listens. This runs on the main thread (all
+    // selectEffectAtIndex: callers are main-thread), where KVO is safe.
+    [self willChangeValueForKey:@"audioUnitShortName"];
     _effectIndex = index;
+    [self didChangeValueForKey:@"audioUnitShortName"];
 
     // Atomic swap for audio thread
     AirwinConsolidatedBase *raw = newProcessor.release();
@@ -373,6 +384,28 @@ static const AUParameterAddress kOutputLevelAddress = 39;
     NSInteger idx = _effectIndex.load();
     if (idx < 0 || idx >= (NSInteger)AirwinRegistry::registry.size()) return @"";
     return [NSString stringWithUTF8String:AirwinRegistry::registry[idx].name.c_str()];
+}
+
+// Override the inherited short name so it reflects the selected effect rather
+// than the static component name. Returns the full effect name — hosts that
+// only show ~6 characters truncate it themselves; returning the whole thing
+// keeps it useful in hosts with more room. Falls back to the component default
+// while no effect is selected. See the manual KVO in selectEffectAtIndex:.
+- (NSString *)audioUnitShortName {
+    NSInteger idx = _effectIndex.load();
+    if (idx >= 0 && idx < (NSInteger)AirwinRegistry::registry.size()) {
+        return [NSString stringWithUTF8String:AirwinRegistry::registry[idx].name.c_str()];
+    }
+    return [super audioUnitShortName];
+}
+
+// We post KVO for audioUnitShortName by hand (from selectEffectAtIndex:), so
+// opt it out of automatic notification to avoid duplicate change events.
++ (BOOL)automaticallyNotifiesObserversForKey:(NSString *)key {
+    if ([key isEqualToString:@"audioUnitShortName"]) {
+        return NO;
+    }
+    return [super automaticallyNotifiesObserversForKey:key];
 }
 
 - (NSString *)currentEffectCategory {
