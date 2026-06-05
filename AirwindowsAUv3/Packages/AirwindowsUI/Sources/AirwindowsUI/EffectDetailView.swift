@@ -128,6 +128,29 @@ public struct EffectDetailView: View {
         self.favorites = favorites
     }
 
+    // Sliders-layout scroll-gutter geometry. The gutter mirrors the header's
+    // IN pot (48pt wide at a 20pt outer inset); `gutterGap` is used on both
+    // sides of the faders so the field is symmetric (gutter→faders == faders→edge).
+    private static let gutterWidth: CGFloat = 48
+    private static let gutterOuterInset: CGFloat = 20
+    private static let gutterGap: CGFloat = 20
+
+    /// The parameter grid itself, built once and positioned by the slider/pot
+    /// branches in `body` (sliders add a left scroll gutter; pots tile to the
+    /// edges).
+    private var parameterGridView: some View {
+        ParameterGrid(
+            parameterCount: parameterCount,
+            parameterNames: parameterNames,
+            parameterDisplays: parameterDisplays,
+            parameterLabels: parameterLabels,
+            parameterValues: $parameterValues,
+            parameterStepCounts: parameterStepCounts,
+            parameterDefaults: parameterDefaults,
+            useRotaryPots: useRotaryPots
+        )
+    }
+
     public var body: some View {
         VStack(spacing: 0) {
             // Tagline reads as a title at the very top — sits at the same
@@ -260,18 +283,39 @@ public struct EffectDetailView: View {
             if parameterCount > 0 {
                 ParameterScrollView {
                     VStack(alignment: .leading, spacing: 0) {
-                        ParameterGrid(
-                            parameterCount: parameterCount,
-                            parameterNames: parameterNames,
-                            parameterDisplays: parameterDisplays,
-                            parameterLabels: parameterLabels,
-                            parameterValues: $parameterValues,
-                            parameterStepCounts: parameterStepCounts,
-                            parameterDefaults: parameterDefaults,
-                            useRotaryPots: useRotaryPots
-                        )
-                        .padding(.horizontal, 24)
-                        .padding(.bottom, 22)
+                        if useRotaryPots {
+                            parameterGridView
+                                .padding(.horizontal, 24)
+                                // Breathing room above row 1 so the header strip
+                                // doesn't crowd the first parameter's number ring
+                                // (the stroked circle's top was getting clipped).
+                                .padding(.top, 10)
+                                .padding(.bottom, 22)
+                        } else {
+                            // Sliders gain a left-edge scroll gutter: a faint
+                            // hatch column aligned under the header's IN pot
+                            // (same 48pt width, same 20pt outer inset). The
+                            // faders shift right to clear it; the gutter→faders
+                            // gap (20) equals the faders→right-edge gap (20), so
+                            // the field reads symmetrically. The hatch is a
+                            // background applied *before* the top/bottom padding
+                            // so it spans exactly the rows (top of row 1 to bottom
+                            // of the last row) and isn't stretched into the
+                            // breathing space above or the gap below.
+                            parameterGridView
+                                .padding(.leading, Self.gutterOuterInset + Self.gutterWidth + Self.gutterGap)
+                                .padding(.trailing, Self.gutterGap)
+                                .background(alignment: .topLeading) {
+                                    ScrollHatchGutter()
+                                        .frame(width: Self.gutterWidth)
+                                        .padding(.leading, Self.gutterOuterInset)
+                                        // Stop one hatch line short of the last
+                                        // row's bottom edge.
+                                        .padding(.bottom, ScrollHatchGutter.lineStep)
+                                }
+                                .padding(.top, 10)
+                                .padding(.bottom, 22)
+                        }
 
                         if shouldShowDescription {
                             Divider()
@@ -320,6 +364,35 @@ public struct EffectDetailView: View {
         let tagline = effect.whatText.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return false }
         return trimmed != tagline
+    }
+}
+
+/// Left-edge scroll affordance for the sliders layout: a column of faint
+/// horizontal hatch lines, aligned under the header's IN pot. It is purely an
+/// empty-space scroll target — it carries no `.scrollDragControl()`, so a touch
+/// landing here scrolls the workspace (unlike a touch on a fader). The lines
+/// match the UI's dividers (`Color(.separator)` at 0.4 opacity, hairline) and
+/// sit 5pt apart.
+private struct ScrollHatchGutter: View {
+    private static let lineSpacing: CGFloat = 5
+    private static let lineThickness: CGFloat = 2
+    /// Center-to-center distance between hatch lines; also the amount the
+    /// caller insets to drop exactly one line off an edge.
+    static let lineStep: CGFloat = lineSpacing + lineThickness
+
+    var body: some View {
+        Canvas { context, size in
+            let step = Self.lineStep
+            var y: CGFloat = 0
+            while y <= size.height {
+                let line = Path(CGRect(x: 0, y: y, width: size.width, height: Self.lineThickness))
+                context.fill(line, with: .color(Color(uiColor: .separator)))
+                y += step
+            }
+        }
+        .opacity(0.4)
+        .allowsHitTesting(false)
+        .accessibilityHidden(true)
     }
 }
 
