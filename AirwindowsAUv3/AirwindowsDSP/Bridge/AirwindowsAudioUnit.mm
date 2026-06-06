@@ -431,6 +431,15 @@ static const AUParameterAddress kOutputLevelAddress = 39;
 
 - (NSString *)parameterDisplayAtIndex:(NSInteger)paramIndex {
     if (!_displayProcessor || paramIndex < 0 || paramIndex >= _activeParamCount.load()) return @"";
+    // Seed the display processor with the live value before reading. External
+    // modulation (host LFOs in AUM, CV in miRack, any render-thread automation)
+    // lands in _paramValues without ever passing through setParameterValue:,
+    // so the display processor's own internal value goes stale. Reading it
+    // blind would return last-edited text while the knob — driven by the
+    // parameter observer's fresh value — has already moved. _paramValues is
+    // the single source of truth every write path updates; the float read is a
+    // pre-existing benign race with the render thread (same as setParameterValue:).
+    _displayProcessor->setParameter((VstInt32)paramIndex, _paramValues[paramIndex]);
     char text[256] = {0};
     _displayProcessor->getParameterDisplay((VstInt32)paramIndex, text);
     return [NSString stringWithUTF8String:text];

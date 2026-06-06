@@ -150,6 +150,54 @@ restore *after* the view is live. A blank UI over a correctly-loaded engine
 is a sync bug, not a persistence bug; device `os_log` is the fastest way to
 tell them apart.
 
+## Value text froze under modulation — display query ignored live value (2026-06-06)
+
+Under a host LFO (AUM), miRack CV, or any render-thread automation, a parameter's
+**knob moved but its value text stayed frozen** at the last manually-edited value.
+
+The knob and the text actually ride the *same* update: the parameter-tree observer
+fires → `handleParameterChange` (view model) sets `parameterValues[idx]` (knob) AND
+calls `refreshParameterDisplay(at:)` (text). So the refresh *was* happening — the bug
+was one level down, in the bridge.
+
+`-parameterDisplayAtIndex:` asked the display processor for its display string without
+seeding it with the current value:
+
+```objc
+_displayProcessor->getParameterDisplay(idx, text);   // reads STALE internal value
+```
+
+`_displayProcessor`'s internal value is only updated on the user-edit path
+(`-setParameterValue:forAddress:`, called by `implementorValueObserver`). External
+modulation never goes through there — it lands only in `_paramValues[]` via the render
+thread (`internalRenderBlock` captures `float *paramValues = _paramValues;`). So the
+display query returned the last user-set value's string while the knob, driven straight
+from the observer's fresh value, moved on. Manual edits always looked right (they update
+the display processor); modulation didn't — which is why it read as a "partial regression"
+and wasn't actually miRack-specific.
+
+**Fix (one line):** seed the display processor from `_paramValues` before reading:
+
+```objc
+_displayProcessor->setParameter(idx, _paramValues[idx]);
+_displayProcessor->getParameterDisplay(idx, text);
+```
+
+`_paramValues` is the single source of truth every write path updates (user edits,
+`implementorValueObserver`, and render-thread automation), so this fixes all callers,
+not just the modulation path. `_displayProcessor` is UI/main-thread only — fully separate
+from the audio thread's `_activeProcessor` — so it can't affect rendering. The float read
+is the same benign render-thread race the existing `-setParameterValue:` already has.
+
+Lesson: when two UI elements seem to come from the same value, check whether they read
+from the same *source*. Here the knob read the observer's pushed value; the text re-queried
+a separate stateful object (the display processor) that not every write path updates.
+
+Confirmed on device in AUM: knob animation + value text move in lockstep under an LFO.
+(The "all instances reset to the menu" seen right after installing was just the AUv3
+binary hot-swap tearing down live extension instances — a clean save→quit→reopen restores
+correctly. State restore is keyed by effect *name*; unaffected by this change.)
+
 ## Build & Deploy
 
 ```bash
