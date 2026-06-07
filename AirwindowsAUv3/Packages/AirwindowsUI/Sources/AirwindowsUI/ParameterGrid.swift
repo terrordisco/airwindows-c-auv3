@@ -31,6 +31,10 @@ public struct ParameterRow: View {
     public let defaultValue: Double
     @Binding public var value: Double
 
+    /// Global UI scale — multiplies this row's fonts, glyph circle, pot size,
+    /// and internal spacing so the whole row grows/shrinks as one piece.
+    @Environment(\.uiScale) private var uiScale
+
     public init(
         index: Int,
         name: String,
@@ -73,14 +77,14 @@ public struct ParameterRow: View {
     /// the second line tucks under the first instead of zig-zagging. The
     /// display value sits centered under the pot it belongs to.
     private var potBody: some View {
-        VStack(spacing: 5) {
-            HStack(alignment: .top, spacing: 10) {
+        VStack(spacing: 5 * uiScale) {
+            HStack(alignment: .top, spacing: 10 * uiScale) {
                 Spacer(minLength: 0)
 
                 Text("\(index + 1)")
-                    .font(.system(size: 13, weight: .semibold).monospacedDigit())
+                    .font(.system(size: 13 * uiScale, weight: .semibold).monospacedDigit())
                     .foregroundStyle(.secondary)
-                    .frame(width: 24, height: 24)
+                    .frame(width: 24 * uiScale, height: 24 * uiScale)
                     .overlay(
                         Circle()
                             .stroke(Color.secondary.opacity(0.4), lineWidth: 1.2)
@@ -89,14 +93,14 @@ public struct ParameterRow: View {
                     // sits a hair below where the eye expects it to align with
                     // the title's cap height. Shift up 1pt; balance with the
                     // title's +2pt nudge below to land on the same baseline.
-                    .offset(y: -1)
+                    .offset(y: -1 * uiScale)
 
                 Text(name)
-                    .font(.system(size: 15, weight: .medium))
+                    .font(.system(size: 15 * uiScale, weight: .medium))
                     .foregroundStyle(.primary)
                     .lineLimit(2)
                     .multilineTextAlignment(.leading)
-                    .offset(y: 2)
+                    .offset(y: 2 * uiScale)
 
                 Spacer(minLength: 0)
             }
@@ -104,17 +108,19 @@ public struct ParameterRow: View {
             // Empty label — the name already sits in the header above.
             // `.scrollDragControl()` keeps a touch that lands on the pot from
             // scrolling the workspace, so the drag adjusts the value instead.
+            // Size carries the global UI scale; RotaryPot derives its text
+            // sizes from `size`, so caption + readout scale with it.
             RotaryPot(
                 value: $value,
                 label: "",
-                size: 56,
+                size: 56 * uiScale,
                 defaultValue: defaultValue,
                 stepCount: stepCount
             )
             .scrollDragControl()
 
             Text(formattedValue)
-                .font(.system(size: 13).monospacedDigit())
+                .font(.system(size: 13 * uiScale).monospacedDigit())
                 .foregroundStyle(.secondary)
                 .lineLimit(1)
                 .multilineTextAlignment(.center)
@@ -122,26 +128,26 @@ public struct ParameterRow: View {
     }
 
     private var sliderBody: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            HStack(spacing: 10) {
+        VStack(alignment: .leading, spacing: 6 * uiScale) {
+            HStack(spacing: 10 * uiScale) {
                 Text("\(index + 1)")
-                    .font(.system(size: 15, weight: .semibold).monospacedDigit())
+                    .font(.system(size: 15 * uiScale, weight: .semibold).monospacedDigit())
                     .foregroundStyle(.secondary)
-                    .frame(width: 32, height: 32)
+                    .frame(width: 32 * uiScale, height: 32 * uiScale)
                     .overlay(
                         Circle()
                             .stroke(Color.secondary.opacity(0.4), lineWidth: 1.5)
                     )
 
                 Text(name)
-                    .font(.system(size: 17, weight: .medium))
+                    .font(.system(size: 17 * uiScale, weight: .medium))
                     .foregroundStyle(.primary)
                     .lineLimit(1)
 
-                Spacer(minLength: 8)
+                Spacer(minLength: 8 * uiScale)
 
                 Text(formattedValue)
-                    .font(.system(size: 15).monospacedDigit())
+                    .font(.system(size: 15 * uiScale).monospacedDigit())
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
             }
@@ -188,6 +194,12 @@ public struct ParameterGrid: View {
     public let parameterDefaults: [Double]
     public let useRotaryPots: Bool
     @Binding public var parameterValues: [Double]
+
+    /// Global UI scale — multiplies column widths, column spacing, and row
+    /// spacing. Scaling the adaptive pot column widths is what makes pots
+    /// reflow: at a smaller scale the columns are narrower, so more pots fit
+    /// per row — genuine "see more," not just a zoom.
+    @Environment(\.uiScale) private var uiScale
 
     public init(
         parameterCount: Int,
@@ -270,14 +282,15 @@ public struct ParameterGrid: View {
     /// Vertical gap between rows. Deliberately roomy: the gaps double as the
     /// single-finger scroll handles for `ParameterScrollView` (a touch on a
     /// control adjusts it instead of scrolling), so there has to be empty space
-    /// to grab between the controls.
-    private let rowSpacing: CGFloat = 32
+    /// to grab between the controls. Scaled so dense (small-scale) layouts
+    /// tighten the gaps too.
+    private var rowSpacing: CGFloat { 32 * uiScale }
 
     private var potColumns: [GridItem] {
         [
             GridItem(
-                .adaptive(minimum: potColumnMinWidth, maximum: potColumnMaxWidth),
-                spacing: potColumnSpacing,
+                .adaptive(minimum: potColumnMinWidth * uiScale, maximum: potColumnMaxWidth * uiScale),
+                spacing: potColumnSpacing * uiScale,
                 alignment: .top
             )
         ]
@@ -293,7 +306,7 @@ public struct ParameterGrid: View {
             }
         }()
         return Array(
-            repeating: GridItem(.flexible(), spacing: 28, alignment: .top),
+            repeating: GridItem(.flexible(), spacing: 28 * uiScale, alignment: .top),
             count: columnCount
         )
     }

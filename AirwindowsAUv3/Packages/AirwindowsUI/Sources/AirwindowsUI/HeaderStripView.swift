@@ -35,6 +35,10 @@ public struct HeaderStripView: View {
     private let isFavorite: Bool
     private let onToggleFavorite: (() -> Void)?
 
+    /// Global UI scale — multiplies the In/Out pots, the title block, the jog
+    /// buttons, and the favorite star so the header tracks the scaled grid.
+    @Environment(\.uiScale) private var uiScale
+
     public init(
         category: String,
         effectName: String,
@@ -76,12 +80,12 @@ public struct HeaderStripView: View {
                 value: $inputLevel,
                 label: "In",
                 valueText: inputDisplay,
-                size: 48,
+                size: 48 * uiScale,
                 defaultValue: 1.0,
                 range: 0...2
             )
 
-            Spacer(minLength: 12)
+            Spacer(minLength: 12 * uiScale)
 
             // Prev jog — mid-gap between IN pot and title
             JogButton(
@@ -90,7 +94,7 @@ public struct HeaderStripView: View {
                 action: onPrevious
             )
 
-            Spacer(minLength: 12)
+            Spacer(minLength: 12 * uiScale)
 
             // Center: stroked rounded box containing category (kicker) +
             // effect name + chevron. Folding the category into the title box
@@ -100,23 +104,23 @@ public struct HeaderStripView: View {
             // Wrapped in a Button for proper hit area, haptic feedback, and
             // VoiceOver semantics ("button: opens browser").
             Button(action: onTitleTap) {
-                HStack(spacing: 12) {
+                HStack(spacing: 12 * uiScale) {
                     Text(category.uppercased())
-                        .font(.system(size: 13, weight: .semibold))
+                        .font(.system(size: 13 * uiScale, weight: .semibold))
                         .kerning(1.2)
                         .foregroundStyle(.secondary)
                         .lineLimit(1)
                     Text(effectName)
-                        .font(.system(size: 34, weight: .semibold))
+                        .font(.system(size: 34 * uiScale, weight: .semibold))
                         .lineLimit(1)
                         .minimumScaleFactor(0.6)
                     Image(systemName: "chevron.down")
-                        .font(.system(size: 18, weight: .medium))
+                        .font(.system(size: 18 * uiScale, weight: .medium))
                         .foregroundStyle(.secondary)
                 }
                 .foregroundStyle(.primary)
-                .padding(.horizontal, 16)
-                .padding(.vertical, 6)
+                .padding(.horizontal, 16 * uiScale)
+                .padding(.vertical, 6 * uiScale)
                 .overlay(
                     RoundedRectangle(cornerRadius: 7)
                         .stroke(Color.secondary.opacity(0.35), lineWidth: 1)
@@ -134,17 +138,17 @@ public struct HeaderStripView: View {
             if let onToggleFavorite {
                 Button(action: onToggleFavorite) {
                     Image(systemName: isFavorite ? "star.fill" : "star")
-                        .font(.system(size: 19, weight: .medium))
+                        .font(.system(size: 19 * uiScale, weight: .medium))
                         .foregroundStyle(isFavorite ? Color.primary : Color.secondary)
-                        .frame(width: 36, height: 36)
+                        .frame(width: 36 * uiScale, height: 36 * uiScale)
                         .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
-                .padding(.leading, 8)
+                .padding(.leading, 8 * uiScale)
                 .accessibilityLabel(isFavorite ? "Remove \(effectName) from favorites" : "Add \(effectName) to favorites")
             }
 
-            Spacer(minLength: 12)
+            Spacer(minLength: 12 * uiScale)
 
             // Next jog — mid-gap between title and OUT pot
             JogButton(
@@ -153,7 +157,7 @@ public struct HeaderStripView: View {
                 action: onNext
             )
 
-            Spacer(minLength: 12)
+            Spacer(minLength: 12 * uiScale)
 
             // Right: OUT pot. Same 0...2 range / unity-default / detent
             // arrangement as the IN pot — see comment above.
@@ -161,19 +165,19 @@ public struct HeaderStripView: View {
                 value: $outputLevel,
                 label: "Out",
                 valueText: outputDisplay,
-                size: 48,
+                size: 48 * uiScale,
                 defaultValue: 1.0,
                 range: 0...2
             )
         }
-        .padding(.horizontal, 20)
+        .hEdgePadding(20)
         // Modest top padding — the tagline sits above this strip in
         // EffectDetailView and already clears the host's top-left window
         // controls. We still leave a bit of space so the IN pot doesn't
         // butt up against the tagline when one is present, and isn't
         // crowded by host chrome when the tagline is absent.
-        .padding(.top, 14)
-        .padding(.bottom, 14)
+        .padding(.top, 14 * uiScale)
+        .padding(.bottom, 14 * uiScale)
     }
 }
 
@@ -182,13 +186,15 @@ private struct JogButton: View {
     let enabled: Bool
     let action: () -> Void
 
+    @Environment(\.uiScale) private var uiScale
+
     var body: some View {
         Button(action: action) {
             Text(text)
-                .font(.system(size: 17))
+                .font(.system(size: 17 * uiScale))
                 .foregroundStyle(enabled ? Color.secondary : Color.secondary.opacity(0.3))
                 .lineLimit(1)
-                .frame(minWidth: 80, idealWidth: 110, maxWidth: 140, alignment: .center)
+                .frame(minWidth: 80 * uiScale, idealWidth: 110 * uiScale, maxWidth: 140 * uiScale, alignment: .center)
         }
         .buttonStyle(.plain)
         .disabled(!enabled)

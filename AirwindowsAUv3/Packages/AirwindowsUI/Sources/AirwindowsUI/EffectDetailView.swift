@@ -63,8 +63,18 @@ public struct EffectDetailView: View {
     /// Optional — when provided, a favorite star appears right of the name box
     /// and toggles this effect's membership in the shared favorites store.
     public let favorites: FavoritesStore?
+    /// Opens the Preferences sheet from the workspace bottom bar's Settings
+    /// box. When nil, the Settings box is omitted (e.g. previews).
+    public let onOpenSettings: (() -> Void)?
+    /// App-only input-monitoring toggle. When `onToggleMonitoring` is non-nil
+    /// (standalone app), a monitoring chip appears in the bottom bar. The AUv3
+    /// plugin leaves it nil — the host owns audio routing, so there's nothing
+    /// to monitor.
+    public let isMonitoring: Bool
+    public let onToggleMonitoring: (() -> Void)?
 
     @Environment(\.colorScheme) private var scheme
+    @Environment(\.uiScale) private var uiScale
 
     public init(
         effect: EffectBrowseModel,
@@ -95,7 +105,10 @@ public struct EffectDetailView: View {
         onToggleTheme: (() -> Void)? = nil,
         useRotaryPots: Bool = false,
         onToggleControlStyle: (() -> Void)? = nil,
-        favorites: FavoritesStore? = nil
+        favorites: FavoritesStore? = nil,
+        onOpenSettings: (() -> Void)? = nil,
+        isMonitoring: Bool = false,
+        onToggleMonitoring: (() -> Void)? = nil
     ) {
         self.effect = effect
         self.parameterCount = parameterCount
@@ -126,6 +139,9 @@ public struct EffectDetailView: View {
         self.useRotaryPots = useRotaryPots
         self.onToggleControlStyle = onToggleControlStyle
         self.favorites = favorites
+        self.onOpenSettings = onOpenSettings
+        self.isMonitoring = isMonitoring
+        self.onToggleMonitoring = onToggleMonitoring
     }
 
     // Sliders-layout scroll-gutter geometry. The gutter mirrors the header's
@@ -160,14 +176,17 @@ public struct EffectDetailView: View {
             // clear of those controls.
             if !effect.whatText.isEmpty {
                 Text("\u{201C}\(effect.whatText)\u{201D}")
-                    .font(.system(size: 20, weight: .regular))
+                    .font(.system(size: 20 * uiScale, weight: .regular))
                     .foregroundStyle(.secondary)
                     .lineLimit(2)
                     .multilineTextAlignment(.center)
+                    // Horizontal clearance kept fixed (not scaled): it keeps the
+                    // centered text clear of the host's window controls, whose
+                    // size doesn't scale with our UI.
                     .padding(.horizontal, 140)
                     .frame(maxWidth: .infinity)
-                    .padding(.top, 14)
-                    .padding(.bottom, 4)
+                    .padding(.top, 14 * uiScale)
+                    .padding(.bottom, 4 * uiScale)
             }
 
             HeaderStripView(
@@ -191,84 +210,9 @@ public struct EffectDetailView: View {
             Divider()
                 .opacity(0.4)
 
-            // Chip row — MONO/STEREO on the left, action toggles on the right.
-            // The tagline lives above the header now, so this row is no longer
-            // shared with text and chips can't collide.
-            HStack(spacing: 8) {
-                MetaChip(text: effect.isMono ? "MONO" : "STEREO")
-
-                Spacer()
-
-                // Button chips right, filled style. Each chip's label
-                // states the destination (where you go when you tap it),
-                // matching the convention Apple uses for context menu
-                // toggles. The Reset chip stays a constant verb because
-                // it isn't a state toggle.
-                // Blog post / video chips live in the browser preview pane,
-                // not here — see EffectPreviewColumn in BrowserView.swift.
-                if let onToggleTheme {
-                    FilledIconChip(
-                        systemName: isDarkMode ? "sun.max" : "moon",
-                        text: isDarkMode ? "Day" : "Night",
-                        accessibility: isDarkMode ? "Switch to light mode" : "Switch to dark mode",
-                        action: onToggleTheme
-                    )
-                }
-
-                if let onToggleControlStyle {
-                    FilledIconChip(
-                        systemName: useRotaryPots ? "slider.horizontal.below.rectangle" : "dial.medium",
-                        text: useRotaryPots ? "Sliders" : "Pots",
-                        accessibility: useRotaryPots
-                            ? "Switch parameter controls to sliders"
-                            : "Switch parameter controls to pots",
-                        action: onToggleControlStyle
-                    )
-                }
-
-                // Undo/Redo sit left of the destructive Random/Reset pair.
-                // They dim and stop responding when their history is empty,
-                // so the row never loses its shape but reads as unavailable.
-                if let onUndo {
-                    FilledIconChip(
-                        systemName: "arrow.uturn.backward",
-                        text: "Undo",
-                        accessibility: "Undo last change",
-                        isEnabled: canUndo,
-                        action: onUndo
-                    )
-                }
-
-                if let onRedo {
-                    FilledIconChip(
-                        systemName: "arrow.uturn.forward",
-                        text: "Redo",
-                        accessibility: "Redo",
-                        isEnabled: canRedo,
-                        action: onRedo
-                    )
-                }
-
-                if let onRandomize {
-                    FilledIconChip(
-                        systemName: "dice",
-                        text: "Random",
-                        accessibility: "Randomize parameters",
-                        action: onRandomize
-                    )
-                }
-
-                FilledIconChip(
-                    systemName: "arrow.counterclockwise",
-                    text: "Reset",
-                    accessibility: "Reset parameters",
-                    action: onReset
-                )
-            }
-            .frame(minHeight: 22)
-            .padding(.horizontal, 24)
-            .padding(.top, 14)
-            .padding(.bottom, 18)
+            // The chip row used to sit here; it now lives in the bottom bar
+            // (see `bottomBar`) so the controls collect along the bottom and
+            // the top stays clean: tagline → header → parameters.
 
             // Parameter grid — or, for the ~48 fixed-character effects with
             // no exposed parameters (dithers, console fixed buses, etc.),
@@ -285,36 +229,40 @@ public struct EffectDetailView: View {
                     VStack(alignment: .leading, spacing: 0) {
                         if useRotaryPots {
                             parameterGridView
-                                .padding(.horizontal, 24)
+                                .hEdgePadding(24)
                                 // Breathing room above row 1 so the header strip
                                 // doesn't crowd the first parameter's number ring
                                 // (the stroked circle's top was getting clipped).
-                                .padding(.top, 10)
-                                .padding(.bottom, 22)
+                                .padding(.top, 12 * uiScale)
+                                .padding(.bottom, 22 * uiScale)
                         } else {
                             // Sliders gain a left-edge scroll gutter: a faint
                             // hatch column aligned under the header's IN pot
-                            // (same 48pt width, same 20pt outer inset). The
-                            // faders shift right to clear it; the gutter→faders
-                            // gap (20) equals the faders→right-edge gap (20), so
-                            // the field reads symmetrically. The hatch is a
+                            // (same width / outer inset, both scaled with the UI
+                            // so the gutter keeps tracking the scaled IN pot).
+                            // The faders shift right to clear it; the
+                            // gutter→faders gap equals the faders→right-edge gap,
+                            // so the field reads symmetrically. The hatch is a
                             // background applied *before* the top/bottom padding
-                            // so it spans exactly the rows (top of row 1 to bottom
-                            // of the last row) and isn't stretched into the
-                            // breathing space above or the gap below.
+                            // so it spans exactly the rows.
                             parameterGridView
-                                .padding(.leading, Self.gutterOuterInset + Self.gutterWidth + Self.gutterGap)
-                                .padding(.trailing, Self.gutterGap)
+                                // Left edge → hatch uses the half/half edge inset
+                                // (so it keeps margin at small scale AND stays
+                                // aligned under the IN pot, whose header uses the
+                                // same edge inset); the gutter width + the
+                                // gutter→faders gap stay fully scaled.
+                                .padding(.leading, airwindowsEdgeInset(Self.gutterOuterInset, scale: uiScale) + (Self.gutterWidth + Self.gutterGap) * uiScale)
+                                .padding(.trailing, airwindowsEdgeInset(Self.gutterGap, scale: uiScale))
                                 .background(alignment: .topLeading) {
                                     ScrollHatchGutter()
-                                        .frame(width: Self.gutterWidth)
-                                        .padding(.leading, Self.gutterOuterInset)
+                                        .frame(width: Self.gutterWidth * uiScale)
+                                        .padding(.leading, airwindowsEdgeInset(Self.gutterOuterInset, scale: uiScale))
                                         // Stop one hatch line short of the last
                                         // row's bottom edge.
                                         .padding(.bottom, ScrollHatchGutter.lineStep)
                                 }
-                                .padding(.top, 10)
-                                .padding(.bottom, 22)
+                                .padding(.top, 12 * uiScale)
+                                .padding(.bottom, 22 * uiScale)
                         }
 
                         if shouldShowDescription {
@@ -324,8 +272,8 @@ public struct EffectDetailView: View {
                             // Promotes the awpdoc's leading `# ` line into a
                             // heading instead of showing the literal `#`.
                             EffectDescriptionText(description)
-                                .padding(.horizontal, 24)
-                                .padding(.vertical, 18)
+                                .hEdgePadding(24)
+                                .padding(.vertical, 18 * uiScale)
                         }
                     }
                 }
@@ -333,7 +281,7 @@ public struct EffectDetailView: View {
                 VStack {
                     Spacer()
                     Text("This effect has no parameters")
-                        .font(.system(size: 17))
+                        .font(.system(size: 17 * uiScale))
                         .foregroundStyle(.secondary)
                     Spacer()
                 }
@@ -347,16 +295,166 @@ public struct EffectDetailView: View {
 
                     ScrollView {
                         EffectDescriptionText(description)
-                            .padding(.horizontal, 24)
-                            .padding(.vertical, 18)
+                            .hEdgePadding(24)
+                            .padding(.vertical, 18 * uiScale)
                     }
                     .scrollIndicators(.automatic)
                 } else {
                     Spacer(minLength: 0)
                 }
             }
+
+            // Bottom chrome bar — Settings box + display marker + action chips.
+            bottomBar
         }
         .background(AirwindowsPalette.surface(scheme))
+    }
+
+    // MARK: - Bottom bar
+
+    /// Bottom bar height. Scales with the UI like the rest of the workspace;
+    /// 59 = the original 54 plus ~5pt more room under the top divider.
+    private var bottomBarHeight: CGFloat { 59 * uiScale }
+
+    /// Bottom chrome bar. Mirrors the browser's visual language onto the
+    /// workspace: a Settings box on the far left wearing the same fill as the
+    /// sidebar's action rows (`secondary.opacity(0.08)` over `subtleSurface`),
+    /// and a rest-zone — the color behind the sidebar's category list
+    /// (`subtleSurface`) — holding the non-interactive MONO/STEREO marker on
+    /// the left and the interactive action chips on the right. Display chips go
+    /// left, interactive chips go right.
+    @ViewBuilder
+    private var bottomBar: some View {
+        Divider().opacity(0.4)
+
+        HStack(spacing: 0) {
+            if let onOpenSettings {
+                settingsBox(action: onOpenSettings)
+            }
+
+            chipZone
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .background(AirwindowsPalette.subtleSurface(scheme))
+        }
+        .frame(height: bottomBarHeight)
+    }
+
+    /// Far-left Settings box — echoes the browser sidebar: its width is the
+    /// SAME scaled `sidebarWidth` the browser's first column uses, so as you
+    /// transition between the browse and effect screens the box stays put with
+    /// no width jump. Same fill the sidebar's About/Random rows use, same
+    /// leading icon+label layout. Scales with the UI like everything else.
+    private func settingsBox(action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            HStack(spacing: 10 * uiScale) {
+                Image(systemName: "gearshape")
+                    .font(.system(size: 20 * uiScale, weight: .regular))
+                Text("Settings")
+                    .font(.system(size: 17 * uiScale, weight: .semibold))
+                Spacer(minLength: 0)
+            }
+            .foregroundStyle(.primary)
+            .hEdgePadding(18)
+            // Same vertical padding the browser's SidebarActionButton uses, and
+            // bottom-anchored so the Settings label lands the SAME distance from
+            // the screen bottom in both panes (both bars sit at the bottom).
+            // Centering in the fixed bar height instead made it sit higher.
+            .padding(.vertical, 14 * uiScale)
+            .frame(width: AirwindowsLayout.sidebarWidth * uiScale, alignment: .leading)
+            .frame(maxHeight: .infinity, alignment: .bottom)
+            .contentShape(Rectangle())
+            // Two layers: the sidebar action-row fill over the sidebar base,
+            // matching exactly what the About row looks like in the browser.
+            .background(Color.secondary.opacity(0.08))
+            .background(AirwindowsPalette.subtleSurface(scheme))
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("Open preferences")
+    }
+
+    /// Rest of the bar: MONO/STEREO marker (left) + action chips (right).
+    /// Nudged down 7pt to sit a touch lower in the bar.
+    private var chipZone: some View {
+        HStack(spacing: 16 * uiScale) {
+            // Non-interactive display marker — stays on the left.
+            MetaChip(text: effect.isMono ? "MONO" : "STEREO")
+
+            Spacer(minLength: 8 * uiScale)
+
+            // App-only input-monitoring toggle (mic → effect → speaker). Shows
+            // only in the standalone app; the AUv3 plugin omits it (the host
+            // owns routing). Icon + label reflect the current state.
+            if let onToggleMonitoring {
+                FilledIconChip(
+                    systemName: isMonitoring ? "speaker.wave.2.fill" : "speaker.slash.fill",
+                    text: isMonitoring ? "Live" : "Muted",
+                    accessibility: isMonitoring ? "Mute input monitoring" : "Start input monitoring",
+                    action: onToggleMonitoring
+                )
+            }
+
+            // Interactive chips — right side. Labels state the destination
+            // (where you go when you tap), matching Apple's toggle convention;
+            // Reset stays a constant verb because it isn't a state toggle.
+            if let onToggleTheme {
+                FilledIconChip(
+                    systemName: isDarkMode ? "sun.max" : "moon",
+                    text: isDarkMode ? "Day" : "Night",
+                    accessibility: isDarkMode ? "Switch to light mode" : "Switch to dark mode",
+                    action: onToggleTheme
+                )
+            }
+
+            if let onToggleControlStyle {
+                FilledIconChip(
+                    systemName: useRotaryPots ? "slider.horizontal.below.rectangle" : "dial.medium",
+                    text: useRotaryPots ? "Sliders" : "Pots",
+                    accessibility: useRotaryPots
+                        ? "Switch parameter controls to sliders"
+                        : "Switch parameter controls to pots",
+                    action: onToggleControlStyle
+                )
+            }
+
+            if let onUndo {
+                FilledIconChip(
+                    systemName: "arrow.uturn.backward",
+                    text: "Undo",
+                    accessibility: "Undo last change",
+                    isEnabled: canUndo,
+                    action: onUndo
+                )
+            }
+
+            if let onRedo {
+                FilledIconChip(
+                    systemName: "arrow.uturn.forward",
+                    text: "Redo",
+                    accessibility: "Redo",
+                    isEnabled: canRedo,
+                    action: onRedo
+                )
+            }
+
+            if let onRandomize {
+                FilledIconChip(
+                    systemName: "dice",
+                    text: "Random",
+                    accessibility: "Randomize parameters",
+                    action: onRandomize
+                )
+            }
+
+            FilledIconChip(
+                systemName: "arrow.counterclockwise",
+                text: "Reset",
+                accessibility: "Reset parameters",
+                action: onReset
+            )
+        }
+        .hEdgePadding(20)
+        // Fully centered vertically in the bar.
+        .frame(maxHeight: .infinity)
     }
 
     private var shouldShowDescription: Bool {
@@ -399,13 +497,15 @@ private struct ScrollHatchGutter: View {
 private struct MetaChip: View {
     let text: String
 
+    @Environment(\.uiScale) private var uiScale
+
     var body: some View {
         Text(text)
-            .font(.system(size: 13, weight: .semibold))
+            .font(.system(size: 13 * uiScale, weight: .semibold))
             .kerning(0.6)
             .foregroundStyle(.secondary)
-            .padding(.horizontal, 8)
-            .padding(.vertical, 4)
+            .padding(.horizontal, 8 * uiScale)
+            .padding(.vertical, 4 * uiScale)
             .overlay(
                 RoundedRectangle(cornerRadius: 6)
                     .stroke(Color.secondary.opacity(0.25), lineWidth: 1)
@@ -426,6 +526,7 @@ struct LinkChip: View {
     let accessibility: String
 
     @Environment(\.openURL) private var openURL
+    @Environment(\.uiScale) private var uiScale
 
     init(url: URL, systemName: String, text: String? = nil, accessibility: String) {
         self.url = url
@@ -438,17 +539,17 @@ struct LinkChip: View {
         Button {
             openURL(url)
         } label: {
-            HStack(spacing: 6) {
+            HStack(spacing: 6 * uiScale) {
                 Image(systemName: systemName)
-                    .font(.system(size: 15, weight: .medium))
+                    .font(.system(size: 15 * uiScale, weight: .medium))
                 if let text {
                     Text(text)
-                        .font(.system(size: 14, weight: .medium))
+                        .font(.system(size: 14 * uiScale, weight: .medium))
                 }
             }
             .foregroundStyle(.secondary)
-            .padding(.horizontal, 10)
-            .padding(.vertical, 6)
+            .padding(.horizontal, 10 * uiScale)
+            .padding(.vertical, 6 * uiScale)
             .overlay(
                 RoundedRectangle(cornerRadius: 8)
                     .stroke(Color.secondary.opacity(0.35), lineWidth: 1)
@@ -467,6 +568,7 @@ private struct FilledIconChip: View {
     let action: () -> Void
 
     @Environment(\.colorScheme) private var scheme
+    @Environment(\.uiScale) private var uiScale
 
     init(
         systemName: String,
@@ -484,17 +586,17 @@ private struct FilledIconChip: View {
 
     var body: some View {
         Button(action: action) {
-            HStack(spacing: 6) {
+            HStack(spacing: 6 * uiScale) {
                 Image(systemName: systemName)
-                    .font(.system(size: 15, weight: .medium))
+                    .font(.system(size: 15 * uiScale, weight: .medium))
                 if let text {
                     Text(text)
-                        .font(.system(size: 14, weight: .medium))
+                        .font(.system(size: 14 * uiScale, weight: .medium))
                 }
             }
             .foregroundStyle(scheme == .dark ? Color.black : Color.white)
-            .padding(.horizontal, 10)
-            .padding(.vertical, 6)
+            .padding(.horizontal, 10 * uiScale)
+            .padding(.vertical, 6 * uiScale)
             .background(
                 RoundedRectangle(cornerRadius: 8)
                     .fill(Color.primary.opacity(0.85))

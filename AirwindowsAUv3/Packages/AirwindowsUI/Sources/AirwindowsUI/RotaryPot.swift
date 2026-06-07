@@ -124,10 +124,19 @@ public struct RotaryPot: View {
         return (v - range.lowerBound) / span
     }
 
+    /// Label/value fonts are derived from `size` so the text scales with the
+    /// knob. Callers apply the global UI scale by passing a scaled `size`
+    /// (e.g. `56 * uiScale`); deriving the fonts here keeps the caption and
+    /// readout proportional without threading the scale separately. The 48pt
+    /// In/Out pots → ~13/15pt (their previous hardcoded sizes); the 56pt
+    /// parameter pots → ~15/17pt.
+    private var labelFontSize: CGFloat { size * 0.27 }
+    private var valueFontSize: CGFloat { size * 0.31 }
+
     public var body: some View {
         VStack(spacing: 2) {
             Text(label.uppercased())
-                .font(.system(size: 13, weight: .medium))
+                .font(.system(size: labelFontSize, weight: .medium))
                 .kerning(1.0)
                 .foregroundStyle(.secondary)
                 .lineLimit(1)
@@ -195,7 +204,7 @@ public struct RotaryPot: View {
 
             if let valueText {
                 Text(valueText)
-                    .font(.system(size: 15).monospacedDigit())
+                    .font(.system(size: valueFontSize).monospacedDigit())
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
             }

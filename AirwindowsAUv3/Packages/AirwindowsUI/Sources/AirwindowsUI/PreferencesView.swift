@@ -1,0 +1,168 @@
+//
+//  PreferencesView.swift
+//  AirwindowsUI package — shared by AirwindowsApp + AirwindowsAUExtension
+//
+//  The plugin's settings sheet. Reached from the Settings row at the bottom
+//  of the browser sidebar and from the Settings box in the workspace's bottom
+//  bar. Self-contained: it reads and writes the shared @AppStorage scale key
+//  directly, so changing the slider rescales the live workspace immediately
+//  (AirwindowsAUView reads the same key and re-injects \.uiScale).
+//
+//  First (and for now only) preference: a global interface-scale slider.
+//  100% is the sizing tuned on a 13" iPad; sliding down shrinks everything
+//  proportionally so a smaller iPad fits the same density. The slider carries
+//  two aligned label rows — percentages on top, iPad-size signposts on the
+//  bottom — so the abstract percentage is grounded in real devices.
+//
+
+import SwiftUI
+
+public struct PreferencesView: View {
+    public let onClose: () -> Void
+
+    /// Shared with AirwindowsAUView (which injects it as \.uiScale) and with
+    /// every sized view. Writing here rescales the workspace live. Backed by the
+    /// App Group store so the scale is shared across the app and every plugin
+    /// instance (see UserDefaults.airwindowsShared).
+    @AppStorage("airwindows.uiScale", store: UserDefaults.airwindowsShared) private var uiScale: Double = 1.0
+
+    @Environment(\.colorScheme) private var scheme
+
+    public init(onClose: @escaping () -> Void) {
+        self.onClose = onClose
+    }
+
+    public var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            header
+
+            Divider().opacity(0.4)
+
+            ScrollView {
+                VStack(alignment: .leading, spacing: 14) {
+                    Text("Interface scale")
+                        .font(.system(size: 22, weight: .semibold))
+
+                    Text("Sizes the whole interface — controls, text, and spacing — as one piece. Lower percentages fit more on screen; 100% is tuned for a 13\u{2033} iPad. A smaller iPad set to its mark shows the same amount as a 13\u{2033}.")
+                        .font(.system(size: 15))
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+
+                    ScaleSlider(scale: $uiScale)
+                        .padding(.top, 10)
+
+                    Button {
+                        uiScale = Double(UIScaleConfig.reference)
+                    } label: {
+                        Text("Reset to 100%")
+                            .font(.system(size: 15, weight: .medium))
+                            .foregroundStyle(AirwindowsPalette.actionButton)
+                    }
+                    .buttonStyle(.plain)
+                    .padding(.top, 4)
+                }
+                .padding(.horizontal, 28)
+                .padding(.top, 24)
+                .padding(.bottom, 32)
+                .frame(maxWidth: 560, alignment: .leading)
+                .frame(maxWidth: .infinity, alignment: .leading)
+            }
+        }
+        .background(AirwindowsPalette.surface(scheme))
+    }
+
+    private var header: some View {
+        HStack {
+            Text("Preferences")
+                .font(.system(size: 26, weight: .bold))
+            Spacer()
+            Button(action: onClose) {
+                Image(systemName: "xmark")
+                    .font(.system(size: 17, weight: .semibold))
+                    .foregroundStyle(.secondary)
+                    .frame(width: 32, height: 32)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("Close preferences")
+        }
+        .padding(.horizontal, 24)
+        .padding(.vertical, 16)
+    }
+}
+
+// MARK: - Scale slider
+
+/// A native slider with two aligned tick rows: the current percentage plus
+/// device-size signposts sitting at the scale where each iPad matches 13"
+/// density. The signposts and the live readout share the same x-axis as the
+/// slider track (inset by the thumb radius so they line up with the value).
+private struct ScaleSlider: View {
+    @Binding var scale: Double
+
+    /// Native slider thumb is ~28pt wide; the value travels along a track
+    /// inset by half that on each side. Tick labels inset to match.
+    private let thumbInset: CGFloat = 14
+
+    private var range: ClosedRange<Double> {
+        Double(UIScaleConfig.minimum)...Double(UIScaleConfig.maximum)
+    }
+
+    var body: some View {
+        VStack(spacing: 6) {
+            // Top row: live percentage, big and centered over the thumb.
+            tickRow { guide in
+                Text("\(Int((guide.scale * 100).rounded()))%")
+                    .font(.system(size: 13, weight: .medium).monospacedDigit())
+                    .foregroundStyle(.secondary)
+            }
+
+            Slider(
+                value: $scale,
+                in: range
+            )
+            .tint(AirwindowsPalette.actionButton)
+
+            // Bottom row: iPad-size signposts.
+            tickRow { guide in
+                Text(guide.label)
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(.primary)
+            }
+
+            // Live readout of the user's current setting.
+            HStack {
+                Spacer()
+                Text("\(Int((scale * 100).rounded()))%")
+                    .font(.system(size: 28, weight: .semibold).monospacedDigit())
+                    .foregroundStyle(.primary)
+                Spacer()
+            }
+            .padding(.top, 6)
+        }
+    }
+
+    /// Lays out one label per device guide, positioned at that guide's
+    /// fractional spot along the (thumb-inset) track.
+    private func tickRow<Label: View>(@ViewBuilder label: @escaping ((label: String, scale: CGFloat)) -> Label) -> some View {
+        GeometryReader { geo in
+            let usable = max(geo.size.width - thumbInset * 2, 1)
+            ForEach(UIScaleConfig.deviceGuides, id: \.label) { guide in
+                let frac = (guide.scale - UIScaleConfig.minimum)
+                    / (UIScaleConfig.maximum - UIScaleConfig.minimum)
+                let x = thumbInset + usable * frac
+                label(guide)
+                    .fixedSize()
+                    .position(x: x, y: geo.size.height / 2)
+            }
+        }
+        .frame(height: 18)
+    }
+}
+
+// MARK: - Preview
+
+#Preview("Preferences") {
+    PreferencesView(onClose: {})
+        .frame(width: 720, height: 520)
+}

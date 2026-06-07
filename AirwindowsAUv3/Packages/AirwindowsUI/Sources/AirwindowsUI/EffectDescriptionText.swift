@@ -21,6 +21,8 @@ public struct EffectDescriptionText: View {
     private let heading: String?
     private let bodyText: String
 
+    @Environment(\.uiScale) private var uiScale
+
     public init(_ text: String) {
         let parts = Self.split(text)
         self.heading = parts.heading
@@ -28,18 +30,18 @@ public struct EffectDescriptionText: View {
     }
 
     public var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: 12 * uiScale) {
             if let heading {
                 Text(heading)
-                    .font(.system(size: 20, weight: .semibold))
+                    .font(.system(size: 20 * uiScale, weight: .semibold))
                     .foregroundStyle(.primary)
                     .multilineTextAlignment(.leading)
             }
             if !bodyText.isEmpty {
                 Text(bodyText)
-                    .font(.system(size: 17))
+                    .font(.system(size: 17 * uiScale))
                     .foregroundStyle(.secondary)
-                    .lineSpacing(4)
+                    .lineSpacing(4 * uiScale)
                     .multilineTextAlignment(.leading)
             }
         }

@@ -27,6 +27,12 @@ import AirwindowsUI
 struct AirwindowsAUView: View {
     @Bindable var viewModel: AirwindowsAudioUnitViewModel
 
+    /// App-only input-monitoring state + toggle. The standalone app passes
+    /// these (its mic→effect→speaker passthrough); the AUv3 plugin omits them,
+    /// so no monitoring chip shows in the host (the host owns routing).
+    var isMonitoring: Bool = false
+    var onToggleMonitoring: (() -> Void)?
+
     /// Shared favorites store (App Group backed). One instance per process,
     /// passed into both the browser and the detail view so the star and the
     /// pinned "Favorites" category stay in sync.
@@ -51,6 +57,20 @@ struct AirwindowsAUView: View {
     /// "auto" only persists until the first toggle.
     @AppStorage("airwindows.controlStyle") private var controlStylePreference: String = "auto"
 
+    /// Global UI scale, injected into the AirwindowsUI views as `\.uiScale`.
+    /// 1.0 == reference (13") sizing. Owned here, edited via PreferencesView
+    /// (which writes the same key), read by every sized view. Backed by the App
+    /// Group store so the scale is shared across the app and all plugin
+    /// instances; within one process instances update live.
+    @AppStorage("airwindows.uiScale", store: UserDefaults.airwindowsShared) private var uiScale: Double = 1.0
+    /// First-launch guard for the auto-match default — once we've sized the
+    /// scale to the container, the stored (possibly user-adjusted) value wins.
+    /// Shared too, so only the first instance anywhere auto-sets.
+    @AppStorage("airwindows.uiScaleAutoSet", store: .airwindowsShared) private var uiScaleAutoSet: Bool = false
+
+    /// Preferences sheet, opened from the workspace bottom bar's Settings box.
+    @State private var showPreferences: Bool = false
+
     /// Number of parameters at or above which "auto" mode renders pots
     /// instead of sliders. Effects this dense (e.g. ConsoleX, Recurve, EQ
     /// matrices) get hard to scan as a stack of sliders, but read fine as a
@@ -74,12 +94,24 @@ struct AirwindowsAUView: View {
     }
 
     var body: some View {
-        detailContent
-            // Explicitly override colorScheme so the plugin's theme follows the
-            // user's AppStorage preference, not the host's theme (AUM is dark,
-            // GarageBand is light, etc.).
-            .environment(\.colorScheme, isDarkMode ? .dark : .light)
-            .fullScreenCover(isPresented: $showBrowser) {
+        GeometryReader { geo in
+            detailContent
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                // Explicitly override colorScheme so the plugin's theme follows
+                // the user's AppStorage preference, not the host's theme (AUM is
+                // dark, GarageBand is light, etc.).
+                .environment(\.colorScheme, isDarkMode ? .dark : .light)
+                // Global UI scale: every sized view in AirwindowsUI reads this.
+                .environment(\.uiScale, CGFloat(uiScale))
+                // First launch: size the scale to the container so a smaller
+                // iPad starts at the same density a 13" shows at 100%. Runs on
+                // size changes but no-ops after the one-time auto-set.
+                .task(id: geo.size) { autoMatchScaleIfNeeded(geo.size) }
+                .sheet(isPresented: $showPreferences) {
+                    PreferencesView(onClose: { showPreferences = false })
+                        .environment(\.colorScheme, isDarkMode ? .dark : .light)
+                }
+                .fullScreenCover(isPresented: $showBrowser) {
                 // Preserve user context across browser opens: when there's a
                 // current effect, preselect its category + highlight it so the
                 // preview pane reads as "where you were". On the first launch
@@ -101,6 +133,12 @@ struct AirwindowsAUView: View {
                     onClose: { showBrowser = false }
                 )
                 .environment(\.colorScheme, isDarkMode ? .dark : .light)
+                // fullScreenCover doesn't reliably inherit custom environment
+                // values, so pass the scale explicitly (same reason colorScheme
+                // is re-applied above). Without this the browser sidebar renders
+                // at scale 1.0 while the workspace uses the real scale, so the
+                // Settings box and the first column stop matching width.
+                .environment(\.uiScale, CGFloat(uiScale))
             }
             .task {
                 // Open the browser on launch ONLY when nothing is selected —
@@ -128,6 +166,19 @@ struct AirwindowsAUView: View {
                     showBrowser = false
                 }
             }
+        }
+    }
+
+    /// First-launch auto-match: derive the starting scale from the container's
+    /// short side so a smaller iPad opens at the same density a 13" shows at
+    /// 100%. One-shot — guarded by `uiScaleAutoSet` — and ignores the early
+    /// zero/garbage sizes SwiftUI proposes before first real layout.
+    private func autoMatchScaleIfNeeded(_ size: CGSize) {
+        guard !uiScaleAutoSet else { return }
+        let shortSide = min(size.width, size.height)
+        guard shortSide > 100 else { return }
+        uiScale = Double(UIScaleConfig.autoScale(forShortSide: shortSide))
+        uiScaleAutoSet = true
     }
 
     @ViewBuilder
@@ -177,7 +228,10 @@ struct AirwindowsAUView: View {
                 onToggleTheme: { isDarkMode.toggle() },
                 useRotaryPots: effectiveUseRotaryPots,
                 onToggleControlStyle: { toggleControlStyle() },
-                favorites: favorites
+                favorites: favorites,
+                onOpenSettings: { showPreferences = true },
+                isMonitoring: isMonitoring,
+                onToggleMonitoring: onToggleMonitoring
             )
         } else {
             NoSelectionView(onBrowse: { showBrowser = true })

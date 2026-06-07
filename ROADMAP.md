@@ -2,6 +2,8 @@
 
 ## Now
 
+- [ ] Select default effect — let the user choose an effect that loads by default (instead of the always-browser-on-fresh-launch behavior). Design TBD. #feature
+- [ ] Subtle mono signifier in the menu list — a quiet marker in the browser effect list flagging mono effects, and an "m→s" style marker for any mono-to-stereo effects if that pathway exists (needs checking which/if any effects are mono-in/stereo-out). Design-led; keep it understated. #polish
 - [ ] Rack-height / constrained-height UI — a layout that works when a host presents AUv3 effects in a fixed, limited height with no option to expand (e.g. GarageBand's effect strip). The current detail view assumes generous vertical space (tagline + header + chip row + scrolling grid + description); in a short rack slot it gets clipped or unusable. Needs a compact mode that collapses/prioritises (likely: drop the tagline + description, tighten the chip row, keep params scrollable) and detects the constrained height. Related to but distinct from the broader UX scaling item in Next. #feature
 
 ## Next
@@ -19,9 +21,11 @@
 - [ ] Polish to "Apple built this" — haptics, context menus, animations on state changes #polish
 - [ ] Open source packaging — CI workflow, build instructions, contributor guide (after repo is public) #chore
 - [ ] Accessibility pass — labels, VoiceOver, keyboard support #polish
+- [ ] Test search — verify the browser search field works on device in the next TestFlight round #chore
 
 ## Later
 
+- [ ] Persistent Settings overlay across browse↔effect transition — make the Settings box a single persistent element that stays fixed while the browser and effect screens transition behind it (true shared-element feel), instead of two separate same-sized boxes that animate with their screens. Lift it into an overlay above both screens at the AirwindowsAUView level (or a custom matched-geometry transition replacing the fullScreenCover). Width already matched to the sidebar first column as the prerequisite. #polish
 - [ ] Rack-sized UI experiments — evaluate after beta feedback. Tested Cubasis/AUM/Logic Pro on iPad: no single rack standard, all hosts open in some compact form. Worth seeing if users want a denser fixed-height layout. #question
 - [ ] Recently used / most used collections #feature
 - [ ] Auto-update mechanism for weekly upstream effects #chore

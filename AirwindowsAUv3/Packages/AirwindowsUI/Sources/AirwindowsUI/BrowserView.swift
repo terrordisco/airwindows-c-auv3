@@ -27,11 +27,15 @@ public struct BrowserView: View {
     public let favorites: FavoritesStore?
 
     @Environment(\.colorScheme) private var scheme
+    /// Matches the workspace's Settings box so the two line up across the
+    /// browse ↔ effect transition. Scaled by the same factor as the box.
+    @Environment(\.uiScale) private var uiScale
     @State private var collection: EffectCollection = .all
     @State private var searchText: String = ""
     @State private var selectedCategory: String?
     @State private var highlighted: EffectBrowseModel?
     @State private var showAbout: Bool = false
+    @State private var showPreferences: Bool = false
     @State private var sortMode: EffectSortMode = .chrisOrdering
 
     /// Pseudo-category that shows the N most recently committed effects
@@ -83,13 +87,14 @@ public struct BrowserView: View {
                 onClose: onClose,
                 onAboutTap: { showAbout = true },
                 onRandomTap: pickRandom,
+                onSettingsTap: { showPreferences = true },
                 favoritesCount: favoriteEffects.count,
                 isFavoritesSelected: selectedCategory == Self.favoritesCategoryName,
                 onSelectFavorites: favorites == nil ? nil : {
                     selectedCategory = Self.favoritesCategoryName
                 }
             )
-            .frame(width: 280)
+            .frame(width: AirwindowsLayout.sidebarWidth * uiScale)
 
             Divider().opacity(0.4)
 
@@ -112,7 +117,7 @@ public struct BrowserView: View {
                         sortMode = sortMode.next(allCategories: isAllCategories)
                     }
                 )
-                .frame(minWidth: 260, idealWidth: 310, maxWidth: 340)
+                .frame(minWidth: 260 * uiScale, idealWidth: 310 * uiScale, maxWidth: 340 * uiScale)
 
                 Divider().opacity(0.4)
             }
@@ -158,6 +163,11 @@ public struct BrowserView: View {
         }
         .sheet(isPresented: $showAbout) {
             AboutView(onClose: { showAbout = false })
+                .environment(\.colorScheme, scheme)
+                .environment(\.uiScale, uiScale)
+        }
+        .sheet(isPresented: $showPreferences) {
+            PreferencesView(onClose: { showPreferences = false })
                 .environment(\.colorScheme, scheme)
         }
     }
@@ -267,28 +277,29 @@ private struct EffectListColumn: View {
     let onSortTap: () -> Void
 
     @Environment(\.colorScheme) private var scheme
+    @Environment(\.uiScale) private var uiScale
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            VStack(alignment: .leading, spacing: 2) {
+            VStack(alignment: .leading, spacing: 2 * uiScale) {
                 Text(categoryLabel)
-                    .font(.system(size: 28, weight: .semibold))
+                    .font(.system(size: 28 * uiScale, weight: .semibold))
                     .foregroundStyle(.primary)
                 Button(action: onSortTap) {
-                    HStack(spacing: 4) {
+                    HStack(spacing: 4 * uiScale) {
                         Text(sortLabel)
-                            .font(.system(size: 15))
+                            .font(.system(size: 15 * uiScale))
                             .foregroundStyle(.secondary)
                         Image(systemName: "arrow.up.arrow.down")
-                            .font(.system(size: 11))
+                            .font(.system(size: 11 * uiScale))
                             .foregroundStyle(.secondary)
                     }
                 }
                 .buttonStyle(.plain)
             }
-            .padding(.horizontal, 22)
-            .padding(.top, 22)
-            .padding(.bottom, 12)
+            .hEdgePadding(22)
+            .padding(.top, 22 * uiScale)
+            .padding(.bottom, 12 * uiScale)
 
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: 0) {
@@ -296,11 +307,11 @@ private struct EffectListColumn: View {
                         ForEach(groups, id: \.category) { group in
                             // Category subheader
                             Text(group.category)
-                                .font(.system(size: 13, weight: .semibold))
+                                .font(.system(size: 13 * uiScale, weight: .semibold))
                                 .foregroundStyle(.secondary)
-                                .padding(.horizontal, 22)
-                                .padding(.top, 16)
-                                .padding(.bottom, 6)
+                                .hEdgePadding(22)
+                                .padding(.top, 16 * uiScale)
+                                .padding(.bottom, 6 * uiScale)
 
                             ForEach(Array(group.effects.enumerated()), id: \.element.registryIndex) { index, effect in
                                 NumberedEffectRow(
@@ -358,22 +369,24 @@ private struct NumberedEffectRow: View {
     let effect: EffectBrowseModel
     let isHighlighted: Bool
 
+    @Environment(\.uiScale) private var uiScale
+
     var body: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: 12 * uiScale) {
             Text("\(number).")
-                .font(.system(size: 20, weight: .regular).monospacedDigit())
+                .font(.system(size: 20 * uiScale, weight: .regular).monospacedDigit())
                 .foregroundStyle(.secondary)
-                .frame(width: 46, alignment: .trailing)
+                .frame(width: 46 * uiScale, alignment: .trailing)
 
             Text(effect.name)
-                .font(.system(size: 20, weight: isHighlighted ? .semibold : .regular))
+                .font(.system(size: 20 * uiScale, weight: isHighlighted ? .semibold : .regular))
                 .foregroundStyle(.primary)
                 .lineLimit(1)
 
             Spacer()
         }
-        .padding(.horizontal, 22)
-        .padding(.vertical, 7)
+        .hEdgePadding(22)
+        .padding(.vertical, 7 * uiScale)
         .background(isHighlighted ? Color.primary.opacity(0.05) : Color.clear)
         .contentShape(Rectangle())
     }
@@ -387,13 +400,15 @@ private struct EffectPreviewColumn: View {
     let favorites: FavoritesStore?
     let onSelect: (EffectBrowseModel) -> Void
 
+    @Environment(\.uiScale) private var uiScale
+
     var body: some View {
         if let effect {
             VStack(alignment: .leading, spacing: 0) {
                 // Header row: name + favorite star + Select button
                 HStack(alignment: .firstTextBaseline) {
                     Text(effect.name)
-                        .font(.system(size: 40, weight: .semibold))
+                        .font(.system(size: 40 * uiScale, weight: .semibold))
                         .lineLimit(1)
                         .minimumScaleFactor(0.6)
 
@@ -405,9 +420,9 @@ private struct EffectPreviewColumn: View {
                             favorites.toggle(effect.name)
                         } label: {
                             Image(systemName: isFav ? "star.fill" : "star")
-                                .font(.system(size: 20, weight: .medium))
+                                .font(.system(size: 20 * uiScale, weight: .medium))
                                 .foregroundStyle(isFav ? Color.primary : Color.secondary)
-                                .frame(width: 40, height: 40)
+                                .frame(width: 40 * uiScale, height: 40 * uiScale)
                                 .contentShape(Rectangle())
                         }
                         .buttonStyle(.plain)
@@ -418,31 +433,31 @@ private struct EffectPreviewColumn: View {
                         onSelect(effect)
                     } label: {
                         Text("Select")
-                            .font(.system(size: 17, weight: .semibold))
+                            .font(.system(size: 17 * uiScale, weight: .semibold))
                             .foregroundStyle(Color.white)
-                            .padding(.horizontal, 20)
-                            .padding(.vertical, 10)
+                            .padding(.horizontal, 20 * uiScale)
+                            .padding(.vertical, 10 * uiScale)
                             .background(
                                 Capsule().fill(AirwindowsPalette.actionButton)
                             )
                     }
                     .buttonStyle(.plain)
                 }
-                .padding(.top, 28)
-                .padding(.horizontal, 28)
+                .padding(.top, 28 * uiScale)
+                .hEdgePadding(28)
 
                 if !effect.whatText.isEmpty {
                     Text("\u{201C}\(effect.whatText)\u{201D}")
-                        .font(.system(size: 20))
+                        .font(.system(size: 20 * uiScale))
                         .foregroundStyle(.secondary)
-                        .padding(.horizontal, 28)
-                        .padding(.top, 14)
+                        .hEdgePadding(28)
+                        .padding(.top, 14 * uiScale)
                 }
 
                 // Metadata pills — always shows at least Mono/Stereo.
                 FlowMetaRow(effect: effect)
-                    .padding(.horizontal, 28)
-                    .padding(.top, 19)
+                    .hEdgePadding(28)
+                    .padding(.top, 19 * uiScale)
 
                 // Full description. Scroll indicator forced visible so users
                 // realize there's more content below the fold (the default
@@ -450,8 +465,8 @@ private struct EffectPreviewColumn: View {
                 ScrollView {
                     // Leading `# ` line renders as a heading; see EffectDescriptionText.
                     EffectDescriptionText(description.isEmpty ? effect.whatText : description)
-                        .padding(.horizontal, 28)
-                        .padding(.vertical, 20)
+                        .hEdgePadding(28)
+                        .padding(.vertical, 20 * uiScale)
                 }
                 .scrollIndicators(.visible)
 
@@ -459,7 +474,7 @@ private struct EffectPreviewColumn: View {
                 // Only render when the effect has a matching airwindows.com post
                 // or YouTube video (13 effects have neither and show no chips).
                 if effect.postURL != nil || effect.videoURL != nil {
-                    HStack(spacing: 8) {
+                    HStack(spacing: 8 * uiScale) {
                         if let post = effect.postURL {
                             LinkChip(
                                 url: post,
@@ -477,9 +492,9 @@ private struct EffectPreviewColumn: View {
                             )
                         }
                     }
-                    .padding(.horizontal, 28)
-                    .padding(.top, 10)
-                    .padding(.bottom, 20)
+                    .hEdgePadding(28)
+                    .padding(.top, 10 * uiScale)
+                    .padding(.bottom, 20 * uiScale)
                 }
 
                 Spacer(minLength: 0)
@@ -489,7 +504,7 @@ private struct EffectPreviewColumn: View {
             VStack {
                 Spacer()
                 Text("No effect selected")
-                    .font(.system(size: 17))
+                    .font(.system(size: 17 * uiScale))
                     .foregroundStyle(.secondary)
                 Spacer()
             }
@@ -501,6 +516,8 @@ private struct EffectPreviewColumn: View {
 private struct FlowMetaRow: View {
     let effect: EffectBrowseModel
 
+    @Environment(\.uiScale) private var uiScale
+
     var body: some View {
         // Category and parameter-count pills removed: the category is already
         // visible in the sidebar and the middle-column header, and the raw
@@ -508,7 +525,7 @@ private struct FlowMetaRow: View {
         // as a more visual indicator later). Mono/Stereo always shows one or
         // the other — every effect is one of those two, so neither is a
         // meaningful "default" to leave unmarked.
-        HStack(spacing: 8) {
+        HStack(spacing: 8 * uiScale) {
             MetaPill(text: effect.isMono ? "Mono" : "Stereo")
             if !effect.firstCommitDate.isEmpty {
                 MetaPill(text: effect.firstCommitDate)
@@ -520,12 +537,14 @@ private struct FlowMetaRow: View {
 private struct MetaPill: View {
     let text: String
 
+    @Environment(\.uiScale) private var uiScale
+
     var body: some View {
         Text(text)
-            .font(.system(size: 15))
+            .font(.system(size: 15 * uiScale))
             .foregroundStyle(.secondary)
-            .padding(.horizontal, 12)
-            .padding(.vertical, 5)
+            .padding(.horizontal, 12 * uiScale)
+            .padding(.vertical, 5 * uiScale)
             .background(
                 Capsule().fill(Color.secondary.opacity(0.1))
             )

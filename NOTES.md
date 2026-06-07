@@ -198,6 +198,76 @@ Confirmed on device in AUM: knob animation + value text move in lockstep under a
 binary hot-swap tearing down live extension instances — a clean save→quit→reopen restores
 correctly. State restore is keyed by effect *name*; unaffected by this change.)
 
+## Global UI scale + bottom-bar redesign (2026-06-07) — IN PROGRESS, not committed
+
+Big UI feature, iterated live on device. **All changes uncommitted on `main`.**
+
+### Global UI scale
+- A user-facing **interface-scale slider** in a new **Preferences** screen
+  (`PreferencesView`). 100% = the sizing tuned on a 13" iPad (so the reference
+  device is unchanged at default). Smaller % fits more on screen.
+- Mechanism: a `\.uiScale` **environment value** (`UIScale.swift`) injected once
+  at the `AirwindowsAUView` root. Every sized view reads it and multiplies its
+  own font/control/spacing tokens by it (per-view multiplication — NOT a
+  `scaleEffect` zoom, so layouts genuinely reflow, e.g. the pot grid adds
+  columns at small scale). This was applied across the WHOLE app: workspace
+  (EffectDetailView, HeaderStripView, ParameterGrid, RotaryPot) AND the browser
+  (SidebarView, BrowserView, EffectDescriptionText, AboutView).
+- `RotaryPot` derives its label/value fonts from `size` (`size*0.27` / `size*0.31`),
+  so passing `size: 48*uiScale` scales the In/Out pot text too. (Bug fixed: the
+  value text under the pots was hardcoded at 15 — now uses the derived size.)
+- **Auto-match on first launch**: `AirwindowsAUView.autoMatchScaleIfNeeded`
+  reads the container's short side via GeometryReader and sets scale ≈
+  shortSide/1024 (so a mini opens at ~73%, a 13" at 100%). One-shot, guarded by
+  `airwindows.uiScaleAutoSet`. Container-based because `UIScreen`/`UIApplication`
+  aren't available in an app extension.
+- `UIScaleConfig` holds the clamp range (0.65–1.25), reference short side (1024),
+  and the slider's iPad guide marks (8.3"≈73%, 11"≈81%, 13"=100%).
+- **Shared across instances**: scale AppStorage (`airwindows.uiScale` +
+  `…AutoSet`) uses the **App Group suite** via `UserDefaults.airwindowsShared`
+  (same suite as FavoritesStore). Persists + shared app↔plugin↔instances. Live
+  within one process; cross-process picks up on next appear/launch (same KVO
+  caveat as favorites). Preferences is NOT itself scaled (it's the control).
+
+### Half-static / half-scaling side padding
+- `airwindowsEdgeInset(base, scale) = base/2 + base/2*scale`, exposed as the
+  `.hEdgePadding(_:)` modifier. Used for all **pane-edge horizontal insets** in
+  both views so content keeps a minimum margin at small scale instead of
+  crowding the edge. At 100% it equals the original value. Internal control
+  paddings (pills, search field) stay fully scaled. The slider gutter splits it:
+  edge inset uses half/half (and matches the header edge inset so the hatch
+  stays aligned under the IN pot); gutter width + gutter→faders gap stay scaled.
+
+### Bottom-bar chrome redesign
+- The chip row moved from the top (below the tagline) to a **bottom bar**. Top is
+  now clean: tagline → header → params.
+- Bar = **Settings box** (far left) + **chip zone** (rest). Settings box width =
+  `AirwindowsLayout.sidebarWidth (280) * uiScale`, MATCHING the browser's first
+  column at the same scale (so it reads as a persistent anchor across the
+  browse↔effect transition — true shared-element transition deferred to ROADMAP
+  Later). Settings box uses the sidebar action-row fill (`secondary.08` over
+  `subtleSurface`); the chip zone uses `subtleSurface` (the color behind the
+  sidebar categories). Both bottom-anchored with `14*uiScale` vertical padding so
+  "Settings" sits the same distance from the screen bottom in both panes.
+- Chip zone: MONO/STEREO marker (non-interactive) on the LEFT, interactive chips
+  (Day/Night, Pots/Sliders, Undo, Redo, Random, Reset) on the RIGHT. Inter-chip
+  spacing `16*uiScale`. Chips fully centered vertically.
+- **Mic passthrough is now a chip** ("Live"/"Muted", app-only): `EffectDetailView`
+  gained `isMonitoring`/`onToggleMonitoring`; `AirwindowsAUView` forwards them;
+  `ContentView` passes them and the old floating round button is removed. The
+  AUv3 plugin leaves them nil → no chip (host owns routing).
+- Two Settings entry points: a row under "About Airwindows" in the browser
+  sidebar (`SidebarView.onSettingsTap`), and the bottom-bar Settings box.
+
+### KNOWN OPEN ISSUES (next session)
+- **Reset chip clips at the right edge.** The 6–7 fixed-width chips + `16*uiScale`
+  spacing + the 280-wide Settings box exceed the row width, so the last chip
+  (Reset) overflows/clips instead of the row shrinking. The app has one more
+  chip (mic) than the plugin, so it's worse there. Needs a fit strategy: reduce
+  spacing, icon-only chips when tight, shrink-to-fit, or a narrower Settings box.
+- True **persistent Settings overlay** across the browse↔effect transition is
+  deferred (ROADMAP Later) — width-match is the prerequisite and is done.
+
 ## Build & Deploy
 
 ```bash

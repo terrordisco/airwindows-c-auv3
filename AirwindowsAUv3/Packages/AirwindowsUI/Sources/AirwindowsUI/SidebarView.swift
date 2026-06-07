@@ -28,6 +28,7 @@ public struct SidebarView: View {
     public let onClose: (() -> Void)?
     public let onAboutTap: (() -> Void)?
     public let onRandomTap: (() -> Void)?
+    public let onSettingsTap: (() -> Void)?
     /// Favorites pseudo-category. The row is pinned above "All categories" and
     /// only appears once at least one effect is favorited (count > 0).
     public let favoritesCount: Int
@@ -35,6 +36,7 @@ public struct SidebarView: View {
     public let onSelectFavorites: (() -> Void)?
 
     @Environment(\.colorScheme) private var scheme
+    @Environment(\.uiScale) private var uiScale
 
     public init(
         collection: Binding<EffectCollection>,
@@ -46,6 +48,7 @@ public struct SidebarView: View {
         onClose: (() -> Void)? = nil,
         onAboutTap: (() -> Void)? = nil,
         onRandomTap: (() -> Void)? = nil,
+        onSettingsTap: (() -> Void)? = nil,
         favoritesCount: Int = 0,
         isFavoritesSelected: Bool = false,
         onSelectFavorites: (() -> Void)? = nil
@@ -59,6 +62,7 @@ public struct SidebarView: View {
         self.onClose = onClose
         self.onAboutTap = onAboutTap
         self.onRandomTap = onRandomTap
+        self.onSettingsTap = onSettingsTap
         self.favoritesCount = favoritesCount
         self.isFavoritesSelected = isFavoritesSelected
         self.onSelectFavorites = onSelectFavorites
@@ -72,35 +76,35 @@ public struct SidebarView: View {
                     Spacer()
                     Button(action: onClose) {
                         Image(systemName: "xmark")
-                            .font(.system(size: 17, weight: .semibold))
+                            .font(.system(size: 17 * uiScale, weight: .semibold))
                             .foregroundStyle(.secondary)
-                            .frame(width: 32, height: 32)
+                            .frame(width: 32 * uiScale, height: 32 * uiScale)
                             .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
                     .accessibilityLabel("Close browser")
                 }
-                .padding(.horizontal, 12)
-                .padding(.top, 12)
+                .hEdgePadding(12)
+                .padding(.top, 12 * uiScale)
             }
 
             // Starred collection tabs
             CollectionTabStrip(selection: $collection)
-                .padding(.horizontal, 18)
-                .padding(.top, onClose == nil ? 18 : 4)
-                .padding(.bottom, 14)
+                .hEdgePadding(18)
+                .padding(.top, (onClose == nil ? 18 : 4) * uiScale)
+                .padding(.bottom, 14 * uiScale)
 
             // Search field
             SearchField(text: $searchText)
-                .padding(.horizontal, 18)
-                .padding(.bottom, 16)
+                .hEdgePadding(18)
+                .padding(.bottom, 16 * uiScale)
 
             // Categories header
             Text("Categories")
-                .font(.system(size: 20, weight: .semibold))
+                .font(.system(size: 20 * uiScale, weight: .semibold))
                 .foregroundStyle(.secondary)
-                .padding(.horizontal, 18)
-                .padding(.bottom, 6)
+                .hEdgePadding(18)
+                .padding(.bottom, 6 * uiScale)
 
             // Category list
             ScrollView {
@@ -139,8 +143,8 @@ public struct SidebarView: View {
                 .padding(.bottom, 12)
             }
 
-            // Pinned bottom rows: Random + About
-            if onRandomTap != nil || onAboutTap != nil {
+            // Pinned bottom rows: Random + About + Settings
+            if onRandomTap != nil || onAboutTap != nil || onSettingsTap != nil {
                 Divider().opacity(0.4)
             }
 
@@ -157,6 +161,17 @@ public struct SidebarView: View {
                     systemName: "info.circle",
                     label: "About Airwindows",
                     action: onAboutTap
+                )
+            }
+
+            // Settings sits directly below About — its bottom-left position
+            // here is mirrored by the Settings box in the workspace's bottom
+            // bar, so the entry point reads as "the same place" in both views.
+            if let onSettingsTap {
+                SidebarActionButton(
+                    systemName: "gearshape",
+                    label: "Settings",
+                    action: onSettingsTap
                 )
             }
         }
@@ -180,8 +195,12 @@ private struct CollectionTabStrip: View {
 
     private let items: [EffectCollection] = [.recommended, .basic, .latest]
 
+    @Environment(\.uiScale) private var uiScale
+
     var body: some View {
-        HStack(spacing: 10) {
+        // FlowLayout so the chips wrap to a second line rather than overflowing
+        // the sidebar — the three labels don't fit on one row at full scale.
+        FlowLayout(spacing: 8 * uiScale, lineSpacing: 8 * uiScale) {
             ForEach(items) { item in
                 CollectionTab(
                     collection: item,
@@ -203,12 +222,15 @@ private struct CollectionTab: View {
     let isSelected: Bool
     let action: () -> Void
 
+    @Environment(\.uiScale) private var uiScale
+
     private var fillColor: Color {
-        isSelected ? Color.secondary.opacity(0.14) : Color.clear
+        isSelected ? Color.secondary.opacity(0.16) : Color.clear
     }
 
     private var strokeColor: Color {
-        isSelected ? Color.secondary.opacity(0.25) : Color.clear
+        // Unselected chips keep a faint outline so they still read as chips.
+        isSelected ? Color.secondary.opacity(0.3) : Color.secondary.opacity(0.22)
     }
 
     private var labelColor: Color {
@@ -217,34 +239,20 @@ private struct CollectionTab: View {
 
     var body: some View {
         Button(action: action) {
-            tabContent
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 10)
-                .background(background)
-                .contentShape(Rectangle())
+            Text(collection.rawValue)
+                .font(.system(size: 14 * uiScale, weight: .medium))
+                .foregroundStyle(labelColor)
+                .lineLimit(1)
+                .padding(.horizontal, 13 * uiScale)
+                .padding(.vertical, 7 * uiScale)
+                .background(
+                    Capsule()
+                        .fill(fillColor)
+                        .overlay(Capsule().stroke(strokeColor, lineWidth: 1))
+                )
+                .contentShape(Capsule())
         }
         .buttonStyle(.plain)
-    }
-
-    private var tabContent: some View {
-        VStack(spacing: 4) {
-            Image(systemName: isSelected ? "line.3.horizontal.decrease.circle.fill" : "line.3.horizontal.decrease.circle")
-                .font(.system(size: 20, weight: .regular))
-            Text(collection.rawValue)
-                .font(.system(size: 15, weight: .medium))
-                .lineLimit(1)
-                .minimumScaleFactor(0.8)
-        }
-        .foregroundStyle(labelColor)
-    }
-
-    private var background: some View {
-        RoundedRectangle(cornerRadius: 12)
-            .fill(fillColor)
-            .overlay(
-                RoundedRectangle(cornerRadius: 12)
-                    .stroke(strokeColor, lineWidth: 1)
-            )
     }
 }
 
@@ -253,14 +261,16 @@ private struct CollectionTab: View {
 private struct SearchField: View {
     @Binding var text: String
 
+    @Environment(\.uiScale) private var uiScale
+
     var body: some View {
-        HStack(spacing: 8) {
+        HStack(spacing: 8 * uiScale) {
             Image(systemName: "magnifyingglass")
                 .foregroundStyle(.secondary)
-                .font(.system(size: 17))
+                .font(.system(size: 17 * uiScale))
             TextField("Search", text: $text)
                 .textFieldStyle(.plain)
-                .font(.system(size: 17))
+                .font(.system(size: 17 * uiScale))
                 .autocorrectionDisabled()
             #if os(iOS)
                 .textInputAutocapitalization(.never)
@@ -271,12 +281,13 @@ private struct SearchField: View {
                 } label: {
                     Image(systemName: "xmark.circle.fill")
                         .foregroundStyle(.tertiary)
+                        .font(.system(size: 17 * uiScale))
                 }
                 .buttonStyle(.plain)
             }
         }
-        .padding(.horizontal, 14)
-        .padding(.vertical, 10)
+        .padding(.horizontal, 14 * uiScale)
+        .padding(.vertical, 10 * uiScale)
         .background(
             RoundedRectangle(cornerRadius: 999)
                 .fill(Color.secondary.opacity(0.12))
@@ -292,18 +303,20 @@ private struct SidebarActionButton: View {
     let label: String
     let action: () -> Void
 
+    @Environment(\.uiScale) private var uiScale
+
     var body: some View {
         Button(action: action) {
-            HStack(spacing: 10) {
+            HStack(spacing: 10 * uiScale) {
                 Image(systemName: systemName)
-                    .font(.system(size: 20, weight: .regular))
+                    .font(.system(size: 20 * uiScale, weight: .regular))
                 Text(label)
-                    .font(.system(size: 17, weight: .semibold))
+                    .font(.system(size: 17 * uiScale, weight: .semibold))
                 Spacer()
             }
             .foregroundStyle(.primary)
-            .padding(.horizontal, 18)
-            .padding(.vertical, 14)
+            .hEdgePadding(18)
+            .padding(.vertical, 14 * uiScale)
             .frame(maxWidth: .infinity, alignment: .leading)
             .contentShape(Rectangle())
         }
@@ -321,32 +334,34 @@ private struct FavoritesSidebarRow: View {
 
     private static let accent = AirwindowsPalette.accent
 
+    @Environment(\.uiScale) private var uiScale
+
     var body: some View {
         Button(action: action) {
-            HStack(spacing: 12) {
+            HStack(spacing: 12 * uiScale) {
                 Image(systemName: "star.fill")
-                    .font(.system(size: 12))
+                    .font(.system(size: 12 * uiScale))
                     .foregroundStyle(isSelected ? Self.accent : Color.primary)
-                    .frame(width: 8)
+                    .frame(width: 8 * uiScale)
 
-                HStack(alignment: .firstTextBaseline, spacing: 6) {
+                HStack(alignment: .firstTextBaseline, spacing: 6 * uiScale) {
                     Text("Favorites")
-                        .font(.system(size: 20, weight: isSelected ? .semibold : .regular))
+                        .font(.system(size: 20 * uiScale, weight: isSelected ? .semibold : .regular))
                         .foregroundStyle(isSelected ? Self.accent : Color.primary)
                         .lineLimit(1)
                     Text("(\(count))")
-                        .font(.system(size: 17).monospacedDigit())
+                        .font(.system(size: 17 * uiScale).monospacedDigit())
                         .foregroundStyle(isSelected ? Self.accent.opacity(0.85) : Color.secondary)
                 }
 
                 Spacer()
 
                 Image(systemName: "chevron.right")
-                    .font(.system(size: 15, weight: .semibold))
+                    .font(.system(size: 15 * uiScale, weight: .semibold))
                     .foregroundStyle(isSelected ? Self.accent : Color.secondary.opacity(0.5))
             }
-            .padding(.horizontal, 18)
-            .padding(.vertical, 11)
+            .hEdgePadding(18)
+            .padding(.vertical, 11 * uiScale)
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
@@ -362,34 +377,90 @@ private struct CategoryRow: View {
 
     private static let accent = AirwindowsPalette.accent
 
+    @Environment(\.uiScale) private var uiScale
+
     var body: some View {
         Button(action: action) {
-            HStack(spacing: 12) {
+            HStack(spacing: 12 * uiScale) {
                 Circle()
                     .fill(isSelected ? Self.accent : dotColor.opacity(0.55))
-                    .frame(width: 8, height: 8)
+                    .frame(width: 8 * uiScale, height: 8 * uiScale)
 
-                HStack(alignment: .firstTextBaseline, spacing: 6) {
+                HStack(alignment: .firstTextBaseline, spacing: 6 * uiScale) {
                     Text(title)
-                        .font(.system(size: 20, weight: isSelected ? .semibold : .regular))
+                        .font(.system(size: 20 * uiScale, weight: isSelected ? .semibold : .regular))
                         .foregroundStyle(isSelected ? Self.accent : Color.primary)
                         .lineLimit(1)
                     Text("(\(count))")
-                        .font(.system(size: 17).monospacedDigit())
+                        .font(.system(size: 17 * uiScale).monospacedDigit())
                         .foregroundStyle(isSelected ? Self.accent.opacity(0.85) : Color.secondary)
                 }
 
                 Spacer()
 
                 Image(systemName: "chevron.right")
-                    .font(.system(size: 15, weight: .semibold))
+                    .font(.system(size: 15 * uiScale, weight: .semibold))
                     .foregroundStyle(isSelected ? Self.accent : Color.secondary.opacity(0.5))
             }
-            .padding(.horizontal, 18)
-            .padding(.vertical, 11)
+            .hEdgePadding(18)
+            .padding(.vertical, 11 * uiScale)
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+    }
+}
+
+// MARK: - Flow layout
+
+/// Minimal wrapping layout: places children left-to-right and wraps to a new
+/// line when the next child would overflow the proposed width. Used for the
+/// collection filter chips so they reflow within the sidebar instead of
+/// overflowing or compressing.
+struct FlowLayout: Layout {
+    var spacing: CGFloat = 8
+    var lineSpacing: CGFloat = 8
+
+    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout Void) -> CGSize {
+        let maxWidth = proposal.width ?? .infinity
+        var x: CGFloat = 0
+        var y: CGFloat = 0
+        var rowHeight: CGFloat = 0
+        var widest: CGFloat = 0
+
+        for subview in subviews {
+            let size = subview.sizeThatFits(.unspecified)
+            if x > 0, x + spacing + size.width > maxWidth {
+                widest = max(widest, x)
+                x = 0
+                y += rowHeight + lineSpacing
+                rowHeight = 0
+            }
+            if x > 0 { x += spacing }
+            x += size.width
+            rowHeight = max(rowHeight, size.height)
+        }
+        widest = max(widest, x)
+        let width = maxWidth.isFinite ? maxWidth : widest
+        return CGSize(width: width, height: y + rowHeight)
+    }
+
+    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout Void) {
+        var x: CGFloat = bounds.minX
+        var y: CGFloat = bounds.minY
+        var rowHeight: CGFloat = 0
+
+        for subview in subviews {
+            let size = subview.sizeThatFits(.unspecified)
+            if x > bounds.minX, x + spacing + size.width > bounds.maxX {
+                x = bounds.minX
+                y += rowHeight + lineSpacing
+                rowHeight = 0
+            }
+            if x > bounds.minX { x += spacing }
+            subview.place(at: CGPoint(x: x, y: y), anchor: .topLeading, proposal: ProposedViewSize(size))
+            x += size.width
+            rowHeight = max(rowHeight, size.height)
+        }
     }
 }
 

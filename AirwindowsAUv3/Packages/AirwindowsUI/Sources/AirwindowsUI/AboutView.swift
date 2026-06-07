@@ -14,6 +14,7 @@ public struct AboutView: View {
     public let onClose: () -> Void
 
     @Environment(\.colorScheme) private var scheme
+    @Environment(\.uiScale) private var uiScale
 
     public init(onClose: @escaping () -> Void) {
         self.onClose = onClose
@@ -23,35 +24,35 @@ public struct AboutView: View {
         VStack(alignment: .leading, spacing: 0) {
             HStack {
                 Text("About")
-                    .font(.system(size: 20, weight: .semibold))
+                    .font(.system(size: 20 * uiScale, weight: .semibold))
                 Spacer()
                 Button(action: onClose) {
                     Image(systemName: "xmark")
-                        .font(.system(size: 14, weight: .semibold))
+                        .font(.system(size: 14 * uiScale, weight: .semibold))
                         .foregroundStyle(.secondary)
-                        .frame(width: 32, height: 32)
+                        .frame(width: 32 * uiScale, height: 32 * uiScale)
                         .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
                 .accessibilityLabel("Close")
             }
-            .padding(.horizontal, 24)
-            .padding(.top, 18)
-            .padding(.bottom, 14)
+            .hEdgePadding(24)
+            .padding(.top, 18 * uiScale)
+            .padding(.bottom, 14 * uiScale)
 
             Divider().opacity(0.4)
 
             ScrollView {
-                VStack(alignment: .leading, spacing: 22) {
+                VStack(alignment: .leading, spacing: 22 * uiScale) {
                     AboutSection(title: "Airwindows Consolidated") {
                         Text("500+ free, open-source audio effects by Chris Johnson, packaged as a single AUv3 plugin for iPad.")
-                            .font(.system(size: 14))
+                            .font(.system(size: 14 * uiScale))
                             .foregroundStyle(.primary)
                             .lineSpacing(3)
                     }
 
                     AboutSection(title: "Credits") {
-                        VStack(alignment: .leading, spacing: 8) {
+                        VStack(alignment: .leading, spacing: 8 * uiScale) {
                             AboutRow(label: "DSP", value: "Chris Johnson — airwindows.com")
                             AboutRow(label: "Registry", value: "Paul Walker — baconpaul/airwin2rack")
                             AboutRow(label: "iPad port", value: "Sveinbjörn Pálsson")
@@ -60,13 +61,13 @@ public struct AboutView: View {
 
                     AboutSection(title: "License") {
                         Text("MIT License. Free to use, modify, and distribute. No warranty.")
-                            .font(.system(size: 13))
+                            .font(.system(size: 13 * uiScale))
                             .foregroundStyle(.secondary)
                             .lineSpacing(3)
                     }
 
                     AboutSection(title: "Feedback") {
-                        VStack(alignment: .leading, spacing: 8) {
+                        VStack(alignment: .leading, spacing: 8 * uiScale) {
                             AboutLinkRow(
                                 label: "Email",
                                 display: "sveinbjorn@gmail.com",
@@ -84,14 +85,14 @@ public struct AboutView: View {
 
                     AboutSection(title: "Thanks") {
                         Text("Enormous thanks to Chris Johnson for decades of free, meticulously crafted DSP, and to Paul Walker for the consolidated registry that made this port possible.")
-                            .font(.system(size: 13))
+                            .font(.system(size: 13 * uiScale))
                             .foregroundStyle(.secondary)
                             .lineSpacing(3)
                     }
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.horizontal, 24)
-                .padding(.vertical, 22)
+                .hEdgePadding(24)
+                .padding(.vertical, 22 * uiScale)
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -103,10 +104,12 @@ private struct AboutSection<Content: View>: View {
     let title: String
     @ViewBuilder let content: () -> Content
 
+    @Environment(\.uiScale) private var uiScale
+
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
+        VStack(alignment: .leading, spacing: 10 * uiScale) {
             Text(title.uppercased())
-                .font(.system(size: 11, weight: .semibold))
+                .font(.system(size: 11 * uiScale, weight: .semibold))
                 .kerning(0.8)
                 .foregroundStyle(.secondary)
             content()
@@ -118,14 +121,16 @@ private struct AboutRow: View {
     let label: String
     let value: String
 
+    @Environment(\.uiScale) private var uiScale
+
     var body: some View {
         HStack(alignment: .firstTextBaseline) {
             Text(label)
-                .font(.system(size: 13, weight: .medium))
+                .font(.system(size: 13 * uiScale, weight: .medium))
                 .foregroundStyle(.secondary)
-                .frame(width: 100, alignment: .leading)
+                .frame(width: 100 * uiScale, alignment: .leading)
             Text(value)
-                .font(.system(size: 13))
+                .font(.system(size: 13 * uiScale))
                 .foregroundStyle(.primary)
             Spacer()
         }
@@ -139,18 +144,20 @@ private struct AboutLinkRow: View {
     let display: String
     let url: URL
 
+    @Environment(\.uiScale) private var uiScale
+
     var body: some View {
         HStack(alignment: .firstTextBaseline) {
             Text(label)
-                .font(.system(size: 13, weight: .medium))
+                .font(.system(size: 13 * uiScale, weight: .medium))
                 .foregroundStyle(.secondary)
-                .frame(width: 100, alignment: .leading)
+                .frame(width: 100 * uiScale, alignment: .leading)
             Link(destination: url) {
-                HStack(spacing: 4) {
+                HStack(spacing: 4 * uiScale) {
                     Text(display)
-                        .font(.system(size: 13))
+                        .font(.system(size: 13 * uiScale))
                     Image(systemName: "arrow.up.right")
-                        .font(.system(size: 10, weight: .semibold))
+                        .font(.system(size: 10 * uiScale, weight: .semibold))
                 }
             }
             .accessibilityLabel("\(label): \(display)")
