@@ -198,61 +198,26 @@ private struct CollectionTabStrip: View {
     @Environment(\.uiScale) private var uiScale
 
     var body: some View {
-        // FlowLayout so the chips wrap to a second line rather than overflowing
-        // the sidebar — the three labels don't fit on one row at full scale.
-        FlowLayout(spacing: 8 * uiScale, lineSpacing: 8 * uiScale) {
-            ForEach(items) { item in
-                CollectionTab(
-                    collection: item,
-                    isSelected: selection == item
-                ) {
-                    if selection == item {
-                        selection = .all
-                    } else {
-                        selection = item
+        // The three tabs must share one line in the fixed-width sidebar, but the
+        // longest label ("Recommended" — 100pt of text alone) makes them overflow
+        // the left-aligned 18pt inset (which can't shrink: it matches the search
+        // field below). The inset is half-fixed, so small UI scales make it worse.
+        // FitToWidth shrinks all three uniformly by only the factor needed to fit
+        // (≈0.98 at 100% — imperceptible), keeping them on one line at any scale
+        // while staying the regular chip size, matching the rest of the system.
+        FitToWidth {
+            HStack(spacing: 6 * uiScale) {
+                ForEach(items) { item in
+                    Chip(
+                        text: item.rawValue,
+                        role: .toggle(isOn: selection == item),
+                        accessibility: item.rawValue
+                    ) {
+                        selection = (selection == item) ? .all : item
                     }
                 }
             }
         }
-    }
-}
-
-private struct CollectionTab: View {
-    let collection: EffectCollection
-    let isSelected: Bool
-    let action: () -> Void
-
-    @Environment(\.uiScale) private var uiScale
-
-    private var fillColor: Color {
-        isSelected ? Color.secondary.opacity(0.16) : Color.clear
-    }
-
-    private var strokeColor: Color {
-        // Unselected chips keep a faint outline so they still read as chips.
-        isSelected ? Color.secondary.opacity(0.3) : Color.secondary.opacity(0.22)
-    }
-
-    private var labelColor: Color {
-        isSelected ? Color.primary : Color.secondary
-    }
-
-    var body: some View {
-        Button(action: action) {
-            Text(collection.rawValue)
-                .font(.system(size: 14 * uiScale, weight: .medium))
-                .foregroundStyle(labelColor)
-                .lineLimit(1)
-                .padding(.horizontal, 13 * uiScale)
-                .padding(.vertical, 7 * uiScale)
-                .background(
-                    Capsule()
-                        .fill(fillColor)
-                        .overlay(Capsule().stroke(strokeColor, lineWidth: 1))
-                )
-                .contentShape(Capsule())
-        }
-        .buttonStyle(.plain)
     }
 }
 
@@ -412,10 +377,48 @@ private struct CategoryRow: View {
 
 // MARK: - Flow layout
 
+/// Scales its content down uniformly so it fits the available width on a single
+/// line — never scales up. The layout footprint is capped to the available
+/// width (height tracks the content's natural height), so the shrunk content
+/// can't push its neighbors. Used by the collection filter strip, whose longest
+/// label can't otherwise share a line with the other two in the narrow sidebar.
+private struct FitToWidth<Content: View>: View {
+    @ViewBuilder var content: Content
+
+    @State private var contentSize: CGSize = .zero
+
+    var body: some View {
+        GeometryReader { geo in
+            let factor: CGFloat = (contentSize.width > geo.size.width && contentSize.width > 0)
+                ? geo.size.width / contentSize.width
+                : 1
+            content
+                .fixedSize()
+                .background(
+                    GeometryReader { proxy in
+                        Color.clear.preference(key: FitSizeKey.self, value: proxy.size)
+                    }
+                )
+                .scaleEffect(factor, anchor: .leading)
+                .onPreferenceChange(FitSizeKey.self) { contentSize = $0 }
+        }
+        // Reserve the content's natural height so the GeometryReader (which is
+        // otherwise greedy) doesn't collapse the row.
+        .frame(height: contentSize.height)
+    }
+}
+
+private struct FitSizeKey: PreferenceKey {
+    static let defaultValue: CGSize = .zero
+    static func reduce(value: inout CGSize, nextValue: () -> CGSize) {
+        let next = nextValue()
+        if next != .zero { value = next }
+    }
+}
+
 /// Minimal wrapping layout: places children left-to-right and wraps to a new
-/// line when the next child would overflow the proposed width. Used for the
-/// collection filter chips so they reflow within the sidebar instead of
-/// overflowing or compressing.
+/// line when the next child would overflow the proposed width. Retained as a
+/// general-purpose utility (the filter strip now uses `FitToWidth` instead).
 struct FlowLayout: Layout {
     var spacing: CGFloat = 8
     var lineSpacing: CGFloat = 8

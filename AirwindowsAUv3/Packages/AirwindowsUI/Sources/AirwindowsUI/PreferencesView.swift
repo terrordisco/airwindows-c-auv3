@@ -100,9 +100,10 @@ public struct PreferencesView: View {
 private struct ScaleSlider: View {
     @Binding var scale: Double
 
-    /// Native slider thumb is ~28pt wide; the value travels along a track
-    /// inset by half that on each side. Tick labels inset to match.
-    private let thumbInset: CGFloat = 14
+    /// Matches `LinearFader`, which reserves half its 22pt handle on each side;
+    /// the value travels along a track inset by 11pt. Tick labels inset to match
+    /// so the signposts line up with the handle position.
+    private let thumbInset: CGFloat = 11
 
     private var range: ClosedRange<Double> {
         Double(UIScaleConfig.minimum)...Double(UIScaleConfig.maximum)
@@ -117,11 +118,15 @@ private struct ScaleSlider: View {
                     .foregroundStyle(.secondary)
             }
 
-            Slider(
+            // The same custom fader the parameter rows use: relative-drag (a
+            // touch doesn't teleport the handle), Color.primary fill, and a
+            // double-tap that resets to 100% — mirroring the per-parameter
+            // double-tap-to-default and the "Reset to 100%" button below.
+            LinearFader(
                 value: $scale,
-                in: range
+                in: range,
+                defaultValue: Double(UIScaleConfig.reference)
             )
-            .tint(AirwindowsPalette.actionButton)
 
             // Bottom row: iPad-size signposts.
             tickRow { guide in

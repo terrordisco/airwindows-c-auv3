@@ -377,7 +377,7 @@ public struct EffectDetailView: View {
     private var chipZone: some View {
         HStack(spacing: 16 * uiScale) {
             // Non-interactive display marker — stays on the left.
-            MetaChip(text: effect.isMono ? "MONO" : "STEREO")
+            Chip(text: effect.isMono ? "MONO" : "STEREO", role: .inert, size: .small)
 
             Spacer(minLength: 8 * uiScale)
 
@@ -385,9 +385,10 @@ public struct EffectDetailView: View {
             // only in the standalone app; the AUv3 plugin omits it (the host
             // owns routing). Icon + label reflect the current state.
             if let onToggleMonitoring {
-                FilledIconChip(
+                Chip(
                     systemName: isMonitoring ? "speaker.wave.2.fill" : "speaker.slash.fill",
                     text: isMonitoring ? "Live" : "Muted",
+                    role: .action,
                     accessibility: isMonitoring ? "Mute input monitoring" : "Start input monitoring",
                     action: onToggleMonitoring
                 )
@@ -397,18 +398,20 @@ public struct EffectDetailView: View {
             // (where you go when you tap), matching Apple's toggle convention;
             // Reset stays a constant verb because it isn't a state toggle.
             if let onToggleTheme {
-                FilledIconChip(
+                Chip(
                     systemName: isDarkMode ? "sun.max" : "moon",
                     text: isDarkMode ? "Day" : "Night",
+                    role: .action,
                     accessibility: isDarkMode ? "Switch to light mode" : "Switch to dark mode",
                     action: onToggleTheme
                 )
             }
 
             if let onToggleControlStyle {
-                FilledIconChip(
+                Chip(
                     systemName: useRotaryPots ? "slider.horizontal.below.rectangle" : "dial.medium",
                     text: useRotaryPots ? "Sliders" : "Pots",
+                    role: .action,
                     accessibility: useRotaryPots
                         ? "Switch parameter controls to sliders"
                         : "Switch parameter controls to pots",
@@ -417,44 +420,53 @@ public struct EffectDetailView: View {
             }
 
             if let onUndo {
-                FilledIconChip(
+                Chip(
                     systemName: "arrow.uturn.backward",
                     text: "Undo",
-                    accessibility: "Undo last change",
+                    role: .action,
                     isEnabled: canUndo,
+                    accessibility: "Undo last change",
                     action: onUndo
                 )
             }
 
             if let onRedo {
-                FilledIconChip(
+                Chip(
                     systemName: "arrow.uturn.forward",
                     text: "Redo",
-                    accessibility: "Redo",
+                    role: .action,
                     isEnabled: canRedo,
+                    accessibility: "Redo",
                     action: onRedo
                 )
             }
 
             if let onRandomize {
-                FilledIconChip(
+                Chip(
                     systemName: "dice",
                     text: "Random",
+                    role: .action,
                     accessibility: "Randomize parameters",
                     action: onRandomize
                 )
             }
 
-            FilledIconChip(
+            Chip(
                 systemName: "arrow.counterclockwise",
                 text: "Reset",
+                role: .action,
                 accessibility: "Reset parameters",
                 action: onReset
             )
         }
         .hEdgePadding(20)
-        // Fully centered vertically in the bar.
+        // Centered in the bar, then nudged down 6pt: the Settings box on the
+        // left is bottom-anchored (its label sits below bar center), so a plain
+        // center makes the chips ride high relative to it. This pull-down lines
+        // the chip row up with the Settings label — tuned by eye on device.
+        // Scales with the UI.
         .frame(maxHeight: .infinity)
+        .offset(y: 6 * uiScale)
     }
 
     private var shouldShowDescription: Bool {
@@ -494,31 +506,11 @@ private struct ScrollHatchGutter: View {
     }
 }
 
-private struct MetaChip: View {
-    let text: String
-
-    @Environment(\.uiScale) private var uiScale
-
-    var body: some View {
-        Text(text)
-            .font(.system(size: 13 * uiScale, weight: .semibold))
-            .kerning(0.6)
-            .foregroundStyle(.secondary)
-            .padding(.horizontal, 8 * uiScale)
-            .padding(.vertical, 4 * uiScale)
-            .overlay(
-                RoundedRectangle(cornerRadius: 6)
-                    .stroke(Color.secondary.opacity(0.25), lineWidth: 1)
-            )
-    }
-}
-
-/// Stroked chip that opens an external URL (blog post, YouTube video).
-/// Used in the browser preview pane. Module-internal so BrowserView can render
-/// these chips without re-implementing them.
+/// Chip that opens an external URL (blog post, YouTube video), used in the
+/// browser preview pane. A thin wrapper over `Chip` (role `.action`) so the URL
+/// plumbing lives in one place; module-internal so BrowserView can render it.
 ///
-/// `text` is optional — when nil the chip is icon-only (legacy compact
-/// presentation). When set, the icon sits to the left of the label.
+/// `text` is optional — when nil the chip is icon-only.
 struct LinkChip: View {
     let url: URL
     let systemName: String
@@ -526,7 +518,6 @@ struct LinkChip: View {
     let accessibility: String
 
     @Environment(\.openURL) private var openURL
-    @Environment(\.uiScale) private var uiScale
 
     init(url: URL, systemName: String, text: String? = nil, accessibility: String) {
         self.url = url
@@ -536,78 +527,14 @@ struct LinkChip: View {
     }
 
     var body: some View {
-        Button {
+        Chip(
+            systemName: systemName,
+            text: text,
+            role: .action,
+            accessibility: accessibility
+        ) {
             openURL(url)
-        } label: {
-            HStack(spacing: 6 * uiScale) {
-                Image(systemName: systemName)
-                    .font(.system(size: 15 * uiScale, weight: .medium))
-                if let text {
-                    Text(text)
-                        .font(.system(size: 14 * uiScale, weight: .medium))
-                }
-            }
-            .foregroundStyle(.secondary)
-            .padding(.horizontal, 10 * uiScale)
-            .padding(.vertical, 6 * uiScale)
-            .overlay(
-                RoundedRectangle(cornerRadius: 8)
-                    .stroke(Color.secondary.opacity(0.35), lineWidth: 1)
-            )
         }
-        .buttonStyle(.plain)
-        .accessibilityLabel(accessibility)
-    }
-}
-
-private struct FilledIconChip: View {
-    let systemName: String
-    let text: String?
-    let accessibility: String
-    let isEnabled: Bool
-    let action: () -> Void
-
-    @Environment(\.colorScheme) private var scheme
-    @Environment(\.uiScale) private var uiScale
-
-    init(
-        systemName: String,
-        text: String? = nil,
-        accessibility: String,
-        isEnabled: Bool = true,
-        action: @escaping () -> Void
-    ) {
-        self.systemName = systemName
-        self.text = text
-        self.accessibility = accessibility
-        self.isEnabled = isEnabled
-        self.action = action
-    }
-
-    var body: some View {
-        Button(action: action) {
-            HStack(spacing: 6 * uiScale) {
-                Image(systemName: systemName)
-                    .font(.system(size: 15 * uiScale, weight: .medium))
-                if let text {
-                    Text(text)
-                        .font(.system(size: 14 * uiScale, weight: .medium))
-                }
-            }
-            .foregroundStyle(scheme == .dark ? Color.black : Color.white)
-            .padding(.horizontal, 10 * uiScale)
-            .padding(.vertical, 6 * uiScale)
-            .background(
-                RoundedRectangle(cornerRadius: 8)
-                    .fill(Color.primary.opacity(0.85))
-            )
-        }
-        .buttonStyle(.plain)
-        .disabled(!isEnabled)
-        // Dim the whole chip when there's nothing to do, matching the
-        // standard "unavailable control" affordance.
-        .opacity(isEnabled ? 1 : 0.3)
-        .accessibilityLabel(accessibility)
     }
 }
 

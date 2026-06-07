@@ -429,19 +429,14 @@ private struct EffectPreviewColumn: View {
                         .accessibilityLabel(isFav ? "Remove \(effect.name) from favorites" : "Add \(effect.name) to favorites")
                     }
 
-                    Button {
+                    Chip(
+                        text: "Select",
+                        role: .primary,
+                        size: .large,
+                        accessibility: "Select \(effect.name)"
+                    ) {
                         onSelect(effect)
-                    } label: {
-                        Text("Select")
-                            .font(.system(size: 17 * uiScale, weight: .semibold))
-                            .foregroundStyle(Color.white)
-                            .padding(.horizontal, 20 * uiScale)
-                            .padding(.vertical, 10 * uiScale)
-                            .background(
-                                Capsule().fill(AirwindowsPalette.actionButton)
-                            )
                     }
-                    .buttonStyle(.plain)
                 }
                 .padding(.top, 28 * uiScale)
                 .hEdgePadding(28)
@@ -526,28 +521,11 @@ private struct FlowMetaRow: View {
         // the other — every effect is one of those two, so neither is a
         // meaningful "default" to leave unmarked.
         HStack(spacing: 8 * uiScale) {
-            MetaPill(text: effect.isMono ? "Mono" : "Stereo")
+            Chip(text: effect.isMono ? "Mono" : "Stereo", role: .inert)
             if !effect.firstCommitDate.isEmpty {
-                MetaPill(text: effect.firstCommitDate)
+                Chip(text: effect.firstCommitDate, role: .inert)
             }
         }
-    }
-}
-
-private struct MetaPill: View {
-    let text: String
-
-    @Environment(\.uiScale) private var uiScale
-
-    var body: some View {
-        Text(text)
-            .font(.system(size: 15 * uiScale))
-            .foregroundStyle(.secondary)
-            .padding(.horizontal, 12 * uiScale)
-            .padding(.vertical, 5 * uiScale)
-            .background(
-                Capsule().fill(Color.secondary.opacity(0.1))
-            )
     }
 }
 
