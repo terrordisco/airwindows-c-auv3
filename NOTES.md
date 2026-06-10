@@ -150,6 +150,34 @@ restore *after* the view is live. A blank UI over a correctly-loaded engine
 is a sync bug, not a persistence bug; device `os_log` is the fastest way to
 tell them apart.
 
+## Browser context preserved across opens + prev/next walks the browsed list (2026-06-10)
+
+Tester feedback: browsing "all there is" (All categories / Favorites / search),
+picking an effect, then returning to the browser dumped you into the *effect's
+own category* — the browse context was overwritten every time. Prev/next jogs
+had the same bias: they always walked the effect's literal category, never the
+list you actually picked from.
+
+Two-part fix:
+
+- **`BrowserContext`** (new public struct in `BrowserView.swift`): category,
+  collection filter, search text, sort mode. Owned by `AirwindowsAUView` as
+  `@State` and passed into `BrowserView` as a `Binding`, so it survives the
+  `fullScreenCover` teardown. Reopening the browser lands exactly where you
+  left off. Seeding the context from the active effect's category now happens
+  ONLY when the context is empty (`openBrowser()`) — i.e. host-restored
+  sessions where the user never browsed; a user-picked category is never
+  overridden.
+- **Browse pool** (view model): `onSelect` now also hands over the ordered
+  middle-column list at pick time (`navigationPool`; grouped "by category"
+  view flattens groups to match visual order). `setBrowsePool` stores the
+  registry indexes; `previousEffect`/`nextEffect` walk that pool when it
+  contains the current effect, else fall back to `siblingsInCurrentCategory`
+  (host restores, Random picks that land outside the browsed list).
+
+Launch behavior unchanged: fresh launch still opens the browser with nothing
+preselected; restored sessions still land on the effect page.
+
 ## Value text froze under modulation — display query ignored live value (2026-06-06)
 
 Under a host LFO (AUM), miRack CV, or any render-thread automation, a parameter's

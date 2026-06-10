@@ -197,7 +197,8 @@ final class AirwindowsAudioUnitViewModel {
     }
 
     /// Effects in the same category as the current effect, in Chris order.
-    /// Used by ← Prev | Effect | Next → header navigation.
+    /// Fallback pool for ← Prev | Effect | Next → header navigation when the
+    /// browse pool (below) doesn't apply.
     var siblingsInCurrentCategory: [EffectBrowseModel] {
         let cat = effectCategory
         guard !cat.isEmpty else { return [] }
@@ -206,15 +207,40 @@ final class AirwindowsAudioUnitViewModel {
             .sortedByChrisOrdering()
     }
 
-    var previousEffectInCategory: EffectBrowseModel? {
-        let siblings = siblingsInCurrentCategory
+    /// Ordered registry indexes of the list the user last picked from in the
+    /// browser — a category, Favorites, "New", or a filtered/search result.
+    /// Captured by `setBrowsePool` at selection time so ← Prev | Next → walk
+    /// the list the user was actually browsing. Session-only: after a host
+    /// restore it's empty and navigation falls back to the effect's category.
+    private var browsePoolIndexes: [Int] = []
+
+    /// Snapshot the browser's visible effect list as the prev/next pool.
+    func setBrowsePool(_ effects: [EffectBrowseModel]) {
+        browsePoolIndexes = effects.map(\.registryIndex)
+    }
+
+    /// The list ← Prev | Next → walk: the browse pool when it contains the
+    /// current effect, otherwise the current effect's category. The fallback
+    /// covers host-restored sessions (no pool yet) and Random picks that
+    /// landed outside the browsed list.
+    private var navigationSiblings: [EffectBrowseModel] {
+        if browsePoolIndexes.contains(effectIndex) {
+            return browsePoolIndexes.compactMap { index in
+                browseModels.indices.contains(index) ? browseModels[index] : nil
+            }
+        }
+        return siblingsInCurrentCategory
+    }
+
+    var previousEffect: EffectBrowseModel? {
+        let siblings = navigationSiblings
         guard let idx = siblings.firstIndex(where: { $0.registryIndex == effectIndex }),
               idx > 0 else { return nil }
         return siblings[idx - 1]
     }
 
-    var nextEffectInCategory: EffectBrowseModel? {
-        let siblings = siblingsInCurrentCategory
+    var nextEffect: EffectBrowseModel? {
+        let siblings = navigationSiblings
         guard let idx = siblings.firstIndex(where: { $0.registryIndex == effectIndex }),
               idx < siblings.count - 1 else { return nil }
         return siblings[idx + 1]
@@ -291,7 +317,7 @@ final class AirwindowsAudioUnitViewModel {
     }
 
     func selectNextEffect() {
-        if let next = nextEffectInCategory {
+        if let next = nextEffect {
             selectEffect(at: next.registryIndex)
             return
         }
@@ -302,7 +328,7 @@ final class AirwindowsAudioUnitViewModel {
     }
 
     func selectPreviousEffect() {
-        if let prev = previousEffectInCategory {
+        if let prev = previousEffect {
             selectEffect(at: prev.registryIndex)
             return
         }

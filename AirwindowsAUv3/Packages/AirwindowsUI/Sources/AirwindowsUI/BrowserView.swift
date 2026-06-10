@@ -10,6 +10,34 @@
 
 import SwiftUI
 
+/// The user's place in the browser — which category they're viewing, plus the
+/// collection filter, search text and sort order. Owned by the workspace view
+/// (AirwindowsAUView) and passed into BrowserView as a binding, so the state
+/// survives the browser being dismissed and re-presented: returning to the
+/// browser lands exactly where the user left off instead of being reset to
+/// the active effect's category.
+public struct BrowserContext: Equatable, Sendable {
+    public var collection: EffectCollection
+    public var searchText: String
+    /// `nil` = nothing picked yet (clean launch), `""` = "All categories",
+    /// otherwise a category name or a pseudo-category sentinel ("New",
+    /// "★ Favorites").
+    public var selectedCategory: String?
+    public var sortMode: EffectSortMode
+
+    public init(
+        collection: EffectCollection = .all,
+        searchText: String = "",
+        selectedCategory: String? = nil,
+        sortMode: EffectSortMode = .chrisOrdering
+    ) {
+        self.collection = collection
+        self.searchText = searchText
+        self.selectedCategory = selectedCategory
+        self.sortMode = sortMode
+    }
+}
+
 /// Three-column effect browser:
 /// - left: SidebarView (collections, search, categories)
 /// - middle: "Category (count)" header + "newest first" caption + numbered effect list
@@ -20,7 +48,12 @@ public struct BrowserView: View {
     public let countsByCategory: [String: Int]
     public let initialHighlight: EffectBrowseModel?
     public let descriptionProvider: (EffectBrowseModel) -> String
-    public let onSelect: (EffectBrowseModel) -> Void
+    /// Called with the picked effect plus the ordered list it was picked from
+    /// (the middle column as currently displayed). The workspace hands that
+    /// list to the view model so ← Prev / Next → on the effect page walk the
+    /// same list the user was browsing — Favorites, "New", a search result —
+    /// not just the effect's literal category.
+    public let onSelect: (EffectBrowseModel, [EffectBrowseModel]) -> Void
     public let onClose: () -> Void
     /// Optional — drives the pinned "Favorites" pseudo-category in the sidebar
     /// and the star toggle in the preview pane.
@@ -30,13 +63,12 @@ public struct BrowserView: View {
     /// Matches the workspace's Settings box so the two line up across the
     /// browse ↔ effect transition. Scaled by the same factor as the box.
     @Environment(\.uiScale) private var uiScale
-    @State private var collection: EffectCollection = .all
-    @State private var searchText: String = ""
-    @State private var selectedCategory: String?
+    /// Category / filter / search / sort, owned by the caller so it outlives
+    /// this view — see `BrowserContext`.
+    @Binding var context: BrowserContext
     @State private var highlighted: EffectBrowseModel?
     @State private var showAbout: Bool = false
     @State private var showPreferences: Bool = false
-    @State private var sortMode: EffectSortMode = .chrisOrdering
 
     /// Pseudo-category that shows the N most recently committed effects
     /// across the currently filtered pool. Lives only in the BrowserView —
@@ -53,11 +85,11 @@ public struct BrowserView: View {
         allEffects: [EffectBrowseModel],
         categories: [String],
         countsByCategory: [String: Int],
-        initialCategory: String? = nil,
+        context: Binding<BrowserContext>,
         initialHighlight: EffectBrowseModel? = nil,
         descriptionProvider: @escaping (EffectBrowseModel) -> String = { $0.whatText },
         favorites: FavoritesStore? = nil,
-        onSelect: @escaping (EffectBrowseModel) -> Void,
+        onSelect: @escaping (EffectBrowseModel, [EffectBrowseModel]) -> Void,
         onClose: @escaping () -> Void
     ) {
         self.allEffects = allEffects
@@ -68,9 +100,7 @@ public struct BrowserView: View {
         self.favorites = favorites
         self.onSelect = onSelect
         self.onClose = onClose
-        // Treat empty string the same as nil — no category preselected.
-        let cat = (initialCategory?.isEmpty == true) ? nil : initialCategory
-        self._selectedCategory = State(initialValue: cat)
+        self._context = context
         self._highlighted = State(initialValue: initialHighlight)
     }
 
@@ -78,9 +108,9 @@ public struct BrowserView: View {
         HStack(spacing: 0) {
             // Left: sidebar
             SidebarView(
-                collection: $collection,
-                searchText: $searchText,
-                selectedCategory: $selectedCategory,
+                collection: $context.collection,
+                searchText: $context.searchText,
+                selectedCategory: $context.selectedCategory,
                 categories: visibleCategories,
                 countsByCategory: effectiveCountsByCategory,
                 totalCount: filteredAll.count,
@@ -89,9 +119,9 @@ public struct BrowserView: View {
                 onRandomTap: pickRandom,
                 onSettingsTap: { showPreferences = true },
                 favoritesCount: favoriteEffects.count,
-                isFavoritesSelected: selectedCategory == Self.favoritesCategoryName,
+                isFavoritesSelected: context.selectedCategory == Self.favoritesCategoryName,
                 onSelectFavorites: favorites == nil ? nil : {
-                    selectedCategory = Self.favoritesCategoryName
+                    context.selectedCategory = Self.favoritesCategoryName
                 }
             )
             .frame(width: AirwindowsLayout.sidebarWidth * uiScale)
@@ -101,20 +131,20 @@ public struct BrowserView: View {
             // Middle: effect list — only shown once the user has made a pick
             // in the sidebar. "All categories" sets sentinel "", a specific
             // category sets its name, initial state is nil = nothing picked.
-            if let cat = selectedCategory {
+            if let cat = context.selectedCategory {
                 EffectListColumn(
                     categoryLabel: middleColumnLabel(for: cat),
-                    sortLabel: sortMode.rawValue,
+                    sortLabel: context.sortMode.rawValue,
                     effects: effectsInCurrentCategory,
-                    groupedByCategory: isAllCategories && sortMode == .byCategory
+                    groupedByCategory: isAllCategories && context.sortMode == .byCategory
                         ? groupedEffects : nil,
                     highlighted: $highlighted,
                     onPick: { effect in
-                        onSelect(effect)
+                        onSelect(effect, navigationPool)
                         onClose()
                     },
                     onSortTap: {
-                        sortMode = sortMode.next(allCategories: isAllCategories)
+                        context.sortMode = context.sortMode.next(allCategories: isAllCategories)
                     }
                 )
                 .frame(minWidth: 260 * uiScale, idealWidth: 310 * uiScale, maxWidth: 340 * uiScale)
@@ -125,13 +155,13 @@ public struct BrowserView: View {
             // Right: preview pane — only show an effect once the user has
             // picked a category (selectedCategory != nil).
             EffectPreviewColumn(
-                effect: selectedCategory != nil
+                effect: context.selectedCategory != nil
                     ? (highlighted ?? effectsInCurrentCategory.first)
                     : nil,
                 description: highlighted.flatMap { descriptionProvider($0) } ?? "",
                 favorites: favorites,
                 onSelect: { effect in
-                    onSelect(effect)
+                    onSelect(effect, navigationPool)
                     onClose()
                 }
             )
@@ -146,19 +176,19 @@ public struct BrowserView: View {
             // If the user un-stars their last favorite while viewing the
             // Favorites pseudo-category, fall back to "All categories" so the
             // middle column isn't an orphaned empty list.
-            if newCount == 0, selectedCategory == Self.favoritesCategoryName {
-                selectedCategory = ""
+            if newCount == 0, context.selectedCategory == Self.favoritesCategoryName {
+                context.selectedCategory = ""
             }
         }
-        .onChange(of: selectedCategory) { _, newCat in
+        .onChange(of: context.selectedCategory) { _, newCat in
             // "By category" sort only makes sense for "All categories"
-            if newCat != "" && sortMode == .byCategory {
-                sortMode = .chrisOrdering
+            if newCat != "" && context.sortMode == .byCategory {
+                context.sortMode = .chrisOrdering
             }
             // "New" pseudo-category defaults to newest-first; user can still
             // toggle the sort to re-order those 8 effects alphabetically etc.
             if newCat == Self.newCategoryName {
-                sortMode = .newestFirst
+                context.sortMode = .newestFirst
             }
         }
         .sheet(isPresented: $showAbout) {
@@ -176,8 +206,8 @@ public struct BrowserView: View {
 
     private var filteredAll: [EffectBrowseModel] {
         allEffects
-            .filtered(by: collection)
-            .matching(query: searchText)
+            .filtered(by: context.collection)
+            .matching(query: context.searchText)
     }
 
     private var visibleCategories: [String] {
@@ -207,20 +237,31 @@ public struct BrowserView: View {
 
     private var effectsInCurrentCategory: [EffectBrowseModel] {
         let pool: [EffectBrowseModel]
-        if selectedCategory == Self.favoritesCategoryName {
+        if context.selectedCategory == Self.favoritesCategoryName {
             pool = favoriteEffects
-        } else if selectedCategory == Self.newCategoryName {
+        } else if context.selectedCategory == Self.newCategoryName {
             // Pseudo-category: 8 newest. Re-applies the user-chosen sortMode
             // afterward so toggling alphabetical etc. still re-orders them.
             pool = newCategoryEffects
-        } else if let cat = selectedCategory, !cat.isEmpty {
+        } else if let cat = context.selectedCategory, !cat.isEmpty {
             // Specific category picked
             pool = filteredAll.filter { $0.category == cat }
         } else {
             // Empty string ("All categories") or nil → full pool
             pool = filteredAll
         }
-        return pool.sorted(by: sortMode)
+        return pool.sorted(by: context.sortMode)
+    }
+
+    /// The ordered list of effects the middle column is currently showing —
+    /// handed to `onSelect` so prev/next on the effect page can walk the same
+    /// list the user picked from. In "by category" grouping the flat sort
+    /// order differs from the visual order, so flatten the groups instead.
+    private var navigationPool: [EffectBrowseModel] {
+        if isAllCategories && context.sortMode == .byCategory {
+            return groupedEffects.flatMap(\.effects)
+        }
+        return effectsInCurrentCategory
     }
 
     /// Counts table augmented with the synthetic "New" entry so the sidebar
@@ -232,7 +273,7 @@ public struct BrowserView: View {
     }
 
     private var isAllCategories: Bool {
-        selectedCategory == ""
+        context.selectedCategory == ""
     }
 
     /// Effects grouped by category, each group sorted by Chris ordering.
@@ -258,9 +299,12 @@ public struct BrowserView: View {
 
     /// Pick a random effect from the current filtered pool (collection + search).
     /// Category selection is intentionally ignored so random stays surprising.
+    /// The pool still reflects the current category — if the random pick lands
+    /// outside it, the view model falls back to the pick's own category for
+    /// prev/next navigation.
     private func pickRandom() {
         guard let picked = filteredAll.randomElement() else { return }
-        onSelect(picked)
+        onSelect(picked, navigationPool)
         onClose()
     }
 }
@@ -541,8 +585,8 @@ private struct FlowMetaRow: View {
             "Consoles": 45,
             "Tape": 12
         ],
-        initialCategory: "Filter",
-        onSelect: { _ in },
+        context: .constant(BrowserContext(selectedCategory: "Filter")),
+        onSelect: { _, _ in },
         onClose: {}
     )
     .frame(width: 1100, height: 700)

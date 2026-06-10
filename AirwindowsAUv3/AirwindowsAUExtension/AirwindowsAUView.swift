@@ -44,6 +44,11 @@ struct AirwindowsAUView: View {
     /// AFTER launch), we use this to dismiss the browser and land on the
     /// restored effect's page instead of leaving it covering the workspace.
     @State private var browserOpenedAtLaunch: Bool = false
+    /// The user's place in the browser (category, filter, search, sort).
+    /// Owned here — not by BrowserView — so it survives the fullScreenCover
+    /// being torn down: reopening the browser lands exactly where the user
+    /// left off, instead of resetting to the active effect's category.
+    @State private var browserContext = BrowserContext()
     @AppStorage("airwindows.darkMode") private var isDarkMode: Bool = false
 
     /// Tri-state control-style preference, persisted globally:
@@ -112,22 +117,26 @@ struct AirwindowsAUView: View {
                         .environment(\.colorScheme, isDarkMode ? .dark : .light)
                 }
                 .fullScreenCover(isPresented: $showBrowser) {
-                // Preserve user context across browser opens: when there's a
-                // current effect, preselect its category + highlight it so the
-                // preview pane reads as "where you were". On the first launch
-                // currentBrowseModel is nil and both args fall through as nil,
-                // which keeps the "open clean, no preselection" launch behavior.
+                // The browser reopens into the persistent browserContext —
+                // whatever category/filter/search the user last had — with the
+                // active effect highlighted so the preview pane still reads as
+                // "where you were". On a clean first launch the context is
+                // empty and nothing is preselected.
                 BrowserView(
                     allEffects: viewModel.browseModels,
                     categories: viewModel.allCategories,
                     countsByCategory: viewModel.countsByCategory,
-                    initialCategory: viewModel.currentBrowseModel?.category,
+                    context: $browserContext,
                     initialHighlight: viewModel.currentBrowseModel,
                     descriptionProvider: { effect in
                         viewModel.description(for: effect)
                     },
                     favorites: favorites,
-                    onSelect: { effect in
+                    onSelect: { effect, pool in
+                        // Pool first: selecting swaps the effect, and the
+                        // prev/next labels should resolve against the list the
+                        // user picked from right away.
+                        viewModel.setBrowsePool(pool)
                         viewModel.selectEffect(at: effect.registryIndex)
                     },
                     onClose: { showBrowser = false }
@@ -169,6 +178,19 @@ struct AirwindowsAUView: View {
         }
     }
 
+    /// Opens the browser. If the user has never browsed in this session but an
+    /// effect is active (a host-restored session), seed the context with that
+    /// effect's category so the browser opens "where you were". Once the user
+    /// has picked any category themselves, their last context always wins —
+    /// the active effect's category never overrides it.
+    private func openBrowser() {
+        if browserContext.selectedCategory == nil,
+           let current = viewModel.currentBrowseModel {
+            browserContext.selectedCategory = current.category
+        }
+        showBrowser = true
+    }
+
     /// First-launch auto-match: derive the starting scale from the container's
     /// short side so a smaller iPad opens at the same density a 13" shows at
     /// 100%. One-shot — guarded by `uiScaleAutoSet` — and ignores the early
@@ -193,8 +215,8 @@ struct AirwindowsAUView: View {
                 parameterStepCounts: viewModel.parameterStepCounts,
                 parameterDefaults: viewModel.parameterDefaults,
                 description: viewModel.effectDescription,
-                previousName: viewModel.previousEffectInCategory?.name,
-                nextName: viewModel.nextEffectInCategory?.name,
+                previousName: viewModel.previousEffect?.name,
+                nextName: viewModel.nextEffect?.name,
                 inputDisplay: viewModel.inputLevelDisplay,
                 outputDisplay: viewModel.outputLevelDisplay,
                 parameterValues: Binding(
@@ -217,7 +239,7 @@ struct AirwindowsAUView: View {
                 ),
                 onPrevious: { viewModel.selectPreviousEffect() },
                 onNext: { viewModel.selectNextEffect() },
-                onTitleTap: { showBrowser = true },
+                onTitleTap: { openBrowser() },
                 onReset: { viewModel.resetParameters() },
                 onRandomize: { viewModel.randomizeParameters() },
                 onUndo: { viewModel.undo() },
@@ -234,7 +256,7 @@ struct AirwindowsAUView: View {
                 onToggleMonitoring: onToggleMonitoring
             )
         } else {
-            NoSelectionView(onBrowse: { showBrowser = true })
+            NoSelectionView(onBrowse: { openBrowser() })
                 .environment(\.colorScheme, isDarkMode ? .dark : .light)
         }
     }
