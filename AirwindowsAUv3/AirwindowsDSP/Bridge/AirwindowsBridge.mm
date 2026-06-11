@@ -141,10 +141,13 @@ static void AirwindowsApplyLinks(AirwindowsEffectInfo *info) {
 
 /// Walks the C++ registry once and builds an overridden categories list +
 /// effect-by-category map. Empty categories (e.g. "Unclassified" if every
-/// member was reassigned) are dropped.
+/// member was reassigned) are dropped. Categories are sorted A–Z — this is
+/// the canonical order the UI uses for the browser sidebar and the
+/// "by category" grouped list (pinned pseudo-categories like Favorites/New/
+/// "All categories" are a UI concern and sit above this list).
 static void AirwindowsBuildCategoryCachesIfNeeded(void) {
     if (sCachedCategories && sCachedFxByCategory) return;
-    NSMutableOrderedSet<NSString *> *catsInOrder = [NSMutableOrderedSet orderedSet];
+    NSMutableOrderedSet<NSString *> *cats = [NSMutableOrderedSet orderedSet];
     NSMutableDictionary<NSString *, NSMutableArray<NSString *> *> *byCat = [NSMutableDictionary dictionary];
     for (size_t i = 0; i < AirwinRegistry::registry.size(); i++) {
         const auto &r = AirwinRegistry::registry[i];
@@ -152,12 +155,12 @@ static void AirwindowsBuildCategoryCachesIfNeeded(void) {
         NSString *defaultCat = [NSString stringWithUTF8String:r.category.c_str()];
         NSString *cat = AirwindowsCategoryFor(name, defaultCat);
         if (cat.length == 0) continue;
-        [catsInOrder addObject:cat];
+        [cats addObject:cat];
         NSMutableArray *bucket = byCat[cat];
         if (!bucket) { bucket = [NSMutableArray array]; byCat[cat] = bucket; }
         [bucket addObject:name];
     }
-    sCachedCategories = [catsInOrder array];
+    sCachedCategories = [[cats array] sortedArrayUsingSelector:@selector(localizedCaseInsensitiveCompare:)];
     sCachedFxByCategory = byCat;
 }
 

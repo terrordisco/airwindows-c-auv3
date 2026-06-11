@@ -79,7 +79,7 @@ public struct BrowserView: View {
     /// no upstream registry / override-layer change. Effects still appear in
     /// their natural category alongside their appearance in "New".
     private static let newCategoryName = "New"
-    private static let newCategoryLimit = 8
+    private static let newCategoryLimit = 30
 
     /// Sentinel `selectedCategory` value for the favorites pseudo-category.
     /// Chosen to never collide with a real category name or the "" all-sentinel.
@@ -190,7 +190,7 @@ public struct BrowserView: View {
                 context.sortMode = .chrisOrdering
             }
             // "New" pseudo-category defaults to newest-first; user can still
-            // toggle the sort to re-order those 8 effects alphabetically etc.
+            // toggle the sort to re-order that short list alphabetically etc.
             if newCat == Self.newCategoryName {
                 context.sortMode = .newestFirst
             }
@@ -225,7 +225,7 @@ public struct BrowserView: View {
         return filteredAll.isEmpty ? real : [Self.newCategoryName] + real
     }
 
-    /// 8 newest effects (by firstCommitDate descending) within the current
+    /// The `newCategoryLimit` newest effects (by firstCommitDate descending) within the current
     /// collection/search filter. Computed lazily; sort by date is a stable
     /// tie-break via `EffectSortMode.newestFirst`.
     private var newCategoryEffects: [EffectBrowseModel] {
@@ -245,7 +245,7 @@ public struct BrowserView: View {
         if context.selectedCategory == Self.favoritesCategoryName {
             pool = favoriteEffects
         } else if context.selectedCategory == Self.newCategoryName {
-            // Pseudo-category: 8 newest. Re-applies the user-chosen sortMode
+            // Pseudo-category: newest N. Re-applies the user-chosen sortMode
             // afterward so toggling alphabetical etc. still re-orders them.
             pool = newCategoryEffects
         } else if let cat = context.selectedCategory, !cat.isEmpty {
