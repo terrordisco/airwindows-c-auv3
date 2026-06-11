@@ -450,6 +450,13 @@ private struct EffectPreviewColumn: View {
     let onSelect: (EffectBrowseModel) -> Void
 
     @Environment(\.uiScale) private var uiScale
+    /// Name of the effect that loads on a fresh launch instead of the
+    /// browser ("" = none — fresh launches open the browser as always).
+    /// Set by the pin button below; shown and clearable in Preferences.
+    /// App-Group-backed so the choice is shared across the standalone app
+    /// and every plugin instance, same as favorites and the UI scale.
+    @AppStorage("airwindows.defaultEffect", store: .airwindowsShared)
+    private var defaultEffectName: String = ""
 
     var body: some View {
         if let effect {
@@ -462,6 +469,25 @@ private struct EffectPreviewColumn: View {
                         .minimumScaleFactor(0.6)
 
                     Spacer()
+
+                    // Pin: marks this effect as the default that loads on a
+                    // fresh launch (instead of the browser). One pin at a
+                    // time — pinning replaces any previous default; tapping
+                    // the pinned effect again clears it.
+                    let isDefault = defaultEffectName == effect.name
+                    Button {
+                        defaultEffectName = isDefault ? "" : effect.name
+                    } label: {
+                        Image(systemName: isDefault ? "pin.fill" : "pin")
+                            .font(.system(size: 20 * uiScale, weight: .medium))
+                            .foregroundStyle(isDefault ? Color.primary : Color.secondary)
+                            .frame(width: 40 * uiScale, height: 40 * uiScale)
+                            .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel(isDefault
+                        ? "Remove \(effect.name) as the default effect"
+                        : "Make \(effect.name) the default effect")
 
                     if let favorites {
                         let isFav = favorites.isFavorite(effect.name)

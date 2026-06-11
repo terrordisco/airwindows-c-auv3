@@ -26,6 +26,12 @@ public struct PreferencesView: View {
     /// instance (see UserDefaults.airwindowsShared).
     @AppStorage("airwindows.uiScale", store: UserDefaults.airwindowsShared) private var uiScale: Double = 1.0
 
+    /// The effect that loads on a fresh launch instead of the browser
+    /// ("" = none). Set via the pin button in the browser preview pane;
+    /// this sheet shows the current pick and offers the only remove-from-
+    /// afar affordance. Same App Group store as the scale and favorites.
+    @AppStorage("airwindows.defaultEffect", store: UserDefaults.airwindowsShared) private var defaultEffectName: String = ""
+
     @Environment(\.colorScheme) private var scheme
     /// Live size of the box the host gave the plugin — research instrument
     /// for the responsive (rack-height / thin-strip) layout work. Injected by
@@ -64,6 +70,36 @@ public struct PreferencesView: View {
                     }
                     .buttonStyle(.plain)
                     .padding(.top, 4)
+
+                    Divider()
+                        .opacity(0.4)
+                        .padding(.top, 18)
+
+                    Text("Default effect")
+                        .font(.system(size: 22, weight: .semibold))
+                        .padding(.top, 18)
+
+                    if defaultEffectName.isEmpty {
+                        Text("None. A fresh launch opens the effect browser. To start on a specific effect instead, tap the pin next to its name in the browser preview.")
+                            .font(.system(size: 15))
+                            .foregroundStyle(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    } else {
+                        Text("\(defaultEffectName) loads on a fresh launch instead of the browser. Hosts that restore a session still reopen exactly as left.")
+                            .font(.system(size: 15))
+                            .foregroundStyle(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+
+                        Button {
+                            defaultEffectName = ""
+                        } label: {
+                            Text("Remove default")
+                                .font(.system(size: 15, weight: .medium))
+                                .foregroundStyle(AirwindowsPalette.actionButton)
+                        }
+                        .buttonStyle(.plain)
+                        .padding(.top, 4)
+                    }
 
                     // Live readout of the space the host gives the plugin.
                     // Research instrument for the responsive-layout work —

@@ -82,6 +82,11 @@ struct AirwindowsAUView: View {
     /// Shared too, so only the first instance anywhere auto-sets.
     @AppStorage("airwindows.uiScaleAutoSet", store: .airwindowsShared) private var uiScaleAutoSet: Bool = false
 
+    /// The user's pinned default effect ("" = none). When set, a fresh launch
+    /// loads this effect directly instead of opening the browser. Pinned via
+    /// the pin button in the browser preview; cleared there or in Preferences.
+    @AppStorage("airwindows.defaultEffect", store: .airwindowsShared) private var defaultEffectName: String = ""
+
     /// Preferences sheet, opened from the workspace bottom bar's Settings box.
     @State private var showPreferences: Bool = false
 
@@ -168,16 +173,21 @@ struct AirwindowsAUView: View {
                 .environment(\.containerSize, geo.size)
             }
             .task {
-                // Open the browser on launch ONLY when nothing is selected —
-                // a clean first launch, where the user must pick something and
-                // we want to show the breadth of the plugin. When a host has
-                // already restored a session with an effect active (AUM), skip
-                // the browser and land straight on that effect's page. Some
-                // hosts (Cubasis) restore LATER, after this runs — that case is
-                // handled by the onChange below. Uses .task (not onAppear) so
-                // the view is fully in the hierarchy before the fullScreenCover
-                // transition fires.
+                // Launch priority, highest first:
+                //   1. Host-restored session (AUM) — land on that effect.
+                //   2. User's pinned default effect — load it directly.
+                //   3. Nothing — open the browser so the user must pick
+                //      something and sees the breadth of the plugin.
+                // Some hosts (Cubasis) restore LATER, after this runs — the
+                // onChange below dismisses an auto-opened browser, and a late
+                // restore simply overrides a just-loaded default the same way
+                // it overrides any user selection. Uses .task (not onAppear)
+                // so the view is fully in the hierarchy before the
+                // fullScreenCover transition fires.
                 if viewModel.hasSelection {
+                    showBrowser = false
+                } else if let pinned = pinnedDefaultEffect() {
+                    viewModel.selectEffect(at: pinned.registryIndex)
                     showBrowser = false
                 } else {
                     showBrowser = true
@@ -207,6 +217,14 @@ struct AirwindowsAUView: View {
             browserContext.selectedCategory = current.category
         }
         showBrowser = true
+    }
+
+    /// Resolves the pinned default effect name to a browse model, or nil when
+    /// no pin is set or the name no longer exists in the registry (an upstream
+    /// rename/removal) — in which case launch falls back to the browser.
+    private func pinnedDefaultEffect() -> EffectBrowseModel? {
+        guard !defaultEffectName.isEmpty else { return nil }
+        return viewModel.browseModels.first { $0.name == defaultEffectName }
     }
 
     /// Host view-size research: log every real container size the host hands

@@ -1,5 +1,5 @@
 {
-  "_comment": "Manual category overrides applied at the bridge boundary so we never have to edit the upstream-generated ModuleAdd.h. Mostly: assigning real categories to effects that arrive labelled 'Unclassified'. Family rule: an effect named X3 inherits X2's category; an effect named ConsoleY{Buss,Channel,Pre} goes under 'Consoles'. The truly orphan effects (no whatText, no awpdoc, no predecessor) are best-guess and should be reviewed: BitDualPan, CStrip, PearLiteEQ, PunchyDeluxe, PunchyGuitar, WoodenBox, X2Buss, and Longhand. Longhand (added 2026-06-01 upstream sync) has only Input/Output/Dry-Wet and no blog post yet — 'Effects' is a pure placeholder; reclassify once Chris documents it.",
+  "_comment": "Manual category overrides applied at the bridge boundary so we never have to edit the upstream-generated ModuleAdd.h. Mostly: assigning real categories to effects that arrive labelled 'Unclassified'. Family rule: an effect named X3 inherits X2's category; an effect named ConsoleY{Buss,Channel,Pre} goes under 'Consoles'. Review pass 2026-06-11: BitDualPan->Stereo confirmed via blog post (2026-05-31); CStrip corrected Effects->Filter (upstream puts CStrip2 and EQ under Filter); PearLiteEQ->Filter confirmed via family rule (Pear/Pear2/PearEQ all Filter); PurestConsole4* confirmed via family rule; WoodenBox override REMOVED (upstream now categorizes it 'Tone Color' itself). Still best-guess, no blog post yet as of 2026-06-11: PunchyDeluxe, PunchyGuitar (Dynamics from the name), X2Buss (Consoles; site search maps it to the ConsoleX2 family), kRockstar (Reverb; every k-series effect upstream is Reverb), and Longhand ('Effects' is a pure placeholder - only Input/Output/Dry-Wet, no docs). Reclassify those once Chris posts about them.",
 
   "Baxandall3": "Filter",
   "BitDualPan": "Stereo",
@@ -13,7 +13,7 @@
   "ConsoleXBuss": "Consoles",
   "ConsoleXChannel": "Consoles",
   "ConsoleXPre": "Consoles",
-  "CStrip": "Effects",
+  "CStrip": "Filter",
   "Density3": "Distortion",
   "Dynamics3": "Dynamics",
   "LRConvolve3": "Utility",
@@ -25,7 +25,6 @@
   "PurestConsole4Buss": "Consoles",
   "PurestConsole4Channel": "Consoles",
   "SoftClock3": "Utility",
-  "WoodenBox": "Ambience",
   "X2Buss": "Consoles",
   "kRockstar": "Reverb"
 }

@@ -150,6 +150,28 @@ restore *after* the view is live. A blank UI over a correctly-loaded engine
 is a sync bug, not a persistence bug; device `os_log` is the fastest way to
 tell them apart.
 
+## Function-track sweep: emptying the list before the UI phase (2026-06-11)
+
+Knocked out the layout-independent roadmap items so the responsive UI phase
+starts with a clean slate:
+
+- **Alphabetical categories** — sorted at the source (bridge category cache).
+- **"New" pseudo-category → 30** (was 8).
+- **Category verification** — BitDualPan→Stereo (new post), PearLiteEQ→Filter +
+  PurestConsole4*→Consoles (family rule), CStrip corrected →Filter, WoodenBox
+  override dropped (upstream now says "Tone Color"). 5 effects remain
+  unverifiable — no posts yet.
+- **Descriptions** — fetch_missing_descriptions.py reports 0 fillable gaps;
+  the 8 remaining are the post-blocked May-2026 effects. Links refreshed
+  (Density3 gained a video).
+- **Default effect** — pin button in the browser preview; fresh launch loads
+  the pinned effect instead of the browser (restore > pin > browser).
+  Preferences shows/removes the pick. `airwindows.defaultEffect` in the App
+  Group, keyed by name.
+- **BPM sync** — shelved by Sveinbjörn pending design thinking. Scope research
+  saved in the roadmap item: SoftClock family only, param A, bpm = A×200.99+40,
+  musicalContextBlock is the host-tempo source.
+
 ## Responsive UI program kicked off: roadmap triage + host view-size instrumentation (2026-06-11)
 
 The rack-height UI is the next big phase. Plan lives at
