@@ -50,7 +50,9 @@ public enum ChipSize {
 
 /// One chip. Supply an optional icon, optional label, a `role`, and a `size`.
 /// Pass `action` for interactive roles; `.inert` ignores it and renders as a
-/// plain (non-button) view.
+/// plain (non-button) view. An optional `longPressAction` adds a secondary
+/// hold gesture (used by Recall settings → clear); tap and hold are exclusive,
+/// so a long press never also fires the tap.
 public struct Chip: View {
     private let systemName: String?
     private let text: String?
@@ -59,6 +61,7 @@ public struct Chip: View {
     private let isEnabled: Bool
     private let accessibility: String?
     private let action: (() -> Void)?
+    private let longPressAction: (() -> Void)?
 
     @Environment(\.uiScale) private var uiScale
 
@@ -69,7 +72,8 @@ public struct Chip: View {
         size: ChipSize = .regular,
         isEnabled: Bool = true,
         accessibility: String? = nil,
-        action: (() -> Void)? = nil
+        action: (() -> Void)? = nil,
+        longPressAction: (() -> Void)? = nil
     ) {
         self.systemName = systemName
         self.text = text
@@ -78,12 +82,23 @@ public struct Chip: View {
         self.isEnabled = isEnabled
         self.accessibility = accessibility
         self.action = action
+        self.longPressAction = longPressAction
     }
 
     public var body: some View {
         let visual = ChipVisual(role: role, isEnabled: isEnabled)
 
-        if visual.interactive, let action {
+        if visual.interactive, let action, let longPressAction {
+            // Gesture-based variant: .onTapGesture and .onLongPressGesture
+            // compose exclusively (a hold never also fires the tap), which a
+            // Button + simultaneous long-press gesture does not guarantee.
+            label(visual)
+                .opacity(visual.opacity)
+                .onTapGesture(perform: action)
+                .onLongPressGesture(perform: longPressAction)
+                .accessibilityAddTraits(.isButton)
+                .modify { applyAccessibility($0) }
+        } else if visual.interactive, let action {
             Button(action: action) { label(visual) }
                 .buttonStyle(.plain)
                 .disabled(!isEnabled)

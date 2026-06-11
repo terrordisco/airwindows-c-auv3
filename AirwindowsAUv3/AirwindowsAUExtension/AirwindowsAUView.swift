@@ -47,6 +47,10 @@ struct AirwindowsAUView: View {
     /// pinned "Favorites" category stay in sync.
     @State private var favorites = FavoritesStore()
 
+    /// Per-effect saved parameter snapshots (App Group backed, like favorites).
+    /// Drives the Save/Recall settings chip in the workspace bottom bar.
+    @State private var savedSettings = SavedSettingsStore()
+
     @State private var showBrowser: Bool = false
     /// True when the browser was force-opened at launch because nothing was
     /// selected yet. If a host then restores an effect late (Cubasis restores
@@ -184,6 +188,9 @@ struct AirwindowsAUView: View {
                 // it overrides any user selection. Uses .task (not onAppear)
                 // so the view is fully in the hierarchy before the
                 // fullScreenCover transition fires.
+                // Pick up snapshots saved by the other process (app ↔ plugin)
+                // before the workspace renders its Save/Recall chip.
+                savedSettings.refresh()
                 if viewModel.hasSelection {
                     showBrowser = false
                 } else if let pinned = pinnedDefaultEffect() {
@@ -295,6 +302,16 @@ struct AirwindowsAUView: View {
                 onToggleTheme: { isDarkMode.toggle() },
                 useRotaryPots: effectiveUseRotaryPots,
                 onToggleControlStyle: { toggleControlStyle() },
+                hasSavedSettings: savedSettings.hasSaved(effect.name),
+                onSaveSettings: {
+                    savedSettings.save(viewModel.currentParameterSnapshot, for: effect.name)
+                },
+                onRecallSettings: {
+                    if let values = savedSettings.savedValues(for: effect.name) {
+                        viewModel.applySavedSettings(values)
+                    }
+                },
+                onClearSavedSettings: { savedSettings.clear(effect.name) },
                 favorites: favorites,
                 onOpenSettings: { showPreferences = true },
                 isMonitoring: isMonitoring,

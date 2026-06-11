@@ -60,6 +60,15 @@ public struct EffectDetailView: View {
     public let onToggleTheme: (() -> Void)?
     public let useRotaryPots: Bool
     public let onToggleControlStyle: (() -> Void)?
+    /// Per-effect saved settings (the "Save settings" / "Recall settings"
+    /// chip). The effect always loads factory defaults; the chip saves the
+    /// current parameter values once, then recalls them on tap. Long-press on
+    /// Recall asks to clear. All three closures must be provided together for
+    /// the chip to appear; `hasSavedSettings` picks which face it shows.
+    public let hasSavedSettings: Bool
+    public let onSaveSettings: (() -> Void)?
+    public let onRecallSettings: (() -> Void)?
+    public let onClearSavedSettings: (() -> Void)?
     /// Optional — when provided, a favorite star appears right of the name box
     /// and toggles this effect's membership in the shared favorites store.
     public let favorites: FavoritesStore?
@@ -75,6 +84,8 @@ public struct EffectDetailView: View {
 
     @Environment(\.colorScheme) private var scheme
     @Environment(\.uiScale) private var uiScale
+    /// Long-press on "Recall settings" asks before discarding the snapshot.
+    @State private var showClearSavedSettingsDialog = false
 
     public init(
         effect: EffectBrowseModel,
@@ -105,6 +116,10 @@ public struct EffectDetailView: View {
         onToggleTheme: (() -> Void)? = nil,
         useRotaryPots: Bool = false,
         onToggleControlStyle: (() -> Void)? = nil,
+        hasSavedSettings: Bool = false,
+        onSaveSettings: (() -> Void)? = nil,
+        onRecallSettings: (() -> Void)? = nil,
+        onClearSavedSettings: (() -> Void)? = nil,
         favorites: FavoritesStore? = nil,
         onOpenSettings: (() -> Void)? = nil,
         isMonitoring: Bool = false,
@@ -138,6 +153,10 @@ public struct EffectDetailView: View {
         self.onToggleTheme = onToggleTheme
         self.useRotaryPots = useRotaryPots
         self.onToggleControlStyle = onToggleControlStyle
+        self.hasSavedSettings = hasSavedSettings
+        self.onSaveSettings = onSaveSettings
+        self.onRecallSettings = onRecallSettings
+        self.onClearSavedSettings = onClearSavedSettings
         self.favorites = favorites
         self.onOpenSettings = onOpenSettings
         self.isMonitoring = isMonitoring
@@ -451,6 +470,33 @@ public struct EffectDetailView: View {
                 )
             }
 
+            // Per-effect saved settings. One chip, two faces: "Save settings"
+            // until a snapshot exists, then "Recall settings" (the effect
+            // itself always loads factory defaults — recalling is deliberate).
+            // Long-press on Recall asks to clear the snapshot, which flips the
+            // chip back to Save. Filled bookmark = something is saved, per the
+            // chip system's fill-encodes-active rule.
+            if let onSaveSettings, let onRecallSettings, onClearSavedSettings != nil {
+                if hasSavedSettings {
+                    Chip(
+                        systemName: "bookmark.fill",
+                        text: "Recall settings",
+                        role: .action,
+                        accessibility: "Recall saved settings. Hold to clear them.",
+                        action: onRecallSettings,
+                        longPressAction: { showClearSavedSettingsDialog = true }
+                    )
+                } else {
+                    Chip(
+                        systemName: "bookmark",
+                        text: "Save settings",
+                        role: .action,
+                        accessibility: "Save current settings for this effect",
+                        action: onSaveSettings
+                    )
+                }
+            }
+
             Chip(
                 systemName: "arrow.counterclockwise",
                 text: "Reset",
@@ -458,6 +504,10 @@ public struct EffectDetailView: View {
                 accessibility: "Reset parameters",
                 action: onReset
             )
+        }
+        .alert("Do you want to clear saved settings?", isPresented: $showClearSavedSettingsDialog) {
+            Button("Yes", role: .destructive) { onClearSavedSettings?() }
+            Button("Cancel", role: .cancel) {}
         }
         .hEdgePadding(20)
         // Centered in the bar, then nudged down 6pt: the Settings box on the

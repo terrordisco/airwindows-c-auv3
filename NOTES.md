@@ -171,6 +171,14 @@ starts with a clean slate:
 - **BPM sync** — shelved by Sveinbjörn pending design thinking. Scope research
   saved in the roadmap item: SoftClock family only, param A, bpm = A×200.99+40,
   musicalContextBlock is the host-tempo source.
+- **Per-effect saved settings** — Sveinbjörn's design, implemented verbatim:
+  effects always load factory defaults; a "Save settings" chip (bookmark, left
+  of Reset) snapshots the params, then becomes "Recall settings" (filled
+  bookmark); tap recalls as one undoable step; long-press → clear dialog
+  (Yes/Cancel). New SavedSettingsStore (App Group, keyed by name, mirrors
+  FavoritesStore). Chip primitive gained an exclusive long-press gesture
+  (gesture-based variant, NOT Button+simultaneousGesture — that would fire
+  both tap and hold). Gating behind a personalisation toggle still open.
 
 ## Responsive UI program kicked off: roadmap triage + host view-size instrumentation (2026-06-11)
 

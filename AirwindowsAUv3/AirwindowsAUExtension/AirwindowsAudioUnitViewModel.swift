@@ -104,6 +104,7 @@ final class AirwindowsAudioUnitViewModel {
         case randomize
         case reset
         case effect
+        case recallSettings
     }
 
     private var undoStack: [StateSnapshot] = []
@@ -398,6 +399,27 @@ final class AirwindowsAudioUnitViewModel {
         }
     }
 
+    /// The current effect's parameter values, trimmed to its real parameter
+    /// count — what "Save settings" writes into the SavedSettingsStore.
+    /// In/Out levels are deliberately excluded (same scope as Reset/Randomize).
+    var currentParameterSnapshot: [Double] {
+        Array(parameterValues.prefix(parameterCount))
+    }
+
+    /// Applies a saved per-effect snapshot ("Recall settings") as ONE undoable
+    /// step, mirroring randomizeParameters. A snapshot longer than the current
+    /// parameter count (upstream param changes) is truncated; a shorter one
+    /// leaves the remaining parameters untouched.
+    func applySavedSettings(_ values: [Double]) {
+        guard audioUnit != nil else { return }
+        recordChange(.recallSettings)
+        suppressUndoRecording = true
+        defer { suppressUndoRecording = false }
+        for (i, value) in values.enumerated() where i < parameterCount {
+            setParameterValue(value, at: i)
+        }
+    }
+
     /// Reset all of the current effect's parameters to the values the registry
     /// generator provides on a fresh instance.
     func resetParameters() {
@@ -434,7 +456,7 @@ final class AirwindowsAudioUnitViewModel {
         case .parameter, .inputLevel, .outputLevel:
             coalesces = kind == lastChangeKind
                 && (now - lastChangeTime) < Self.undoCoalesceWindow
-        case .randomize, .reset, .effect:
+        case .randomize, .reset, .effect, .recallSettings:
             // Discrete actions are always their own undo step.
             coalesces = false
         }
