@@ -63,6 +63,7 @@
 
 #import "AirwindowsAudioUnit.h"
 #import "AirwindowsBridge.h"
+#import <CoreAudioKit/CoreAudioKit.h>
 #include <atomic>
 #include <memory>
 #include <os/log.h>
@@ -485,6 +486,22 @@ static const AUParameterAddress kOutputLevelAddress = 39;
 }
 
 // MARK: - AUAudioUnit Overrides
+
+// Hosts that support multiple plugin view sizes (Logic, GarageBand, …) call
+// this with the sizes they can offer, and the AU answers with the indexes it
+// supports. We don't opt into any alternate configuration yet — the UI has a
+// single adaptive layout — but we LOG every offer so the responsive-design
+// work (rack-height / thin-strip modes) is grounded in the sizes hosts
+// actually propose instead of guesses. Read the numbers in Console.app
+// filtered on subsystem com.terrordisco.airwindows.consolidated.
+// Returning super's answer keeps today's behavior unchanged.
+- (NSIndexSet *)supportedViewConfigurations:(NSArray<AUAudioUnitViewConfiguration *> *)availableViewConfigurations {
+    [availableViewConfigurations enumerateObjectsUsingBlock:^(AUAudioUnitViewConfiguration *config, NSUInteger idx, BOOL *stop) {
+        os_log(airwindowsLog(), "host offered view configuration %lu: %.0f x %.0f pt (hostHasController: %d)",
+               (unsigned long)idx, config.width, config.height, config.hostHasController);
+    }];
+    return [super supportedViewConfigurations:availableViewConfigurations];
+}
 
 - (AUAudioUnitBusArray *)inputBusses {
     return _inputBusArray;

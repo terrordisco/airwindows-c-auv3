@@ -145,3 +145,7 @@ targets:
     dependencies:
       - sdk: AudioToolbox.framework
       - sdk: AVFoundation.framework
+      # CoreAudioKit: AUAudioUnitViewConfiguration, needed by the
+      # supportedViewConfigurations: override in AirwindowsAudioUnit.mm
+      # (host view-size research instrumentation). Extension-safe API.
+      - sdk: CoreAudioKit.framework

@@ -63,6 +63,10 @@ public struct BrowserView: View {
     /// Matches the workspace's Settings box so the two line up across the
     /// browse ↔ effect transition. Scaled by the same factor as the box.
     @Environment(\.uiScale) private var uiScale
+    /// Re-passed into the Preferences sheet (sheets don't reliably inherit
+    /// custom environment values) so its "Plugin window" readout works when
+    /// Preferences is opened from the browser sidebar too.
+    @Environment(\.containerSize) private var containerSize
     /// Category / filter / search / sort, owned by the caller so it outlives
     /// this view — see `BrowserContext`.
     @Binding var context: BrowserContext
@@ -199,6 +203,7 @@ public struct BrowserView: View {
         .sheet(isPresented: $showPreferences) {
             PreferencesView(onClose: { showPreferences = false })
                 .environment(\.colorScheme, scheme)
+                .environment(\.containerSize, containerSize)
         }
     }
 

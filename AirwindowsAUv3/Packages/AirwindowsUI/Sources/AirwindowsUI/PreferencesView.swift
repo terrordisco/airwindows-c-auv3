@@ -27,6 +27,10 @@ public struct PreferencesView: View {
     @AppStorage("airwindows.uiScale", store: UserDefaults.airwindowsShared) private var uiScale: Double = 1.0
 
     @Environment(\.colorScheme) private var scheme
+    /// Live size of the box the host gave the plugin — research instrument
+    /// for the responsive (rack-height / thin-strip) layout work. Injected by
+    /// AirwindowsAUView; .zero in bare previews, which hides the section.
+    @Environment(\.containerSize) private var containerSize
 
     public init(onClose: @escaping () -> Void) {
         self.onClose = onClose
@@ -60,6 +64,28 @@ public struct PreferencesView: View {
                     }
                     .buttonStyle(.plain)
                     .padding(.top, 4)
+
+                    // Live readout of the space the host gives the plugin.
+                    // Research instrument for the responsive-layout work —
+                    // testers can read their host's number straight off this
+                    // sheet. Hidden when nothing injected the value (previews).
+                    if containerSize != .zero {
+                        Divider()
+                            .opacity(0.4)
+                            .padding(.top, 18)
+
+                        Text("Plugin window")
+                            .font(.system(size: 22, weight: .semibold))
+                            .padding(.top, 18)
+
+                        Text("\(Int(containerSize.width.rounded())) × \(Int(containerSize.height.rounded())) pt")
+                            .font(.system(size: 28, weight: .semibold).monospacedDigit())
+
+                        Text("The space this host is giving the plugin right now. If you're beta testing, this number — together with the host app's name — helps us design the compact layout for small plugin windows.")
+                            .font(.system(size: 15))
+                            .foregroundStyle(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
                 }
                 .padding(.horizontal, 28)
                 .padding(.top, 24)

@@ -23,6 +23,15 @@
 
 import SwiftUI
 import AirwindowsUI
+import os
+
+/// Host view-size research: every container size the host hands us is logged
+/// so the responsive-design work is grounded in real numbers. Filter
+/// Console.app on this subsystem; PreferencesView shows the same value live.
+private let containerLog = Logger(
+    subsystem: "com.terrordisco.airwindows.consolidated",
+    category: "ContainerSize"
+)
 
 struct AirwindowsAUView: View {
     @Bindable var viewModel: AirwindowsAudioUnitViewModel
@@ -108,13 +117,21 @@ struct AirwindowsAUView: View {
                 .environment(\.colorScheme, isDarkMode ? .dark : .light)
                 // Global UI scale: every sized view in AirwindowsUI reads this.
                 .environment(\.uiScale, CGFloat(uiScale))
+                // Live container size — research instrument for the responsive
+                // UI work; PreferencesView displays it. See ContainerSize.swift.
+                .environment(\.containerSize, geo.size)
                 // First launch: size the scale to the container so a smaller
                 // iPad starts at the same density a 13" shows at 100%. Runs on
-                // size changes but no-ops after the one-time auto-set.
-                .task(id: geo.size) { autoMatchScaleIfNeeded(geo.size) }
+                // size changes but no-ops after the one-time auto-set. Also
+                // logs each size the host hands us (host view-size research).
+                .task(id: geo.size) {
+                    autoMatchScaleIfNeeded(geo.size)
+                    logContainerSizeIfReal(geo.size)
+                }
                 .sheet(isPresented: $showPreferences) {
                     PreferencesView(onClose: { showPreferences = false })
                         .environment(\.colorScheme, isDarkMode ? .dark : .light)
+                        .environment(\.containerSize, geo.size)
                 }
                 .fullScreenCover(isPresented: $showBrowser) {
                 // The browser reopens into the persistent browserContext —
@@ -148,6 +165,7 @@ struct AirwindowsAUView: View {
                 // at scale 1.0 while the workspace uses the real scale, so the
                 // Settings box and the first column stop matching width.
                 .environment(\.uiScale, CGFloat(uiScale))
+                .environment(\.containerSize, geo.size)
             }
             .task {
                 // Open the browser on launch ONLY when nothing is selected —
@@ -189,6 +207,15 @@ struct AirwindowsAUView: View {
             browserContext.selectedCategory = current.category
         }
         showBrowser = true
+    }
+
+    /// Host view-size research: log every real container size the host hands
+    /// us. Skips the zero/garbage sizes SwiftUI proposes before first layout.
+    /// `.task(id: geo.size)` already de-duplicates — it only re-fires when the
+    /// size actually changes.
+    private func logContainerSizeIfReal(_ size: CGSize) {
+        guard size.width > 1, size.height > 1 else { return }
+        containerLog.log("container size: \(Int(size.width.rounded())) x \(Int(size.height.rounded())) pt")
     }
 
     /// First-launch auto-match: derive the starting scale from the container's

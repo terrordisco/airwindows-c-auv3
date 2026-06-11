@@ -150,6 +150,34 @@ restore *after* the view is live. A blank UI over a correctly-loaded engine
 is a sync bug, not a persistence bug; device `os_log` is the fastest way to
 tell them apart.
 
+## Responsive UI program kicked off: roadmap triage + host view-size instrumentation (2026-06-11)
+
+The rack-height UI is the next big phase. Plan lives at
+`~/.claude/plans/quizzical-floating-globe.md`; summary:
+
+- **Roadmap triaged** into a function track (safe before/during the UI phase)
+  and `#ui-schema`-tagged items parked until the new schema lands (settings
+  overlay transition, polish pass, accessibility pass, mono signifier,
+  notes-UI placement). The Later "Rack-sized UI experiments" merged into the
+  Now item, now called "Responsive UI program".
+- **Strategy**: discrete layout modes (`full` / `shortRack` / `thinStrip`)
+  layered ON TOP of the continuous uiScale, derived from container size in
+  the root GeometryReader. **The priority ladder (what survives compaction)
+  is Sveinbjörn's design call** — Claude's strawman is reference input only.
+  Thresholds come from measured host sizes, not guesses. Designs iterate in
+  Figma first (MCP connection verified working, full pro seat).
+- **Instrumentation shipped** (this commit, targets build 6):
+  - `\.containerSize` environment value (ContainerSize.swift) injected from
+    AirwindowsAUView's GeometryReader — same pattern as `\.uiScale`, same
+    "re-apply on sheets/covers" caveat.
+  - PreferencesView shows a live "Plugin window: W × H pt" readout — testers
+    can read their host's number off the sheet and report it with the host name.
+  - os_log on every container-size change (subsystem
+    com.terrordisco.airwindows.consolidated, category ContainerSize).
+  - `supportedViewConfigurations:` override in AirwindowsAudioUnit.mm logs
+    every view size API-aware hosts offer, returns super (no behavior change).
+    Needed CoreAudioKit added to the AirwindowsDSP target (project.yml).
+
 ## Browser context preserved across opens + prev/next walks the browsed list (2026-06-10)
 
 Tester feedback: browsing "all there is" (All categories / Favorites / search),
