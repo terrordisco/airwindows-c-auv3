@@ -66,8 +66,21 @@ final class AirwindowsAudioUnitViewModel {
     private(set) var allCategories: [String] = []
 
     /// Pure Swift mirror of `allEffects` for the UI layer in `AirwindowsUI`.
+    /// FULL and index-aligned: `browseModels[i].registryIndex == i`, so a
+    /// host-restored effect (including an undocumented, hidden one) always
+    /// resolves by index in `currentBrowseModel`. Discovery uses the filtered
+    /// `browsableModels` instead.
     private(set) var browseModels: [EffectBrowseModel] = []
     private(set) var countsByCategory: [String: Int] = [:]
+
+    /// The effects shown in the browser: everything with a description or a
+    /// tagline. Undocumented effects (committed upstream but not yet blogged)
+    /// are filtered out so the user never opens a blank page — they remain in
+    /// `browseModels`/the registry and still load if a saved session points at
+    /// one. Category counts and the sidebar derive from this list.
+    var browsableModels: [EffectBrowseModel] {
+        browseModels.filter(\.hasDescription)
+    }
 
     private weak var audioUnit: AirwindowsAudioUnit?
     private var parameterObserverToken: AUParameterObserverToken?
@@ -139,7 +152,10 @@ final class AirwindowsAudioUnitViewModel {
         allEffects = AirwindowsEngine.allEffects()
         allCategories = AirwindowsEngine.allCategories()
         browseModels = allEffects.map { Self.makeBrowseModel(from: $0) }
-        countsByCategory = Dictionary(grouping: browseModels, by: \.category)
+        // Counts reflect what's actually browsable, so the sidebar numbers
+        // match the lists, and a category populated only by hidden effects
+        // disappears from the sidebar entirely.
+        countsByCategory = Dictionary(grouping: browsableModels, by: \.category)
             .mapValues(\.count)
 
         // Observe parameter changes from the host
@@ -181,8 +197,23 @@ final class AirwindowsAudioUnitViewModel {
             firstCommitDate: info.firstCommitDate,
             collections: info.collections,
             postURL: info.postURL.flatMap(URL.init(string:)),
-            videoURL: info.videoURL.flatMap(URL.init(string:))
+            videoURL: info.videoURL.flatMap(URL.init(string:)),
+            hasDescription: hasPresentableDescription(info)
         )
+    }
+
+    /// True when the effect has something to show in the browser: a long-form
+    /// awpdoc description bundled in the framework, or at least a tagline.
+    /// Effects Chris has committed upstream but not yet blogged about arrive
+    /// with neither — they're real, working DSP, but presenting a blank page
+    /// for them looks broken, so they're hidden from discovery (see
+    /// `browsableModels`) until a description lands on the next sync.
+    private static func hasPresentableDescription(_ info: AirwindowsEffectInfo) -> Bool {
+        if !info.whatText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            return true
+        }
+        let bundle = Bundle(for: AirwindowsAudioUnit.self)
+        return bundle.url(forResource: info.name, withExtension: "txt") != nil
     }
 
     /// Lookup table the UI uses to render the current effect through `EffectBrowseModel`.
@@ -203,7 +234,11 @@ final class AirwindowsAudioUnitViewModel {
     var siblingsInCurrentCategory: [EffectBrowseModel] {
         let cat = effectCategory
         guard !cat.isEmpty else { return [] }
-        return browseModels
+        // Documented effects only — prev/next must never jog into a hidden,
+        // undocumented effect. (If the *current* effect is itself hidden, e.g.
+        // restored from a saved session, it won't be in this list and
+        // navigation falls back to the global wrap-around in selectNext/Prev.)
+        return browsableModels
             .filter { $0.category == cat }
             .sortedByChrisOrdering()
     }

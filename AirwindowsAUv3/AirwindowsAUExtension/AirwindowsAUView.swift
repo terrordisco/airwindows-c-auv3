@@ -149,7 +149,7 @@ struct AirwindowsAUView: View {
                 // "where you were". On a clean first launch the context is
                 // empty and nothing is preselected.
                 BrowserView(
-                    allEffects: viewModel.browseModels,
+                    allEffects: viewModel.browsableModels,
                     categories: viewModel.allCategories,
                     countsByCategory: viewModel.countsByCategory,
                     context: $browserContext,

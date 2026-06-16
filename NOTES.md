@@ -150,6 +150,36 @@ restore *after* the view is live. A blank UI over a correctly-loaded engine
 is a sync bug, not a persistence bug; device `os_log` is the fastest way to
 tell them apart.
 
+## Hide undocumented effects from the browser (2026-06-16)
+
+Effects come from Chris's *code* (committed → baconpaul/airwin2rack → our sync),
+which runs weeks ahead of his blog posts. So an effect can be working DSP in
+our registry with zero description for weeks. Showing a blank page looks broken
+("part of the OS" goal), so undocumented effects are now hidden from discovery —
+the way baconpaul's tools gate undocumented modules.
+
+- Gate = `EffectBrowseModel.hasDescription` (bundled awpdoc exists OR non-empty
+  tagline). Computed at the bridge boundary in `makeBrowseModel`.
+- CRITICAL: `browseModels` stays FULL and index-aligned so a host-restored
+  session pointing at a hidden effect still resolves (`currentBrowseModel`
+  indexes by registry position) and plays. Only *discovery* is filtered, via a
+  new `browsableModels` computed property → browser list, category counts,
+  prev/next sibling fallback. NO registry renumbering — persistence untouched.
+- Exactly 8 hidden (verified across all 512 with a script): Longhand,
+  PearLiteEQ, PunchyDeluxe, PunchyGuitar, PurestConsole4Buss,
+  PurestConsole4Channel, X2Buss, kRockstar. 504 browsable.
+- The 7 documented-but-unposted utilities (ConsoleMD*, MidSide, Lefto/Righto-
+  Mono, DitherMeDiskers, NotJustAnotherCD) have real awpdoc (1.3–5.9 KB) → stay
+  visible. (This is why the gate is description-based, not blog-post-based.)
+- Auto-recovers: a hidden effect reappears the moment a description lands on the
+  next upstream sync.
+
+PUNCHY = POINTY: PunchyDeluxe/PunchyGuitar have byte-identical params to the
+2025 PointyDeluxe/PointyGuitar amp sims (same 10 names, same order, same
+"Crtical" typo). They're a 2026 amp-sim sibling series → Dynamics guess was
+wrong, they're Amp Sims. Moot while hidden; recategorize when surfaced.
+Longhand got its post 2026-06-14 (softclipping → Saturation).
+
 ## Function-track sweep: emptying the list before the UI phase (2026-06-11)
 
 Knocked out the layout-independent roadmap items so the responsive UI phase

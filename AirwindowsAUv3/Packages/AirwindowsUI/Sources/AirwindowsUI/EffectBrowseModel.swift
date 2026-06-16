@@ -37,6 +37,13 @@ public struct EffectBrowseModel: Identifiable, Hashable, Sendable {
     public let collections: [String]
     public let postURL: URL?
     public let videoURL: URL?
+    /// Whether the effect has anything to show — a long-form awpdoc description
+    /// or at least a tagline. Effects Chris has committed but not yet posted
+    /// about arrive with neither; they stay in the registry (so saved sessions
+    /// still load them) but are kept OUT of the browser via `browsableModels`,
+    /// so the user never lands on a blank effect. Defaults to `true` so sample
+    /// data and previews are unaffected.
+    public let hasDescription: Bool
 
     public var id: Int { registryIndex }
 
@@ -51,7 +58,8 @@ public struct EffectBrowseModel: Identifiable, Hashable, Sendable {
         firstCommitDate: String,
         collections: [String],
         postURL: URL? = nil,
-        videoURL: URL? = nil
+        videoURL: URL? = nil,
+        hasDescription: Bool = true
     ) {
         self.registryIndex = registryIndex
         self.name = name
@@ -64,6 +72,7 @@ public struct EffectBrowseModel: Identifiable, Hashable, Sendable {
         self.collections = collections
         self.postURL = postURL
         self.videoURL = videoURL
+        self.hasDescription = hasDescription
     }
 }
 
