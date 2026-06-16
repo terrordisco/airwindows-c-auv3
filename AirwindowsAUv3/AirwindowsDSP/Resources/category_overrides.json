@@ -1,5 +1,5 @@
 {
-  "_comment": "Manual category overrides applied at the bridge boundary so we never have to edit the upstream-generated ModuleAdd.h. Mostly: assigning real categories to effects that arrive labelled 'Unclassified'. Family rule: an effect named X3 inherits X2's category; an effect named ConsoleY{Buss,Channel,Pre} goes under 'Consoles'. Review pass 2026-06-11: BitDualPan->Stereo confirmed via blog post (2026-05-31); CStrip corrected Effects->Filter (upstream puts CStrip2 and EQ under Filter); PearLiteEQ->Filter confirmed via family rule (Pear/Pear2/PearEQ all Filter); PurestConsole4* confirmed via family rule; WoodenBox override REMOVED (upstream now categorizes it 'Tone Color' itself). Still best-guess, no blog post yet as of 2026-06-11: PunchyDeluxe, PunchyGuitar (Dynamics from the name), X2Buss (Consoles; site search maps it to the ConsoleX2 family), kRockstar (Reverb; every k-series effect upstream is Reverb), and Longhand ('Effects' is a pure placeholder - only Input/Output/Dry-Wet, no docs). Reclassify those once Chris posts about them.",
+  "_comment": "Manual category overrides applied at the bridge boundary so we never have to edit the upstream-generated ModuleAdd.h. Mostly: assigning real categories to effects that arrive labelled 'Unclassified'. Family rule: an effect named X3 inherits X2's category; an effect named ConsoleY{Buss,Channel,Pre} goes under 'Consoles'. Review pass 2026-06-11: BitDualPan->Stereo confirmed via blog post (2026-05-31); CStrip corrected Effects->Filter (upstream puts CStrip2 and EQ under Filter); PearLiteEQ->Filter confirmed via family rule (Pear/Pear2/PearEQ all Filter); PurestConsole4* confirmed via family rule; WoodenBox override REMOVED (upstream now categorizes it 'Tone Color' itself). Update 2026-06-16: Longhand confirmed Saturation (post went up 2026-06-14, 'an experiment in softclipping'); PunchyDeluxe/PunchyGuitar corrected Dynamics->Amp Sims (param layout is byte-identical to the PointyDeluxe/PointyGuitar amp sims, but the DSP is genuinely distinct - PointyDeluxe has a ClipOnly2 stage Punchy lacks, Proc files differ ~3KB - so they're a real amp-sim sibling, not a duplicate). Still best-guess, no blog post yet: X2Buss (Consoles; site search maps it to the ConsoleX2 family) and kRockstar (Reverb; every k-series effect upstream is Reverb). Both currently hidden from the browser (no description) until Chris posts.",
 
   "Baxandall3": "Filter",
   "BitDualPan": "Stereo",
@@ -17,11 +17,11 @@
   "Density3": "Distortion",
   "Dynamics3": "Dynamics",
   "LRConvolve3": "Utility",
-  "Longhand": "Effects",
+  "Longhand": "Saturation",
   "Pafnuty": "Filter",
   "PearLiteEQ": "Filter",
-  "PunchyDeluxe": "Dynamics",
-  "PunchyGuitar": "Dynamics",
+  "PunchyDeluxe": "Amp Sims",
+  "PunchyGuitar": "Amp Sims",
   "PurestConsole4Buss": "Consoles",
   "PurestConsole4Channel": "Consoles",
   "SoftClock3": "Utility",
