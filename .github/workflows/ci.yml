@@ -1,0 +1,45 @@
+name: CI
+
+# Build verification for pull requests and pushes to main. The project file
+# is generated from project.yml by XcodeGen (the .xcodeproj is gitignored), so
+# CI regenerates it first, then builds the host app for the iOS Simulator —
+# which transitively builds the AUv3 extension, the AirwindowsDSP framework,
+# and the AirwindowsUI Swift package. No code signing: a simulator build needs
+# none, so contributors without an Apple Developer account still get a green
+# check on their PRs.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# A newer push to the same branch/PR cancels the older in-flight run.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build (iOS Simulator)
+    runs-on: macos-15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Generate Xcode project
+        working-directory: AirwindowsAUv3
+        run: xcodegen generate
+
+      - name: Build
+        working-directory: AirwindowsAUv3
+        run: |
+          set -o pipefail
+          xcodebuild build \
+            -project AirwindowsAUv3.xcodeproj \
+            -scheme AirwindowsApp \
+            -configuration Debug \
+            -destination 'generic/platform=iOS Simulator' \
+            CODE_SIGNING_ALLOWED=NO

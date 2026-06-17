@@ -1,0 +1,48 @@
+name: Bug report
+description: Something doesn't work as expected
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting. The fields below are the ones that actually help
+        track a bug down — host apps implement AUv3 surprisingly differently, so
+        the host and iPadOS version matter a lot.
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: What you did, and what happened instead of what you expected.
+      placeholder: e.g. Loaded Galactic in AUM, the parameter page came up blank.
+    validations:
+      required: true
+  - type: input
+    id: ipados
+    attributes:
+      label: iPadOS version
+      placeholder: e.g. 17.5.1
+    validations:
+      required: true
+  - type: input
+    id: host
+    attributes:
+      label: Host app and version
+      description: Where you loaded the plugin (or "standalone app").
+      placeholder: e.g. AUM 1.4.2 / Logic Pro / GarageBand / standalone app
+    validations:
+      required: true
+  - type: input
+    id: effect
+    attributes:
+      label: Effect
+      description: The specific effect, if the bug reproduces with one.
+      placeholder: e.g. Galactic
+    validations:
+      required: false
+  - type: textarea
+    id: media
+    attributes:
+      label: Screenshot or screen recording
+      description: For anything visual, worth a thousand words. Drag files in here.
+    validations:
+      required: false

@@ -1,5 +1,7 @@
 # Airwindows Consolidated AUv3
 
+[![CI](https://github.com/terrordisco/airwindows-c-auv3/actions/workflows/ci.yml/badge.svg)](https://github.com/terrordisco/airwindows-c-auv3/actions/workflows/ci.yml)
+
 A native iPadOS AUv3 plugin that rolls the entire Airwindows effects library — all 500+ of Chris Johnson's free, open-source audio effects — in a single Apple-scented Audio Unit.
 
 <p align="center">

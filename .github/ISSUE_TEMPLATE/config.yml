@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Community Discord
+    url: https://discord.gg/gXATXkCDm
+    about: Questions, host-compat chatter, and beta feedback — often faster than an issue.
+  - name: Airwindows (the DSP itself)
+    url: https://www.airwindows.com
+    about: Anything about how an effect *sounds* is Chris Johnson's domain — start here, not in this repo.
