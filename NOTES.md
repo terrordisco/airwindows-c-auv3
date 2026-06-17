@@ -150,6 +150,30 @@ restore *after* the view is live. A blank UI over a correctly-loaded engine
 is a sync bug, not a persistence bug; device `os_log` is the fastest way to
 tell them apart.
 
+## Build 6 shipped + personalisation gating + CI (2026-06-17)
+
+Closed out the pre-responsive-UI function track and cut a release.
+
+- **Personalisation master toggle** — single `airwindows.personalisation`
+  switch in Preferences, default OFF (sparse stock experience). Gates
+  favorites, default-effect pin, Save/Recall settings, pots/sliders swap by
+  passing nil stores/closures (affordances already render conditionally) + a
+  `showDefaultEffectPin` flag on BrowserView. Stores keep persisting → flipping
+  on restores prior state. Open for review: default-OFF hides existing testers'
+  stars; whether pots/sliders swap belongs here or is core UI.
+- **Build 6 → TestFlight**, first HEADLESS upload (no Organizer). Recipe
+  verified and saved in memory [[reference_asc_upload_setup]]: archive →
+  ExportOptions (app-store-connect/automatic/team CV7UBF55FQ) → altool
+  validate+upload with the ASC API key. Validated clean. Next build = 7.
+  REMINDER: "What to Test" notes are Sveinbjörn's to write in ASC.
+- **Open-source packaging** — `.github/workflows/ci.yml` (macOS runner:
+  xcodegen generate → build AirwindowsApp for simulator, CODE_SIGNING_ALLOWED=NO;
+  green in 8m15s on first run), bug-report issue form, feature template,
+  config.yml (Discord + airwindows.com links), PR template, README CI badge.
+  Build instructions + CONTRIBUTING already existed.
+- **Roadmap pruned** per Sveinbjörn: deleted BPM-sync idea, the
+  surface-7-hidden-effects tracker, and the baconpaul 37-param chore.
+
 ## Hide undocumented effects from the browser (2026-06-16)
 
 Effects come from Chris's *code* (committed → baconpaul/airwin2rack → our sync),
