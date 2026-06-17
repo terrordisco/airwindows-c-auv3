@@ -91,6 +91,15 @@ struct AirwindowsAUView: View {
     /// the pin button in the browser preview; cleared there or in Preferences.
     @AppStorage("airwindows.defaultEffect", store: .airwindowsShared) private var defaultEffectName: String = ""
 
+    /// Master opt-in for the personalisation toolkit. OFF by default so the
+    /// stock experience stays sparse ("deeply designed to appear barely
+    /// designed"); turning it on in Preferences reveals favorites, the
+    /// default-effect pin, Save/Recall settings, and the pots/sliders swap.
+    /// The underlying stores keep persisting regardless — this only gates the
+    /// on-screen affordances, so turning it back on restores prior stars,
+    /// pins, and saved snapshots untouched. App-Group-shared like the rest.
+    @AppStorage("airwindows.personalisation", store: .airwindowsShared) private var personalisationEnabled: Bool = false
+
     /// Preferences sheet, opened from the workspace bottom bar's Settings box.
     @State private var showPreferences: Bool = false
 
@@ -157,7 +166,8 @@ struct AirwindowsAUView: View {
                     descriptionProvider: { effect in
                         viewModel.description(for: effect)
                     },
-                    favorites: favorites,
+                    favorites: personalisationEnabled ? favorites : nil,
+                    showDefaultEffectPin: personalisationEnabled,
                     onSelect: { effect, pool in
                         // Pool first: selecting swaps the effect, and the
                         // prev/next labels should resolve against the list the
@@ -193,7 +203,7 @@ struct AirwindowsAUView: View {
                 savedSettings.refresh()
                 if viewModel.hasSelection {
                     showBrowser = false
-                } else if let pinned = pinnedDefaultEffect() {
+                } else if personalisationEnabled, let pinned = pinnedDefaultEffect() {
                     viewModel.selectEffect(at: pinned.registryIndex)
                     showBrowser = false
                 } else {
@@ -301,18 +311,22 @@ struct AirwindowsAUView: View {
                 isDarkMode: isDarkMode,
                 onToggleTheme: { isDarkMode.toggle() },
                 useRotaryPots: effectiveUseRotaryPots,
-                onToggleControlStyle: { toggleControlStyle() },
-                hasSavedSettings: savedSettings.hasSaved(effect.name),
-                onSaveSettings: {
+                // Personalisation-gated affordances: passing nil hides the chip
+                // entirely (EffectDetailView renders each only when its closure
+                // is non-nil). Auto pots-for-dense-effects still applies even
+                // when the manual swap is hidden.
+                onToggleControlStyle: personalisationEnabled ? { toggleControlStyle() } : nil,
+                hasSavedSettings: personalisationEnabled && savedSettings.hasSaved(effect.name),
+                onSaveSettings: personalisationEnabled ? {
                     savedSettings.save(viewModel.currentParameterSnapshot, for: effect.name)
-                },
-                onRecallSettings: {
+                } : nil,
+                onRecallSettings: personalisationEnabled ? {
                     if let values = savedSettings.savedValues(for: effect.name) {
                         viewModel.applySavedSettings(values)
                     }
-                },
-                onClearSavedSettings: { savedSettings.clear(effect.name) },
-                favorites: favorites,
+                } : nil,
+                onClearSavedSettings: personalisationEnabled ? { savedSettings.clear(effect.name) } : nil,
+                favorites: personalisationEnabled ? favorites : nil,
                 onOpenSettings: { showPreferences = true },
                 isMonitoring: isMonitoring,
                 onToggleMonitoring: onToggleMonitoring

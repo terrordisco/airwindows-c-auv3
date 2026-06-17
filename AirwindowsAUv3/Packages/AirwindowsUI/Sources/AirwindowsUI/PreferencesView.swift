@@ -8,11 +8,16 @@
 //  directly, so changing the slider rescales the live workspace immediately
 //  (AirwindowsAUView reads the same key and re-injects \.uiScale).
 //
-//  First (and for now only) preference: a global interface-scale slider.
-//  100% is the sizing tuned on a 13" iPad; sliding down shrinks everything
-//  proportionally so a smaller iPad fits the same density. The slider carries
-//  two aligned label rows — percentages on top, iPad-size signposts on the
-//  bottom — so the abstract percentage is grounded in real devices.
+//  Sections, top to bottom:
+//    - Interface scale — a global size slider (100% = the sizing tuned on a
+//      13" iPad; sliding down fits more on smaller iPads). Two aligned label
+//      rows ground the abstract percentage in real device sizes.
+//    - Personalisation — a master opt-in. OFF by default keeps the stock
+//      experience sparse; on reveals favorites, the default-effect pin,
+//      Save/Recall settings, and the pots/sliders swap. The default-effect
+//      controls live under it (shown only when enabled).
+//    - Plugin window — a live container-size readout (research instrument for
+//      the responsive-layout work); hidden when nothing injects the size.
 //
 
 import SwiftUI
@@ -25,6 +30,12 @@ public struct PreferencesView: View {
     /// App Group store so the scale is shared across the app and every plugin
     /// instance (see UserDefaults.airwindowsShared).
     @AppStorage("airwindows.uiScale", store: UserDefaults.airwindowsShared) private var uiScale: Double = 1.0
+
+    /// Master opt-in for the personalisation toolkit (favorites, default-effect
+    /// pin, Save/Recall settings, pots/sliders swap). OFF by default so the
+    /// stock experience stays sparse; mirrors the key AirwindowsAUView reads to
+    /// gate the on-screen affordances. App-Group-shared.
+    @AppStorage("airwindows.personalisation", store: UserDefaults.airwindowsShared) private var personalisationEnabled: Bool = false
 
     /// The effect that loads on a fresh launch instead of the browser
     /// ("" = none). Set via the pin button in the browser preview pane;
@@ -75,30 +86,55 @@ public struct PreferencesView: View {
                         .opacity(0.4)
                         .padding(.top, 18)
 
-                    Text("Default effect")
+                    Text("Personalisation")
                         .font(.system(size: 22, weight: .semibold))
                         .padding(.top, 18)
 
-                    if defaultEffectName.isEmpty {
-                        Text("None. A fresh launch opens the effect browser. To start on a specific effect instead, tap the pin next to its name in the browser preview.")
-                            .font(.system(size: 15))
-                            .foregroundStyle(.secondary)
-                            .fixedSize(horizontal: false, vertical: true)
-                    } else {
-                        Text("\(defaultEffectName) loads on a fresh launch instead of the browser. Hosts that restore a session still reopen exactly as left.")
-                            .font(.system(size: 15))
-                            .foregroundStyle(.secondary)
-                            .fixedSize(horizontal: false, vertical: true)
+                    Text("Off by default, Airwindows stays sparse — just the effect and its controls. Turn this on to add favorites, a default effect, per-effect saved settings, and the pots/sliders switch. Anything you've already starred or saved is kept either way; this only shows or hides the controls.")
+                        .font(.system(size: 15))
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
 
-                        Button {
-                            defaultEffectName = ""
-                        } label: {
-                            Text("Remove default")
-                                .font(.system(size: 15, weight: .medium))
-                                .foregroundStyle(AirwindowsPalette.actionButton)
+                    Toggle(isOn: $personalisationEnabled) {
+                        Text("Personalisation features")
+                            .font(.system(size: 17, weight: .medium))
+                    }
+                    .tint(AirwindowsPalette.actionButton)
+                    .padding(.top, 6)
+
+                    // The default-effect control only matters when the toolkit
+                    // is on (the pin that sets it is gated behind the same
+                    // toggle), so the whole section follows it.
+                    if personalisationEnabled {
+                        Divider()
+                            .opacity(0.4)
+                            .padding(.top, 18)
+
+                        Text("Default effect")
+                            .font(.system(size: 22, weight: .semibold))
+                            .padding(.top, 18)
+
+                        if defaultEffectName.isEmpty {
+                            Text("None. A fresh launch opens the effect browser. To start on a specific effect instead, tap the pin next to its name in the browser preview.")
+                                .font(.system(size: 15))
+                                .foregroundStyle(.secondary)
+                                .fixedSize(horizontal: false, vertical: true)
+                        } else {
+                            Text("\(defaultEffectName) loads on a fresh launch instead of the browser. Hosts that restore a session still reopen exactly as left.")
+                                .font(.system(size: 15))
+                                .foregroundStyle(.secondary)
+                                .fixedSize(horizontal: false, vertical: true)
+
+                            Button {
+                                defaultEffectName = ""
+                            } label: {
+                                Text("Remove default")
+                                    .font(.system(size: 15, weight: .medium))
+                                    .foregroundStyle(AirwindowsPalette.actionButton)
+                            }
+                            .buttonStyle(.plain)
+                            .padding(.top, 4)
                         }
-                        .buttonStyle(.plain)
-                        .padding(.top, 4)
                     }
 
                     // Live readout of the space the host gives the plugin.

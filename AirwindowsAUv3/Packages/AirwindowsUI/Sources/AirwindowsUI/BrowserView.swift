@@ -58,6 +58,9 @@ public struct BrowserView: View {
     /// Optional — drives the pinned "Favorites" pseudo-category in the sidebar
     /// and the star toggle in the preview pane.
     public let favorites: FavoritesStore?
+    /// Whether the "make this the default effect" pin appears in the preview
+    /// pane. Gated by the personalisation master toggle (see AirwindowsAUView).
+    public let showDefaultEffectPin: Bool
 
     @Environment(\.colorScheme) private var scheme
     /// Matches the workspace's Settings box so the two line up across the
@@ -93,6 +96,7 @@ public struct BrowserView: View {
         initialHighlight: EffectBrowseModel? = nil,
         descriptionProvider: @escaping (EffectBrowseModel) -> String = { $0.whatText },
         favorites: FavoritesStore? = nil,
+        showDefaultEffectPin: Bool = true,
         onSelect: @escaping (EffectBrowseModel, [EffectBrowseModel]) -> Void,
         onClose: @escaping () -> Void
     ) {
@@ -102,6 +106,7 @@ public struct BrowserView: View {
         self.initialHighlight = initialHighlight
         self.descriptionProvider = descriptionProvider
         self.favorites = favorites
+        self.showDefaultEffectPin = showDefaultEffectPin
         self.onSelect = onSelect
         self.onClose = onClose
         self._context = context
@@ -164,6 +169,7 @@ public struct BrowserView: View {
                     : nil,
                 description: highlighted.flatMap { descriptionProvider($0) } ?? "",
                 favorites: favorites,
+                showDefaultEffectPin: showDefaultEffectPin,
                 onSelect: { effect in
                     onSelect(effect, navigationPool)
                     onClose()
@@ -447,6 +453,8 @@ private struct EffectPreviewColumn: View {
     let effect: EffectBrowseModel?
     let description: String
     let favorites: FavoritesStore?
+    /// Gates the "make default" pin (personalisation master toggle).
+    let showDefaultEffectPin: Bool
     let onSelect: (EffectBrowseModel) -> Void
 
     @Environment(\.uiScale) private var uiScale
@@ -473,21 +481,24 @@ private struct EffectPreviewColumn: View {
                     // Pin: marks this effect as the default that loads on a
                     // fresh launch (instead of the browser). One pin at a
                     // time — pinning replaces any previous default; tapping
-                    // the pinned effect again clears it.
-                    let isDefault = defaultEffectName == effect.name
-                    Button {
-                        defaultEffectName = isDefault ? "" : effect.name
-                    } label: {
-                        Image(systemName: isDefault ? "pin.fill" : "pin")
-                            .font(.system(size: 20 * uiScale, weight: .medium))
-                            .foregroundStyle(isDefault ? Color.primary : Color.secondary)
-                            .frame(width: 40 * uiScale, height: 40 * uiScale)
-                            .contentShape(Rectangle())
+                    // the pinned effect again clears it. Hidden unless the
+                    // personalisation toolkit is enabled.
+                    if showDefaultEffectPin {
+                        let isDefault = defaultEffectName == effect.name
+                        Button {
+                            defaultEffectName = isDefault ? "" : effect.name
+                        } label: {
+                            Image(systemName: isDefault ? "pin.fill" : "pin")
+                                .font(.system(size: 20 * uiScale, weight: .medium))
+                                .foregroundStyle(isDefault ? Color.primary : Color.secondary)
+                                .frame(width: 40 * uiScale, height: 40 * uiScale)
+                                .contentShape(Rectangle())
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityLabel(isDefault
+                            ? "Remove \(effect.name) as the default effect"
+                            : "Make \(effect.name) the default effect")
                     }
-                    .buttonStyle(.plain)
-                    .accessibilityLabel(isDefault
-                        ? "Remove \(effect.name) as the default effect"
-                        : "Make \(effect.name) the default effect")
 
                     if let favorites {
                         let isFav = favorites.isFavorite(effect.name)
