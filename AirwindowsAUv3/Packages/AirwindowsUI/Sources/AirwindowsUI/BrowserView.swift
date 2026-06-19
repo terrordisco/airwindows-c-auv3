@@ -519,10 +519,9 @@ private struct EffectPreviewColumn: View {
                         text: "Select",
                         role: .primary,
                         size: .large,
-                        accessibility: "Select \(effect.name)"
-                    ) {
-                        onSelect(effect)
-                    }
+                        accessibility: "Select \(effect.name)",
+                        action: { onSelect(effect) }
+                    )
                 }
                 .padding(.top, 28 * uiScale)
                 .hEdgePadding(28)

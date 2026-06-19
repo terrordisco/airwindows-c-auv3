@@ -581,10 +581,9 @@ struct LinkChip: View {
             systemName: systemName,
             text: text,
             role: .action,
-            accessibility: accessibility
-        ) {
-            openURL(url)
-        }
+            accessibility: accessibility,
+            action: { openURL(url) }
+        )
     }
 }
 

@@ -211,10 +211,9 @@ private struct CollectionTabStrip: View {
                     Chip(
                         text: item.rawValue,
                         role: .toggle(isOn: selection == item),
-                        accessibility: item.rawValue
-                    ) {
-                        selection = (selection == item) ? .all : item
-                    }
+                        accessibility: item.rawValue,
+                        action: { selection = (selection == item) ? .all : item }
+                    )
                 }
             }
         }

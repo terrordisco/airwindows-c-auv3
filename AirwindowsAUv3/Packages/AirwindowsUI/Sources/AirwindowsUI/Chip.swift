@@ -65,6 +65,12 @@ public struct Chip: View {
 
     @Environment(\.uiScale) private var uiScale
 
+    // NOTE: because there are two trailing-closure-eligible parameters
+    // (`action` and `longPressAction`), an UNLABELED trailing closure is
+    // ambiguous and Swift binds it to the wrong one with only a deprecation
+    // warning — that is the bug that killed build 6's Select button. So every
+    // caller MUST pass `action:` (and `longPressAction:`) with its label; do
+    // not use trailing-closure syntax on a Chip.
     public init(
         systemName: String? = nil,
         text: String? = nil,
