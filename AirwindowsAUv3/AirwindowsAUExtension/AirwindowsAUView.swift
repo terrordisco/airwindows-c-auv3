@@ -91,14 +91,14 @@ struct AirwindowsAUView: View {
     /// the pin button in the browser preview; cleared there or in Preferences.
     @AppStorage("airwindows.defaultEffect", store: .airwindowsShared) private var defaultEffectName: String = ""
 
-    /// Master opt-in for the personalisation toolkit. OFF by default so the
-    /// stock experience stays sparse ("deeply designed to appear barely
-    /// designed"); turning it on in Preferences reveals favorites, the
-    /// default-effect pin, Save/Recall settings, and the pots/sliders swap.
-    /// The underlying stores keep persisting regardless — this only gates the
-    /// on-screen affordances, so turning it back on restores prior stars,
-    /// pins, and saved snapshots untouched. App-Group-shared like the rest.
-    @AppStorage("airwindows.personalisation", store: .airwindowsShared) private var personalisationEnabled: Bool = false
+    /// Master switch for the personalisation toolkit. ON by default — favorites,
+    /// the default-effect pin, Save/Recall settings, and the pots/sliders swap
+    /// are all available out of the box; turning it OFF in Preferences strips
+    /// the interface back to just the effect and its controls. The underlying
+    /// stores keep persisting regardless — this only gates the on-screen
+    /// affordances, so toggling it back on restores prior stars, pins, and
+    /// saved snapshots untouched. App-Group-shared like the rest.
+    @AppStorage("airwindows.personalisation", store: .airwindowsShared) private var personalisationEnabled: Bool = true
 
     /// Preferences sheet, opened from the workspace bottom bar's Settings box.
     @State private var showPreferences: Bool = false

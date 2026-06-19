@@ -12,10 +12,10 @@
 //    - Interface scale — a global size slider (100% = the sizing tuned on a
 //      13" iPad; sliding down fits more on smaller iPads). Two aligned label
 //      rows ground the abstract percentage in real device sizes.
-//    - Personalisation — a master opt-in. OFF by default keeps the stock
-//      experience sparse; on reveals favorites, the default-effect pin,
-//      Save/Recall settings, and the pots/sliders swap. The default-effect
-//      controls live under it (shown only when enabled).
+//    - Personalisation — a master switch, ON by default: favorites, the
+//      default-effect pin, Save/Recall settings, and the pots/sliders swap.
+//      Turning it off strips back to just the effect + controls. The
+//      default-effect controls live under it (shown only when enabled).
 //    - Plugin window — a live container-size readout (research instrument for
 //      the responsive-layout work); hidden when nothing injects the size.
 //
@@ -31,11 +31,11 @@ public struct PreferencesView: View {
     /// instance (see UserDefaults.airwindowsShared).
     @AppStorage("airwindows.uiScale", store: UserDefaults.airwindowsShared) private var uiScale: Double = 1.0
 
-    /// Master opt-in for the personalisation toolkit (favorites, default-effect
-    /// pin, Save/Recall settings, pots/sliders swap). OFF by default so the
-    /// stock experience stays sparse; mirrors the key AirwindowsAUView reads to
-    /// gate the on-screen affordances. App-Group-shared.
-    @AppStorage("airwindows.personalisation", store: UserDefaults.airwindowsShared) private var personalisationEnabled: Bool = false
+    /// Master switch for the personalisation toolkit (favorites, default-effect
+    /// pin, Save/Recall settings, pots/sliders swap). ON by default; mirrors the
+    /// key AirwindowsAUView reads to gate the on-screen affordances. The default
+    /// MUST match AirwindowsAUView's (both read this App-Group-shared key).
+    @AppStorage("airwindows.personalisation", store: UserDefaults.airwindowsShared) private var personalisationEnabled: Bool = true
 
     /// The effect that loads on a fresh launch instead of the browser
     /// ("" = none). Set via the pin button in the browser preview pane;
@@ -90,7 +90,7 @@ public struct PreferencesView: View {
                         .font(.system(size: 22, weight: .semibold))
                         .padding(.top, 18)
 
-                    Text("Off by default, Airwindows stays sparse — just the effect and its controls. Turn this on to add favorites, a default effect, per-effect saved settings, and the pots/sliders switch. Anything you've already starred or saved is kept either way; this only shows or hides the controls.")
+                    Text("Favorites, a default effect, per-effect saved settings, and the pots/sliders switch. Turn this off for a sparser interface — just the effect and its controls. Anything you've already starred or saved is kept either way; this only shows or hides the controls.")
                         .font(.system(size: 15))
                         .foregroundStyle(.secondary)
                         .fixedSize(horizontal: false, vertical: true)
