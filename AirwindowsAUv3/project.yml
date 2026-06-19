@@ -24,8 +24,13 @@ schemes:
     build:
       targets:
         AirwindowsApp: all
+        AirwindowsAppUITests: [test]
     run:
       config: Debug
+    test:
+      config: Debug
+      targets:
+        - AirwindowsAppUITests
     archive:
       config: Release
 
@@ -149,3 +154,17 @@ targets:
       # supportedViewConfigurations: override in AirwindowsAudioUnit.mm
       # (host view-size research instrumentation). Extension-safe API.
       - sdk: CoreAudioKit.framework
+
+  AirwindowsAppUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources:
+      - path: AirwindowsAppUITests
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.terrordisco.airwindows.consolidated.uitests
+        GENERATE_INFOPLIST_FILE: true
+        TARGETED_DEVICE_FAMILY: "2"
+        TEST_TARGET_NAME: AirwindowsApp
+    dependencies:
+      - target: AirwindowsApp

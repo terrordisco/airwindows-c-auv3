@@ -33,13 +33,37 @@ jobs:
         working-directory: AirwindowsAUv3
         run: xcodegen generate
 
-      - name: Build
+      - name: Build & test (UI smoke test)
         working-directory: AirwindowsAUv3
         run: |
           set -o pipefail
-          xcodebuild build \
+          # Pick whatever iPad simulator the runner image happens to ship — the
+          # exact model varies by Xcode version, so don't hard-code a name.
+          UDID=$(xcrun simctl list devices available | grep -i ipad | head -1 | grep -oE '[0-9A-F-]{36}' | head -1)
+          if [ -z "$UDID" ]; then echo "::error::No iPad simulator available on the runner"; exit 1; fi
+          echo "Using simulator $UDID"
+          # `test` builds everything (extension, DSP, UI package) AND runs the
+          # critical-path smoke test (browser → Select → effect loads), which
+          # guards the build-6 dead-Select-button class of regression.
+          xcodebuild test \
             -project AirwindowsAUv3.xcodeproj \
             -scheme AirwindowsApp \
             -configuration Debug \
-            -destination 'generic/platform=iOS Simulator' \
-            CODE_SIGNING_ALLOWED=NO
+            -destination "id=$UDID" \
+            CODE_SIGNING_ALLOWED=NO \
+            | tee build.log
+
+      - name: Guard against silent-failure warnings
+        working-directory: AirwindowsAUv3
+        run: |
+          # Some Swift warnings compile fine but produce a broken app at
+          # runtime. The worst we've hit: an unlabeled trailing closure binding
+          # to the wrong parameter, which made the Select button (and others)
+          # dead to taps in build 6 — shipped because the warning read as noise.
+          # Treat that whole class as a hard failure so it can never hide again.
+          patterns='backward matching of the unlabeled trailing closure|will never be executed|result of call to .* is unused.*\bmutating\b'
+          if grep -niE "$patterns" build.log; then
+            echo "::error::Silent-failure warning detected (see matches above). These compile but break at runtime — fix at the source, e.g. pass the closure with its label (action:)."
+            exit 1
+          fi
+          echo "No silent-failure warnings found."

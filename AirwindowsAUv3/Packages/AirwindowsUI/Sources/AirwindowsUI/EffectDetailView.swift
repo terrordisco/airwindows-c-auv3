@@ -327,6 +327,10 @@ public struct EffectDetailView: View {
             bottomBar
         }
         .background(AirwindowsPalette.surface(scheme))
+        // Stable anchor for UI tests: the smoke test taps Select in the browser
+        // and asserts this appears (i.e. the effect actually loaded). Guards the
+        // build-6 regression where Select did nothing.
+        .accessibilityIdentifier("effectDetailView")
     }
 
     // MARK: - Bottom bar
