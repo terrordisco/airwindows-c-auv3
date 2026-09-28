@@ -35,6 +35,14 @@
          export-compliance prompt on every TestFlight build. -->
     <key>ITSAppUsesNonExemptEncryption</key>
     <false/>
+    <!-- iPhone: portrait for the stacked compact layout, landscape for the
+         short-rack one (see LayoutMode.swift). No upside-down on iPhone. -->
+    <key>UISupportedInterfaceOrientations</key>
+    <array>
+        <string>UIInterfaceOrientationPortrait</string>
+        <string>UIInterfaceOrientationLandscapeLeft</string>
+        <string>UIInterfaceOrientationLandscapeRight</string>
+    </array>
     <key>UISupportedInterfaceOrientations~ipad</key>
     <array>
         <string>UIInterfaceOrientationPortrait</string>

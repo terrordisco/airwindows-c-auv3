@@ -193,6 +193,11 @@ public struct ParameterGrid: View {
     /// entries fall back to 0.5.
     public let parameterDefaults: [Double]
     public let useRotaryPots: Bool
+    /// Optional cap on the slider layout's column count. The compact layout
+    /// passes 1 so faders stack in a single full-width column regardless of
+    /// parameter count. nil = the count-based rule below. Pots ignore this:
+    /// their adaptive grid already reflows with the available width.
+    public let maxSliderColumns: Int?
     @Binding public var parameterValues: [Double]
 
     /// Global UI scale — multiplies column widths, column spacing, and row
@@ -209,7 +214,8 @@ public struct ParameterGrid: View {
         parameterValues: Binding<[Double]>,
         parameterStepCounts: [Int] = [],
         parameterDefaults: [Double] = [],
-        useRotaryPots: Bool = false
+        useRotaryPots: Bool = false,
+        maxSliderColumns: Int? = nil
     ) {
         self.parameterCount = parameterCount
         self.parameterNames = parameterNames
@@ -218,6 +224,7 @@ public struct ParameterGrid: View {
         self.parameterStepCounts = parameterStepCounts
         self.parameterDefaults = parameterDefaults
         self.useRotaryPots = useRotaryPots
+        self.maxSliderColumns = maxSliderColumns
         self._parameterValues = parameterValues
     }
 
@@ -305,9 +312,10 @@ public struct ParameterGrid: View {
             default: return 4
             }
         }()
+        let capped = maxSliderColumns.map { Swift.max(1, Swift.min($0, columnCount)) } ?? columnCount
         return Array(
             repeating: GridItem(.flexible(), spacing: 28 * uiScale, alignment: .top),
-            count: columnCount
+            count: capped
         )
     }
 

@@ -190,7 +190,7 @@ public struct SidebarView: View {
 
 /// Three filter tabs (Recommended / Basic / Latest). Tapping the selected
 /// tab deselects it, reverting to `.all` (no filter).
-private struct CollectionTabStrip: View {
+struct CollectionTabStrip: View {
     @Binding var selection: EffectCollection
 
     private let items: [EffectCollection] = [.recommended, .basic, .latest]
@@ -222,7 +222,7 @@ private struct CollectionTabStrip: View {
 
 // MARK: - Search field
 
-private struct SearchField: View {
+struct SearchField: View {
     @Binding var text: String
 
     @Environment(\.uiScale) private var uiScale

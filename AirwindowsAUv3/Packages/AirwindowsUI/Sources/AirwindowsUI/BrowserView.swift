@@ -77,16 +77,9 @@ public struct BrowserView: View {
     @State private var showAbout: Bool = false
     @State private var showPreferences: Bool = false
 
-    /// Pseudo-category that shows the N most recently committed effects
-    /// across the currently filtered pool. Lives only in the BrowserView —
-    /// no upstream registry / override-layer change. Effects still appear in
-    /// their natural category alongside their appearance in "New".
-    private static let newCategoryName = "New"
-    private static let newCategoryLimit = 30
-
-    /// Sentinel `selectedCategory` value for the favorites pseudo-category.
-    /// Chosen to never collide with a real category name or the "" all-sentinel.
-    private static let favoritesCategoryName = "\u{2605} Favorites"
+    // Pseudo-category sentinels — see BrowserCatalog.
+    private static let newCategoryName = BrowserCatalog.newCategoryName
+    private static let favoritesCategoryName = BrowserCatalog.favoritesCategoryName
 
     public init(
         allEffects: [EffectBrowseModel],
@@ -213,99 +206,29 @@ public struct BrowserView: View {
         }
     }
 
-    // MARK: - Filtering
+    // MARK: - Filtering (delegated to BrowserCatalog, shared with CompactBrowserView)
 
-    private var filteredAll: [EffectBrowseModel] {
-        allEffects
-            .filtered(by: context.collection)
-            .matching(query: context.searchText)
+    private var catalog: BrowserCatalog {
+        BrowserCatalog(
+            allEffects: allEffects,
+            categories: categories,
+            countsByCategory: countsByCategory,
+            context: context,
+            favorites: favorites
+        )
     }
 
-    private var visibleCategories: [String] {
-        // Only show categories that have effects after the current filters,
-        // preserving the canonical order from `categories`. The synthetic
-        // "New" pseudo-category is pinned to the top whenever there's at
-        // least one effect to draw from.
-        let cats = Set(filteredAll.map(\.category))
-        let real = categories.filter { cats.contains($0) }
-        return filteredAll.isEmpty ? real : [Self.newCategoryName] + real
-    }
-
-    /// The `newCategoryLimit` newest effects (by firstCommitDate descending) within the current
-    /// collection/search filter. Computed lazily; sort by date is a stable
-    /// tie-break via `EffectSortMode.newestFirst`.
-    private var newCategoryEffects: [EffectBrowseModel] {
-        Array(filteredAll.sorted(by: .newestFirst).prefix(Self.newCategoryLimit))
-    }
-
-    /// Effects in the current filter pool that the user has favorited.
-    /// Empty when there's no store. Drives both the sidebar row count and the
-    /// favorites pseudo-category listing.
-    private var favoriteEffects: [EffectBrowseModel] {
-        guard let favorites else { return [] }
-        return filteredAll.filter { favorites.isFavorite($0.name) }
-    }
-
-    private var effectsInCurrentCategory: [EffectBrowseModel] {
-        let pool: [EffectBrowseModel]
-        if context.selectedCategory == Self.favoritesCategoryName {
-            pool = favoriteEffects
-        } else if context.selectedCategory == Self.newCategoryName {
-            // Pseudo-category: newest N. Re-applies the user-chosen sortMode
-            // afterward so toggling alphabetical etc. still re-orders them.
-            pool = newCategoryEffects
-        } else if let cat = context.selectedCategory, !cat.isEmpty {
-            // Specific category picked
-            pool = filteredAll.filter { $0.category == cat }
-        } else {
-            // Empty string ("All categories") or nil → full pool
-            pool = filteredAll
-        }
-        return pool.sorted(by: context.sortMode)
-    }
-
-    /// The ordered list of effects the middle column is currently showing —
-    /// handed to `onSelect` so prev/next on the effect page can walk the same
-    /// list the user picked from. In "by category" grouping the flat sort
-    /// order differs from the visual order, so flatten the groups instead.
-    private var navigationPool: [EffectBrowseModel] {
-        if isAllCategories && context.sortMode == .byCategory {
-            return groupedEffects.flatMap(\.effects)
-        }
-        return effectsInCurrentCategory
-    }
-
-    /// Counts table augmented with the synthetic "New" entry so the sidebar
-    /// can render its row. Real-category counts come straight from the host.
-    private var effectiveCountsByCategory: [String: Int] {
-        var counts = countsByCategory
-        counts[Self.newCategoryName] = min(Self.newCategoryLimit, filteredAll.count)
-        return counts
-    }
-
-    private var isAllCategories: Bool {
-        context.selectedCategory == ""
-    }
-
-    /// Effects grouped by category, each group sorted by Chris ordering.
-    /// Only computed when "by category" sort is active on "All categories".
-    private var groupedEffects: [(category: String, effects: [EffectBrowseModel])] {
-        let grouped = Dictionary(grouping: filteredAll, by: \.category)
-        return categories
-            .filter { grouped[$0] != nil }
-            .map { cat in
-                (category: cat, effects: grouped[cat]!.sortedByChrisOrdering())
-            }
-    }
+    private var filteredAll: [EffectBrowseModel] { catalog.filteredAll }
+    private var visibleCategories: [String] { catalog.visibleCategories }
+    private var favoriteEffects: [EffectBrowseModel] { catalog.favoriteEffects }
+    private var effectsInCurrentCategory: [EffectBrowseModel] { catalog.effectsInCurrentCategory }
+    private var navigationPool: [EffectBrowseModel] { catalog.navigationPool }
+    private var effectiveCountsByCategory: [String: Int] { catalog.effectiveCountsByCategory }
+    private var isAllCategories: Bool { catalog.isAllCategories }
+    private var groupedEffects: [(category: String, effects: [EffectBrowseModel])] { catalog.groupedEffects }
 
     private func middleColumnLabel(for selection: String) -> String {
-        if selection.isEmpty {
-            return "All effects (\(effectsInCurrentCategory.count))"
-        }
-        if selection == Self.favoritesCategoryName {
-            return "Favorites (\(effectsInCurrentCategory.count))"
-        }
-        return "\(selection) (\(effectsInCurrentCategory.count))"
+        "\(catalog.title(for: selection)) (\(effectsInCurrentCategory.count))"
     }
 
     /// Pick a random effect from the current filtered pool (collection + search).
@@ -314,7 +237,7 @@ public struct BrowserView: View {
     /// outside it, the view model falls back to the pick's own category for
     /// prev/next navigation.
     private func pickRandom() {
-        guard let picked = filteredAll.randomElement() else { return }
+        guard let picked = catalog.randomEffect() else { return }
         onSelect(picked, navigationPool)
         onClose()
     }
@@ -444,6 +367,10 @@ private struct NumberedEffectRow: View {
         .padding(.vertical, 7 * uiScale)
         .background(isHighlighted ? Color.primary.opacity(0.05) : Color.clear)
         .contentShape(Rectangle())
+        // Stable anchor for the UI smoke test (shared with the compact browser).
+        .accessibilityIdentifier("effectRow")
+        .accessibilityLabel(effect.name)
+        .accessibilityAddTraits(.isButton)
     }
 }
 
@@ -465,6 +392,10 @@ private struct EffectPreviewColumn: View {
     /// and every plugin instance, same as favorites and the UI scale.
     @AppStorage("airwindows.defaultEffect", store: .airwindowsShared)
     private var defaultEffectName: String = ""
+    /// Touch tooltip for the pin (see TransientTooltip). Text differs for
+    /// pinning vs unpinning.
+    @State private var showPinTooltip = false
+    @State private var pinTooltipText = ""
 
     var body: some View {
         if let effect {
@@ -487,6 +418,13 @@ private struct EffectPreviewColumn: View {
                         let isDefault = defaultEffectName == effect.name
                         Button {
                             defaultEffectName = isDefault ? "" : effect.name
+                            // The pin's meaning isn't obvious from the glyph,
+                            // so every tap surfaces a short explanatory
+                            // tooltip above it for a couple of seconds.
+                            pinTooltipText = isDefault
+                                ? "No longer the default effect"
+                                : "Make this effect default when I open Airwindows Consolidated"
+                            showPinTooltip = true
                         } label: {
                             Image(systemName: isDefault ? "pin.fill" : "pin")
                                 .font(.system(size: 20 * uiScale, weight: .medium))
@@ -495,6 +433,7 @@ private struct EffectPreviewColumn: View {
                                 .contentShape(Rectangle())
                         }
                         .buttonStyle(.plain)
+                        .transientTooltip(pinTooltipText, isPresented: $showPinTooltip)
                         .accessibilityLabel(isDefault
                             ? "Remove \(effect.name) as the default effect"
                             : "Make \(effect.name) the default effect")
