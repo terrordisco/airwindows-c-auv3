@@ -290,7 +290,7 @@ public struct EffectDetailView: View {
 
                             // Promotes the awpdoc's leading `# ` line into a
                             // heading instead of showing the literal `#`.
-                            EffectDescriptionText(description)
+                            EffectDescriptionText(description, omittingHeadingMatching: effect.whatText)
                                 .hEdgePadding(24)
                                 .padding(.vertical, 18 * uiScale)
                         }
@@ -313,7 +313,7 @@ public struct EffectDetailView: View {
                         .opacity(0.4)
 
                     ScrollView {
-                        EffectDescriptionText(description)
+                        EffectDescriptionText(description, omittingHeadingMatching: effect.whatText)
                             .hEdgePadding(24)
                             .padding(.vertical, 18 * uiScale)
                     }

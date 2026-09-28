@@ -714,7 +714,7 @@ public struct CompactBrowserView: View {
 
                     Divider().opacity(0.4)
 
-                    EffectDescriptionText(description.isEmpty ? effect.whatText : description)
+                    EffectDescriptionText(description.isEmpty ? effect.whatText : description, omittingHeadingMatching: effect.whatText)
 
                     if effect.postURL != nil || effect.videoURL != nil {
                         HStack(spacing: 8) {

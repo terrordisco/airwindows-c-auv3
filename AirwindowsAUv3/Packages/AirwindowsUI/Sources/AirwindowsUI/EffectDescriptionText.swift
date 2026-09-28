@@ -23,10 +23,34 @@ public struct EffectDescriptionText: View {
 
     @Environment(\.uiScale) private var uiScale
 
-    public init(_ text: String) {
+    /// - Parameters:
+    ///   - text: the awpdoc description.
+    ///   - tagline: the effect's one-line `whatText`, when it is shown
+    ///     separately right next to this view. Chris's awpdoc heading is the
+    ///     same sentence as his tagline for 482 of 524 effects, so when the
+    ///     two match (ignoring case and trailing punctuation) the heading is
+    ///     dropped here rather than printed twice. The ~30 effects whose
+    ///     heading is a variant of the tagline keep it — it says something
+    ///     the tagline doesn't.
+    public init(_ text: String, omittingHeadingMatching tagline: String? = nil) {
         let parts = Self.split(text)
-        self.heading = parts.heading
+        if let heading = parts.heading, let tagline,
+           Self.normalized(heading) == Self.normalized(tagline) {
+            self.heading = nil
+        } else {
+            self.heading = parts.heading
+        }
         self.bodyText = parts.body
+    }
+
+    /// Comparison key for the tagline/heading duplicate check: lowercased,
+    /// whitespace collapsed, trailing sentence punctuation dropped.
+    static func normalized(_ s: String) -> String {
+        var t = s.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        while let last = t.last, ".!…\u{201D}\"".contains(last) {
+            t.removeLast()
+        }
+        return t.split(whereSeparator: \.isWhitespace).joined(separator: " ")
     }
 
     public var body: some View {

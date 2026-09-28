@@ -365,7 +365,7 @@ public struct CompactWorkspaceView: View {
     @ViewBuilder
     private var descriptionBlock: some View {
         if shouldShowDescription {
-            EffectDescriptionText(description)
+            EffectDescriptionText(description, omittingHeadingMatching: effect.whatText)
                 .hEdgePadding(16)
                 .padding(.vertical, 16 * uiScale)
         }

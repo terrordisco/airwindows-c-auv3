@@ -483,7 +483,7 @@ private struct EffectPreviewColumn: View {
                 // SwiftUI behavior only flashes the indicator on scroll).
                 ScrollView {
                     // Leading `# ` line renders as a heading; see EffectDescriptionText.
-                    EffectDescriptionText(description.isEmpty ? effect.whatText : description)
+                    EffectDescriptionText(description.isEmpty ? effect.whatText : description, omittingHeadingMatching: effect.whatText)
                         .hEdgePadding(28)
                         .padding(.vertical, 20 * uiScale)
                 }
