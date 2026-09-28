@@ -1,7 +1,8 @@
 {
-  "_comment": "Manual category overrides applied at the bridge boundary so we never have to edit the upstream-generated ModuleAdd.h. Mostly: assigning real categories to effects that arrive labelled 'Unclassified'. Family rule: an effect named X3 inherits X2's category; an effect named ConsoleY{Buss,Channel,Pre} goes under 'Consoles'. Review pass 2026-06-11: BitDualPan->Stereo confirmed via blog post (2026-05-31); CStrip corrected Effects->Filter (upstream puts CStrip2 and EQ under Filter); PearLiteEQ->Filter confirmed via family rule (Pear/Pear2/PearEQ all Filter); PurestConsole4* confirmed via family rule; WoodenBox override REMOVED (upstream now categorizes it 'Tone Color' itself). Update 2026-06-16: Longhand confirmed Saturation (post went up 2026-06-14, 'an experiment in softclipping'); PunchyDeluxe/PunchyGuitar corrected Dynamics->Amp Sims (param layout is byte-identical to the PointyDeluxe/PointyGuitar amp sims, but the DSP is genuinely distinct - PointyDeluxe has a ClipOnly2 stage Punchy lacks, Proc files differ ~3KB - so they're a real amp-sim sibling, not a duplicate). Still best-guess, no blog post yet: X2Buss (Consoles; site search maps it to the ConsoleX2 family) and kRockstar (Reverb; every k-series effect upstream is Reverb). Both currently hidden from the browser (no description) until Chris posts.",
+  "_comment": "Manual category overrides applied at the bridge boundary so we never have to edit the upstream-generated ModuleAdd.h. Mostly: assigning real categories to effects that arrive labelled 'Unclassified'. Family rule: an effect named X3 inherits X2's category; an effect named ConsoleY{Buss,Channel,Pre} goes under 'Consoles'. Review pass 2026-06-11: BitDualPan->Stereo confirmed via blog post (2026-05-31); CStrip corrected Effects->Filter (upstream puts CStrip2 and EQ under Filter); PearLiteEQ->Filter confirmed via family rule (Pear/Pear2/PearEQ all Filter); PurestConsole4* confirmed via family rule; WoodenBox override REMOVED (upstream now categorizes it 'Tone Color' itself). Update 2026-06-16: Longhand confirmed Saturation (post went up 2026-06-14, 'an experiment in softclipping'); PunchyDeluxe/PunchyGuitar corrected Dynamics->Amp Sims (param layout is byte-identical to the PointyDeluxe/PointyGuitar amp sims, but the DSP is genuinely distinct - PointyDeluxe has a ClipOnly2 stage Punchy lacks, Proc files differ ~3KB - so they're a real amp-sim sibling, not a duplicate). Still best-guess, no blog post yet: X2Buss (Consoles; site search maps it to the ConsoleX2 family) and kRockstar (Reverb; every k-series effect upstream is Reverb). Both currently hidden from the browser (no description) until Chris posts. Update 2026-09-28 (upstream sync 2026-05-30 -> 2026-09-18, +12 effects): family-rule overrides for the new Unclassified arrivals - BezEQ4->Filter (BezEQ2/3), ConsoleX3->Consoles, DeRez5->Lo-Fi (DeRez3/4), Spiral3->Saturation (Spiral/Spiral2). Weave left Unclassified: no family, no post yet; hidden from the browser until Chris posts. X2Buss, kRockstar, PearLiteEQ, Longhand now have upstream awpdoc and are visible.",
 
   "Baxandall3": "Filter",
+  "BezEQ4": "Filter",
   "BitDualPan": "Stereo",
   "ClipOnly3": "Clipping",
   "ConsoleHBuss": "Consoles",
@@ -10,14 +11,17 @@
   "ConsoleX2Buss": "Consoles",
   "ConsoleX2Channel": "Consoles",
   "ConsoleX2Pre": "Consoles",
+  "ConsoleX3": "Consoles",
   "ConsoleXBuss": "Consoles",
   "ConsoleXChannel": "Consoles",
   "ConsoleXPre": "Consoles",
   "CStrip": "Filter",
   "Density3": "Distortion",
+  "DeRez5": "Lo-Fi",
   "Dynamics3": "Dynamics",
-  "LRConvolve3": "Utility",
+  "kRockstar": "Reverb",
   "Longhand": "Saturation",
+  "LRConvolve3": "Utility",
   "Pafnuty": "Filter",
   "PearLiteEQ": "Filter",
   "PunchyDeluxe": "Amp Sims",
@@ -25,6 +29,6 @@
   "PurestConsole4Buss": "Consoles",
   "PurestConsole4Channel": "Consoles",
   "SoftClock3": "Utility",
-  "X2Buss": "Consoles",
-  "kRockstar": "Reverb"
+  "Spiral3": "Saturation",
+  "X2Buss": "Consoles"
 }

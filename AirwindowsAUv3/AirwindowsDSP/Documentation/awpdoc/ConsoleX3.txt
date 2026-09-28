@@ -1,0 +1,21 @@
+OK, so for the ConsoleX3 shown in the video, go here:
+
+https://github.com/airwindows/ConsoleX3/releases
+
+and click on the version number at the top. As of posting it’s 0.0.7 (cue theme music!) and for this repository, I’ve not been able to get Github to set it as a ‘latest release’, but that’s the one.
+
+If you would like the standalone, no-GUI versions such as for Raspberry Pi, I have those too!
+
+If you mean to use the GUI version, don’t install the Audio Unit from this, the installer for the GUI version doesn’t want to install if there’s already a plugin of that name present.
+
+If you want to use a surround-capable version of ConsoleX3, you HAVE to use the Audio Unit ‘ConsoleX3Mono’ plugin, because that’s the one that will run any number of channels (it doesn’t do surround panning, though, you’ll have to do that separately).
+
+If you want to use AirwindowsGlobals and have the nice grey watercolor texture I favor, or to customize the look of it any way you want, use this:
+
+AirwindowsGlobals.zip (158k) (text file, folder structure and jpeg)
+
+There’s an extra folder in there telling you to put the ‘Airwindows’ folder into your Documents folder. If JUCE looks for documents files in a different place on your system then put it there instead, but on the Mac it knows to look in the Documents folder, so it goes Documents/Airwindows/AirwindowsGlobals.txt and the GreyWatercolor.jpg goes beside that file. I encourage making the Airwindows GUI plugins your own in this way. AirwindowsGlobals now has a bunch of comments telling you how to do stuff, making it easier to use.
+
+The standalone plugins are in all the existing standalone plugin collections, but ConsoleX3 has too many controls to go into Consolidated so it doesn’t go in Consolidated. For a GUI version, go to Github and use the one I made, for the Chris vision of how wild GUI plugins can go.
+
+Hope you like ConsoleX3! I will be bringing out the new plugins (such as Rockstar2, BezEQ4, Weave) which are either in the demo, or built into ConsoleX3 but don’t exist as standalone yet. For instance, the overdrive control ‘More’ is the ‘Weave’ algorithm and this is the first you’re seeing it, or a Console algorithm that uses the ‘derivative BIP’ thing I came up with after not successfully reinventing Signalsmith’s ‘elliptic BLEP’ antialiasing :)

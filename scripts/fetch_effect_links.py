@@ -118,6 +118,9 @@ VARIANT_SUFFIXES = (
 # Confirmed against the WordPress sitemap.
 MANUAL_OVERRIDES: dict[str, str] = {
     "ADClip7": "adclip-7",
+    # Chris's one Iron Oxide Classic post covers both versions; the predecessor
+    # guard would otherwise refuse it for the "2" (it's IronOxideClassic's own).
+    "IronOxideClassic2": "iron-oxide-classic",
     "BussColors4": "busscolors-4",
     "C5RawBuss": "c5rawconsole",
     "C5RawChannel": "c5rawconsole",
@@ -154,12 +157,25 @@ def strip_variant_suffix(name: str) -> str | None:
 
 def candidate_slugs(name: str) -> list[str]:
     """Produce slug candidates in preference order."""
-    out: list[str] = []
+    return [slug for slug, _ in candidate_slugs_tagged(name)]
 
-    def add(variants: list[str]) -> None:
+
+def candidate_slugs_tagged(name: str) -> list[tuple[str, bool]]:
+    """Slug candidates in preference order, each tagged with whether it is a
+    *predecessor* fallback (BezEQ4 -> bezeq3 -> bezeq). Predecessor slugs are
+    a last resort and `match_slugs` refuses them when the slug is another
+    registered effect's own post: BezEQ3's post is about BezEQ3, and showing it
+    under BezEQ4 is worse than showing nothing (the browser hides undocumented
+    effects until Chris posts). Variant fallbacks (AtmosphereBuss ->
+    atmosphere) are NOT tagged: those siblings genuinely share one post."""
+    out: list[tuple[str, bool]] = []
+    seen: set[str] = set()
+
+    def add(variants: list[str], predecessor: bool = False) -> None:
         for s in variants:
-            if s and s not in out:
-                out.append(s)
+            if s and s not in seen:
+                seen.add(s)
+                out.append((s, predecessor))
 
     def slugs_for(word: str) -> list[str]:
         lower = word.lower()
@@ -196,20 +212,34 @@ def candidate_slugs(name: str) -> list[str]:
     if m:
         root, num = m.group(1), int(m.group(2))
         for n in range(num - 1, 0, -1):
-            add(slugs_for(f"{root}{n}"))
-        add(slugs_for(root))
+            add(slugs_for(f"{root}{n}"), predecessor=True)
+        add(slugs_for(root), predecessor=True)
 
     return out
 
 
 def match_slugs(names: list[str], slugs: set[str]) -> dict[str, str]:
+    # Slugs that are some effect's OWN (non-predecessor) post. A predecessor
+    # fallback may never land on one of these — see candidate_slugs_tagged.
+    # Record EVERY own slug that exists (not just the first hit): DeRez's
+    # first match is its "-vst" follow-up, but plain "derez" is still its post
+    # and must not be claimable by DeRez5's root fallback.
+    owned: set[str] = set()
+    for name in names:
+        for cand, is_pred in candidate_slugs_tagged(name):
+            if not is_pred and cand in slugs:
+                owned.add(cand)
+
     matched: dict[str, str] = {}
     unmatched: list[str] = []
     for name in names:
-        for cand in candidate_slugs(name):
-            if cand in slugs:
-                matched[name] = cand
-                break
+        for cand, is_pred in candidate_slugs_tagged(name):
+            if cand not in slugs:
+                continue
+            if is_pred and cand in owned:
+                continue
+            matched[name] = cand
+            break
         else:
             unmatched.append(name)
     print(

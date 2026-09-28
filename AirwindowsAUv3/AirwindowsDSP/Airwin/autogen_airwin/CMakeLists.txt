@@ -61,6 +61,8 @@ set(AIRWIN_SOURCES
    src/autogen_airwin/BezEQ2Proc.cpp
    src/autogen_airwin/BezEQ3.cpp
    src/autogen_airwin/BezEQ3Proc.cpp
+   src/autogen_airwin/BezEQ4.cpp
+   src/autogen_airwin/BezEQ4Proc.cpp
    src/autogen_airwin/BeziComp.cpp
    src/autogen_airwin/BeziCompProc.cpp
    src/autogen_airwin/BigAmp.cpp
@@ -149,6 +151,8 @@ set(AIRWIN_SOURCES
    src/autogen_airwin/Channel8Proc.cpp
    src/autogen_airwin/Channel9.cpp
    src/autogen_airwin/Channel9Proc.cpp
+   src/autogen_airwin/ChannelX.cpp
+   src/autogen_airwin/ChannelXProc.cpp
    src/autogen_airwin/ChimeyDeluxe.cpp
    src/autogen_airwin/ChimeyDeluxeProc.cpp
    src/autogen_airwin/ChimeyGuitar.cpp
@@ -257,6 +261,8 @@ set(AIRWIN_SOURCES
    src/autogen_airwin/ConsoleX2ChannelProc.cpp
    src/autogen_airwin/ConsoleX2Pre.cpp
    src/autogen_airwin/ConsoleX2PreProc.cpp
+   src/autogen_airwin/ConsoleX3.cpp
+   src/autogen_airwin/ConsoleX3Proc.cpp
    src/autogen_airwin/ConsoleXBuss.cpp
    src/autogen_airwin/ConsoleXBussProc.cpp
    src/autogen_airwin/ConsoleXChannel.cpp
@@ -303,6 +309,10 @@ set(AIRWIN_SOURCES
    src/autogen_airwin/DeRez2Proc.cpp
    src/autogen_airwin/DeRez3.cpp
    src/autogen_airwin/DeRez3Proc.cpp
+   src/autogen_airwin/DeRez4.cpp
+   src/autogen_airwin/DeRez4Proc.cpp
+   src/autogen_airwin/DeRez5.cpp
+   src/autogen_airwin/DeRez5Proc.cpp
    src/autogen_airwin/Deckwrecka.cpp
    src/autogen_airwin/DeckwreckaProc.cpp
    src/autogen_airwin/Density.cpp
@@ -405,6 +415,8 @@ set(AIRWIN_SOURCES
    src/autogen_airwin/ExciterProc.cpp
    src/autogen_airwin/Facet.cpp
    src/autogen_airwin/FacetProc.cpp
+   src/autogen_airwin/FastDistance.cpp
+   src/autogen_airwin/FastDistanceProc.cpp
    src/autogen_airwin/FatEQ.cpp
    src/autogen_airwin/FatEQProc.cpp
    src/autogen_airwin/FathomFive.cpp
@@ -707,6 +719,8 @@ set(AIRWIN_SOURCES
    src/autogen_airwin/PurestWarmProc.cpp
    src/autogen_airwin/PurestWarm2.cpp
    src/autogen_airwin/PurestWarm2Proc.cpp
+   src/autogen_airwin/PurestWarm3.cpp
+   src/autogen_airwin/PurestWarm3Proc.cpp
    src/autogen_airwin/Pyewacket.cpp
    src/autogen_airwin/PyewacketProc.cpp
    src/autogen_airwin/RawGlitters.cpp
@@ -721,6 +735,8 @@ set(AIRWIN_SOURCES
    src/autogen_airwin/ResEQProc.cpp
    src/autogen_airwin/ResEQ2.cpp
    src/autogen_airwin/ResEQ2Proc.cpp
+   src/autogen_airwin/RetroBass.cpp
+   src/autogen_airwin/RetroBassProc.cpp
    src/autogen_airwin/Reverb.cpp
    src/autogen_airwin/ReverbProc.cpp
    src/autogen_airwin/Righteous4.cpp
@@ -781,6 +797,8 @@ set(AIRWIN_SOURCES
    src/autogen_airwin/SpiralProc.cpp
    src/autogen_airwin/Spiral2.cpp
    src/autogen_airwin/Spiral2Proc.cpp
+   src/autogen_airwin/Spiral3.cpp
+   src/autogen_airwin/Spiral3Proc.cpp
    src/autogen_airwin/SquareRoot.cpp
    src/autogen_airwin/SquareRootProc.cpp
    src/autogen_airwin/Srsly.cpp
@@ -883,6 +901,10 @@ set(AIRWIN_SOURCES
    src/autogen_airwin/Tube2Proc.cpp
    src/autogen_airwin/TubeDesk.cpp
    src/autogen_airwin/TubeDeskProc.cpp
+   src/autogen_airwin/Ultralight.cpp
+   src/autogen_airwin/UltralightProc.cpp
+   src/autogen_airwin/Ultralight2.cpp
+   src/autogen_airwin/Ultralight2Proc.cpp
    src/autogen_airwin/UltrasonX.cpp
    src/autogen_airwin/UltrasonXProc.cpp
    src/autogen_airwin/Ultrasonic.cpp
@@ -913,6 +935,8 @@ set(AIRWIN_SOURCES
    src/autogen_airwin/VoiceOfTheStarshipProc.cpp
    src/autogen_airwin/VoiceTrick.cpp
    src/autogen_airwin/VoiceTrickProc.cpp
+   src/autogen_airwin/Weave.cpp
+   src/autogen_airwin/WeaveProc.cpp
    src/autogen_airwin/Weight.cpp
    src/autogen_airwin/WeightProc.cpp
    src/autogen_airwin/Wider.cpp

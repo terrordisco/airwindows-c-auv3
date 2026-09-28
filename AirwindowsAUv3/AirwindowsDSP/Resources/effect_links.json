@@ -297,6 +297,10 @@
     "post": "https://www.airwindows.com/channel9/",
     "video": "https://www.youtube.com/watch?v=qJYkvCxnSg0"
   },
+  "ChannelX": {
+    "post": "https://www.airwindows.com/channelx/",
+    "video": "https://www.youtube.com/watch?v=E2I6Dyn3A9w"
+  },
   "ChimeyDeluxe": {
     "post": "https://www.airwindows.com/chimeydeluxe/",
     "video": "https://www.youtube.com/watch?v=htaeNDOmYkA"
@@ -504,6 +508,10 @@
     "post": "https://www.airwindows.com/consolex2/",
     "video": "https://www.youtube.com/watch?v=73eMYXPINEo"
   },
+  "ConsoleX3": {
+    "post": "https://www.airwindows.com/consolex3/",
+    "video": "https://www.youtube.com/watch?v=pW6B9v0KqFk"
+  },
   "ConsoleXBuss": {
     "post": "https://www.airwindows.com/consolex/",
     "video": "https://www.youtube.com/watch?v=nBmPlGvHpeI"
@@ -595,6 +603,10 @@
   "DeRez3": {
     "post": "https://www.airwindows.com/derez3/",
     "video": "https://www.youtube.com/watch?v=cG3oWAZUkCc"
+  },
+  "DeRez4": {
+    "post": "https://www.airwindows.com/derez4/",
+    "video": "https://www.youtube.com/watch?v=vTWpG_LnMjw"
   },
   "Deckwrecka": {
     "post": "https://www.airwindows.com/deckwrecka/",
@@ -733,8 +745,8 @@
     "video": "https://www.youtube.com/watch?v=sC1wR5NrQFE"
   },
   "Dynamics3": {
-    "post": "https://www.airwindows.com/dynamics2/",
-    "video": "https://www.youtube.com/watch?v=sC1wR5NrQFE"
+    "post": "https://www.airwindows.com/dynamics3/",
+    "video": "https://www.youtube.com/watch?v=pepKMORVC6o"
   },
   "Dyno": {
     "post": "https://www.airwindows.com/dyno/",
@@ -795,6 +807,10 @@
   "Facet": {
     "post": "https://www.airwindows.com/facet/",
     "video": "https://www.youtube.com/watch?v=Y6VEdA6GImA"
+  },
+  "FastDistance": {
+    "post": "https://www.airwindows.com/fastdistance/",
+    "video": "https://www.youtube.com/watch?v=W95HDNH_B3w"
   },
   "FatEQ": {
     "post": "https://www.airwindows.com/fateq/",
@@ -1018,8 +1034,8 @@
     "video": "https://www.youtube.com/watch?v=iouZjRDfBTk"
   },
   "LRConvolve3": {
-    "post": "https://www.airwindows.com/lrconvolve2/",
-    "video": "https://www.youtube.com/watch?v=iouZjRDfBTk"
+    "post": "https://www.airwindows.com/lrconvolve3/",
+    "video": "https://www.youtube.com/watch?v=3vDqvLHTM0c"
   },
   "LRFlipTimer": {
     "post": "https://www.airwindows.com/lrfliptimer/",
@@ -1207,6 +1223,10 @@
     "post": "https://www.airwindows.com/peareq/",
     "video": "https://www.youtube.com/watch?v=BAttULDke7s"
   },
+  "PearLiteEQ": {
+    "post": "https://www.airwindows.com/pearliteeq/",
+    "video": "https://www.youtube.com/watch?v=hJoWwrBJDyk"
+  },
   "PhaseNudge": {
     "post": "https://www.airwindows.com/phasenudge-vst/",
     "video": "https://www.youtube.com/watch?v=-aTenJq2jUY"
@@ -1363,6 +1383,10 @@
     "post": "https://www.airwindows.com/purestwarm2/",
     "video": "https://www.youtube.com/watch?v=dasz4WQeMa4"
   },
+  "PurestWarm3": {
+    "post": "https://www.airwindows.com/purestwarm3/",
+    "video": "https://www.youtube.com/watch?v=AHVM1azpDZw"
+  },
   "Pyewacket": {
     "post": "https://www.airwindows.com/pyewacket/",
     "video": "https://www.youtube.com/watch?v=xLKfV4U1NfE"
@@ -1390,6 +1414,10 @@
   "ResEQ2": {
     "post": "https://www.airwindows.com/reseq2/",
     "video": "https://www.youtube.com/watch?v=7zIuRqF8Dqc"
+  },
+  "RetroBass": {
+    "post": "https://www.airwindows.com/retrobass/",
+    "video": "https://www.youtube.com/watch?v=K9zkdQTONTI"
   },
   "Reverb": {
     "post": "https://www.airwindows.com/reverb/",
@@ -1706,6 +1734,14 @@
     "post": "https://www.airwindows.com/tubedesk/",
     "video": "https://www.youtube.com/watch?v=737RLbqJjAA"
   },
+  "Ultralight": {
+    "post": "https://www.airwindows.com/ultralight/",
+    "video": "https://www.youtube.com/watch?v=u-t5C217-M4"
+  },
+  "Ultralight2": {
+    "post": "https://www.airwindows.com/ultralight2/",
+    "video": "https://www.youtube.com/watch?v=Drh3ab3tIy0"
+  },
   "UltrasonX": {
     "post": "https://www.airwindows.com/ultrasonx/",
     "video": "https://www.youtube.com/watch?v=72nBW1kdEU4"
@@ -1781,6 +1817,10 @@
   "WoodenBox": {
     "post": "https://www.airwindows.com/woodenbox/",
     "video": "https://www.youtube.com/watch?v=bWhGSnwU2Iw"
+  },
+  "X2Buss": {
+    "post": "https://www.airwindows.com/x2buss/",
+    "video": "https://www.youtube.com/watch?v=fhWxiooSMRY"
   },
   "XBandpass": {
     "post": "https://www.airwindows.com/xbandpass/",
@@ -1961,6 +2001,10 @@
   "kPlateD": {
     "post": "https://www.airwindows.com/kplated/",
     "video": "https://www.youtube.com/watch?v=lttn64XiWDg"
+  },
+  "kRockstar": {
+    "post": "https://www.airwindows.com/krockstar/",
+    "video": "https://www.youtube.com/watch?v=ORITjITahWE"
   },
   "kStation": {
     "post": "https://www.airwindows.com/kstation/",
