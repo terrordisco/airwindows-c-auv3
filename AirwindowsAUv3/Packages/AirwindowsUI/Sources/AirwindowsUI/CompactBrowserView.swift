@@ -597,7 +597,7 @@ public struct CompactBrowserView: View {
 
             if !effect.whatText.isEmpty {
                 Text("\u{201C}\(effect.whatText)\u{201D}")
-                    .font(.system(size: 17 * uiScale).italic())
+                    .font(.system(size: 17 * uiScale, weight: .regular, design: .serif).italic())
                     .foregroundStyle(.secondary)
                     .lineLimit(3)
                     .fixedSize(horizontal: false, vertical: true)
@@ -700,7 +700,7 @@ public struct CompactBrowserView: View {
 
                     if !effect.whatText.isEmpty {
                         Text("\u{201C}\(effect.whatText)\u{201D}")
-                            .font(.system(size: 20 * uiScale).italic())
+                            .font(.system(size: 20 * uiScale, weight: .regular, design: .serif).italic())
                             .foregroundStyle(.secondary)
                             .fixedSize(horizontal: false, vertical: true)
                     }

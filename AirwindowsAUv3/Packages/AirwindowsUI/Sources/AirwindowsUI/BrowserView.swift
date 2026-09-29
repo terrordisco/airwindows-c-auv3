@@ -467,7 +467,7 @@ private struct EffectPreviewColumn: View {
 
                 if !effect.whatText.isEmpty {
                     Text("\u{201C}\(effect.whatText)\u{201D}")
-                        .font(.system(size: 20 * uiScale))
+                        .font(.system(size: 20 * uiScale, weight: .regular, design: .serif).italic())
                         .foregroundStyle(.secondary)
                         .hEdgePadding(28)
                         .padding(.top, 14 * uiScale)

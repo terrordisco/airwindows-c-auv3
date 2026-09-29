@@ -195,7 +195,9 @@ public struct EffectDetailView: View {
             // clear of those controls.
             if !effect.whatText.isEmpty {
                 Text("\u{201C}\(effect.whatText)\u{201D}")
-                    .font(.system(size: 20 * uiScale, weight: .regular))
+                    // New York Regular Italic (system serif), like the compact
+                    // layout's tagline band.
+                    .font(.system(size: 20 * uiScale, weight: .regular, design: .serif).italic())
                     .foregroundStyle(.secondary)
                     .lineLimit(2)
                     .multilineTextAlignment(.center)

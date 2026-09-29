@@ -352,7 +352,10 @@ public struct CompactWorkspaceView: View {
         if !effect.whatText.isEmpty {
             hairline
             Text("\u{201C}\(effect.whatText)\u{201D}")
-                .font(.system(size: 20 * uiScale, weight: .regular).italic())
+                // New York Regular Italic — the system serif (variable, so the
+                // optical size follows the point size). Same face for every
+                // quoted tagline in the plugin.
+                .font(.system(size: 20 * uiScale, weight: .regular, design: .serif).italic())
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
                 .frame(maxWidth: .infinity)
