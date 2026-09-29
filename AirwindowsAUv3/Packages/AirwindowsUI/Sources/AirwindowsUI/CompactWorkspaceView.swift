@@ -352,7 +352,7 @@ public struct CompactWorkspaceView: View {
         if !effect.whatText.isEmpty {
             hairline
             Text("\u{201C}\(effect.whatText)\u{201D}")
-                .font(.system(size: 15 * uiScale, weight: .regular).italic())
+                .font(.system(size: 20 * uiScale, weight: .regular).italic())
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
                 .frame(maxWidth: .infinity)
