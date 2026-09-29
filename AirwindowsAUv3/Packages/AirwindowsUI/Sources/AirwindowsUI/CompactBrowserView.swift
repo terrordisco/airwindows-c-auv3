@@ -676,10 +676,13 @@ public struct CompactBrowserView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 12) {
                     HStack(alignment: .firstTextBaseline) {
-                        Text(effect.name)
+                        // Soft hyphens at the CamelCase joins so a long name
+                        // wraps "CrunchyGroove- / Wear", not mid-word.
+                        Text(effect.name.camelCaseSoftHyphenated)
                             .font(.system(size: 26 * uiScale, weight: .semibold))
                             .lineLimit(2)
                             .minimumScaleFactor(0.7)
+                            .accessibilityLabel(effect.name)
                         Spacer(minLength: 8)
                         if let favorites {
                             let isFav = favorites.isFavorite(effect.name)
