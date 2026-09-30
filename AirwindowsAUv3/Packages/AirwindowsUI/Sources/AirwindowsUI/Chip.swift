@@ -169,9 +169,11 @@ public struct Chip: View {
 
     private var metrics: ChipMetrics {
         switch size {
-        case .small:   return ChipMetrics(fontSize: 13, iconSize: 13, weight: .semibold, padH: 8, padV: 4, kerning: 0.5)
-        case .regular: return ChipMetrics(fontSize: 13, iconSize: 15, weight: .medium, padH: 10, padV: 6, kerning: 0.5)
-        case .large:   return ChipMetrics(fontSize: 15, iconSize: 17, weight: .semibold, padH: 20, padV: 10, kerning: 0.6)
+        // 2026-09-30: all three sizes cut ~30% (Sveinbjörn) — the ALL CAPS
+        // setting reads larger than mixed case at the same point size.
+        case .small:   return ChipMetrics(fontSize: 9, iconSize: 9, weight: .semibold, padH: 6, padV: 3, kerning: 0.5)
+        case .regular: return ChipMetrics(fontSize: 9, iconSize: 11, weight: .medium, padH: 7, padV: 4, kerning: 0.5)
+        case .large:   return ChipMetrics(fontSize: 11, iconSize: 12, weight: .semibold, padH: 14, padV: 7, kerning: 0.6)
         }
     }
 }
