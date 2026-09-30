@@ -80,6 +80,12 @@ public struct CompactWorkspaceView: View {
     @Environment(\.uiScale) private var uiScale
     @Environment(\.containerSize) private var containerSize
     @State private var showMenu = false
+    /// Measured heights for the scrollpad rule: the strip only shows when the
+    /// pots/fader field is taller than the scrollable area it sits in, i.e.
+    /// when there is actually something to scroll to. A short field that fits
+    /// gets no strip.
+    @State private var fieldHeight: CGFloat = 0
+    @State private var viewportHeight: CGFloat = 0
 
     public init(
         effect: EffectBrowseModel,
@@ -331,11 +337,13 @@ public struct CompactWorkspaceView: View {
                     parameterField
                         .padding(.top, 14 * uiScale)
                         .padding(.bottom, 20 * uiScale)
+                        .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { fieldHeight = $0 }
 
                     taglineBand
                     descriptionBlock
                 }
             }
+            .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { viewportHeight = $0 }
         } else {
             VStack(spacing: 0) {
                 Text("This effect has no parameters")
@@ -360,10 +368,18 @@ public struct CompactWorkspaceView: View {
     /// one hatch line short of the last row. The grid keeps the usual edge
     /// inset on the strip-less side; on the strip side it clears the strip by
     /// `scrollpadGap`, and the strip itself touches the edge.
+    /// Strip shows only when the field overflows its viewport (see the
+    /// measured heights above). Both start at 0 before first layout, which
+    /// reads as "fits" — no flash of a strip that then disappears.
+    private var showsScrollpad: Bool {
+        scrollpad != .off && viewportHeight > 0 && fieldHeight > viewportHeight
+    }
+
     private var parameterField: some View {
         let stripWidth = Self.scrollpadWidth * uiScale
         let gap = Self.scrollpadGap * uiScale
         let edge = airwindowsEdgeInset(16, scale: uiScale)
+        let strip = showsScrollpad
         return ParameterGrid(
             parameterCount: parameterCount,
             parameterNames: parameterNames,
@@ -375,10 +391,10 @@ public struct CompactWorkspaceView: View {
             useRotaryPots: useRotaryPots,
             maxSliderColumns: sliderColumnCap
         )
-        .padding(.leading, scrollpad == .left ? stripWidth + gap : edge)
-        .padding(.trailing, scrollpad == .right ? stripWidth + gap : edge)
+        .padding(.leading, strip && scrollpad == .left ? stripWidth + gap : edge)
+        .padding(.trailing, strip && scrollpad == .right ? stripWidth + gap : edge)
         .background(alignment: scrollpad == .right ? .topTrailing : .topLeading) {
-            if scrollpad != .off {
+            if strip {
                 ScrollHatchGutter()
                     .frame(width: stripWidth)
                     .padding(.bottom, ScrollHatchGutter.lineStep)
