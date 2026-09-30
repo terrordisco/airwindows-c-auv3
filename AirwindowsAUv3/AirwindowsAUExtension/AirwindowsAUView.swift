@@ -145,6 +145,11 @@ struct AirwindowsAUView: View {
 
     private static var isPhone: Bool { UIDevice.current.userInterfaceIdiom == .phone }
 
+    /// Wrapper-level safety limiter (brickwall at 0 dBFS after the effect),
+    /// for the wild values Randomize can produce. OFF by default — nothing
+    /// touches the sound unless asked. Per-process like the appearance.
+    @AppStorage("airwindows.limiter") private var limiterEnabled: Bool = false
+
     /// Scrollpad edge in the compact layout (left / right / off). App-Group
     /// shared like the other layout choices; cycled from the menu drawer.
     @AppStorage(ScrollpadPlacement.storageKey, store: .airwindowsShared)
@@ -241,6 +246,9 @@ struct AirwindowsAUView: View {
                     showBrowser = true
                     browserOpenedAtLaunch = true
                 }
+            }
+            .onChange(of: limiterEnabled, initial: true) { _, on in
+                viewModel.setLimiterEnabled(on)
             }
             .onChange(of: viewModel.effectIndex) { _, newIndex in
                 // A late host restore (Cubasis) brought in an effect after we
@@ -391,6 +399,8 @@ struct AirwindowsAUView: View {
             onOpenBrowser: { openBrowser() },
             onReset: { viewModel.resetParameters() },
             onRandomize: { viewModel.randomizeParameters() },
+            isLimiterOn: limiterEnabled,
+            onToggleLimiter: { limiterEnabled.toggle() },
             onUndo: { viewModel.undo() },
             onRedo: { viewModel.redo() },
             canUndo: viewModel.canUndo,

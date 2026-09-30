@@ -386,6 +386,12 @@ final class AirwindowsAudioUnitViewModel {
         refreshParameterDisplay(at: index)
     }
 
+    /// Wrapper-level safety limiter (brickwall at 0 dBFS after the effect).
+    /// A UI setting pushed straight to the AU; not undoable, not a parameter.
+    func setLimiterEnabled(_ enabled: Bool) {
+        audioUnit?.outputLimiterEnabled = enabled
+    }
+
     func setInputLevel(_ value: Double) {
         guard let au = audioUnit else { return }
         recordChange(.inputLevel)

@@ -24,6 +24,13 @@ extern NSString * const AirwindowsAudioUnitDidRestoreStateNotification;
 @interface AirwindowsAudioUnit : AUAudioUnit
 
 // Current effect info (readable from Swift for UI)
+/// Wrapper-level safety limiter: a brickwall clip at 0 dBFS applied AFTER
+/// the effect and the output level, so a wild parameter (Randomize can hand
+/// some effects extreme settings) can't send full-scale spikes downstream.
+/// Not part of Chris's DSP; off by default; a UI setting, not a host
+/// parameter. Read lock-free on the audio thread.
+@property (nonatomic) BOOL outputLimiterEnabled;
+
 @property (nonatomic, readonly) NSInteger currentEffectIndex;
 @property (nonatomic, readonly) NSString *currentEffectName;
 @property (nonatomic, readonly) NSString *currentEffectCategory;

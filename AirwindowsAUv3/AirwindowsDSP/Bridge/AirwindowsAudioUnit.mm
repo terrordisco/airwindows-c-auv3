@@ -99,6 +99,9 @@ static const AUParameterAddress kOutputLevelAddress = 39;
     std::atomic<NSInteger> _effectIndex;
     float _inputLevel;
     float _outputLevel;
+    /// Safety limiter switch (see the header). Atomic: written on main,
+    /// read every render.
+    std::atomic<bool> _limiterEnabled;
 
     // Old processor to be freed on main thread
     std::atomic<AirwinConsolidatedBase *> _processorToFree;
@@ -138,6 +141,7 @@ static const AUParameterAddress kOutputLevelAddress = 39;
     // until the user picks an effect from the browser.
     _effectIndex = -1;
     _inputLevel = 1.0f;
+    _limiterEnabled.store(false, std::memory_order_relaxed);
     _outputLevel = 1.0f;
     _pendingProcessor = nullptr;
     _processorToFree = nullptr;
@@ -271,6 +275,14 @@ static const AUParameterAddress kOutputLevelAddress = 39;
     } else if (address == kOutputLevelAddress) {
         _outputLevel = value;
     }
+}
+
+- (void)setOutputLimiterEnabled:(BOOL)enabled {
+    _limiterEnabled.store(enabled, std::memory_order_relaxed);
+}
+
+- (BOOL)outputLimiterEnabled {
+    return _limiterEnabled.load(std::memory_order_relaxed);
 }
 
 - (AUValue)getParameterValueForAddress:(AUParameterAddress)address {
@@ -537,6 +549,7 @@ static const AUParameterAddress kOutputLevelAddress = 39;
     std::atomic<AirwinConsolidatedBase *> *processorToFree = &_processorToFree;
     float *inputLevelPtr = &_inputLevel;
     float *outputLevelPtr = &_outputLevel;
+    std::atomic<bool> *limiterEnabledPtr = &_limiterEnabled;
 
     __block AirwinConsolidatedBase *processorPtr = _activeProcessor.get();
 
@@ -636,6 +649,15 @@ static const AUParameterAddress kOutputLevelAddress = 39;
             for (AVAudioFrameCount i = 0; i < frameCount; i++) {
                 outL[i] *= outGain;
                 outR[i] *= outGain;
+            }
+        }
+
+        // Safety limiter: brickwall clip at 0 dBFS, last thing before the
+        // host. Wrapper-level, not Chris's DSP; see outputLimiterEnabled.
+        if (limiterEnabledPtr->load(std::memory_order_relaxed)) {
+            for (AVAudioFrameCount i = 0; i < frameCount; i++) {
+                outL[i] = fmaxf(-1.0f, fminf(1.0f, outL[i]));
+                outR[i] = fmaxf(-1.0f, fminf(1.0f, outR[i]));
             }
         }
 

@@ -52,6 +52,9 @@ public struct CompactWorkspaceView: View {
     public let onOpenBrowser: () -> Void
     public let onReset: () -> Void
     public let onRandomize: (() -> Void)?
+    /// Safety limiter switch for the menu drawer. nil hides the row.
+    public let isLimiterOn: Bool
+    public let onToggleLimiter: (() -> Void)?
     public let onUndo: (() -> Void)?
     public let onRedo: (() -> Void)?
     public let canUndo: Bool
@@ -113,6 +116,8 @@ public struct CompactWorkspaceView: View {
         onOpenBrowser: @escaping () -> Void,
         onReset: @escaping () -> Void,
         onRandomize: (() -> Void)? = nil,
+        isLimiterOn: Bool = false,
+        onToggleLimiter: (() -> Void)? = nil,
         onUndo: (() -> Void)? = nil,
         onRedo: (() -> Void)? = nil,
         canUndo: Bool = false,
@@ -157,6 +162,8 @@ public struct CompactWorkspaceView: View {
         self.onOpenBrowser = onOpenBrowser
         self.onReset = onReset
         self.onRandomize = onRandomize
+        self.isLimiterOn = isLimiterOn
+        self.onToggleLimiter = onToggleLimiter
         self.onUndo = onUndo
         self.onRedo = onRedo
         self.canUndo = canUndo
@@ -518,6 +525,8 @@ public struct CompactWorkspaceView: View {
             isDefaultEffect: isDefaultEffect,
             onToggleDefaultEffect: onToggleDefaultEffect,
             onRandomize: closing(onRandomize),
+            isLimiterOn: isLimiterOn,
+            onToggleLimiter: onToggleLimiter,
             onReset: closing(onReset) ?? onReset,
             hasSavedSettings: hasSavedSettings,
             onSaveSettings: closing(onSaveSettings),

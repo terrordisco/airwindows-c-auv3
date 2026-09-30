@@ -47,6 +47,10 @@ public struct CompactMenuDrawer: View {
     public let isDefaultEffect: Bool
     public let onToggleDefaultEffect: (() -> Void)?
     public let onRandomize: (() -> Void)?
+    /// Safety limiter switch, shown indented under Randomize Settings (it's
+    /// there for the wild values Randomize can produce). nil hides the row.
+    public let isLimiterOn: Bool
+    public let onToggleLimiter: (() -> Void)?
     public let onReset: () -> Void
     public let hasSavedSettings: Bool
     public let onSaveSettings: (() -> Void)?
@@ -92,6 +96,8 @@ public struct CompactMenuDrawer: View {
         isDefaultEffect: Bool = false,
         onToggleDefaultEffect: (() -> Void)? = nil,
         onRandomize: (() -> Void)? = nil,
+        isLimiterOn: Bool = false,
+        onToggleLimiter: (() -> Void)? = nil,
         onReset: @escaping () -> Void,
         hasSavedSettings: Bool = false,
         onSaveSettings: (() -> Void)? = nil,
@@ -120,6 +126,8 @@ public struct CompactMenuDrawer: View {
         self.isDefaultEffect = isDefaultEffect
         self.onToggleDefaultEffect = onToggleDefaultEffect
         self.onRandomize = onRandomize
+        self.isLimiterOn = isLimiterOn
+        self.onToggleLimiter = onToggleLimiter
         self.onReset = onReset
         self.hasSavedSettings = hasSavedSettings
         self.onSaveSettings = onSaveSettings
@@ -270,6 +278,14 @@ public struct CompactMenuDrawer: View {
         }
         if let onRandomize {
             MenuRow(systemName: "dice", title: "Randomize Settings", action: onRandomize)
+            if let onToggleLimiter {
+                MenuRow(systemName: "waveform.badge.exclamationmark",
+                        titleView: { Text("Limiter") },
+                        trailing: { StyleSwitchGlyph(isOn: isLimiterOn) },
+                        indented: true,
+                        accessibility: isLimiterOn ? "Limiter on. Tap to turn off." : "Limiter off. Tap to turn on.",
+                        action: onToggleLimiter)
+            }
         }
         MenuRow(systemName: "arrow.counterclockwise", title: "Reset Settings", action: onReset)
 
@@ -366,6 +382,9 @@ private struct MenuRow<Title: View, Trailing: View>: View {
     let titleView: () -> Title
     let trailing: () -> Trailing
     let isSecondary: Bool
+    /// Indented one icon-column to read as a child of the row above it
+    /// (the Limiter switch under Randomize Settings).
+    let indented: Bool
     let accessibility: String?
     let action: () -> Void
 
@@ -374,6 +393,7 @@ private struct MenuRow<Title: View, Trailing: View>: View {
         @ViewBuilder titleView: @escaping () -> Title,
         @ViewBuilder trailing: @escaping () -> Trailing,
         isSecondary: Bool = false,
+        indented: Bool = false,
         accessibility: String? = nil,
         action: @escaping () -> Void
     ) {
@@ -381,6 +401,7 @@ private struct MenuRow<Title: View, Trailing: View>: View {
         self.titleView = titleView
         self.trailing = trailing
         self.isSecondary = isSecondary
+        self.indented = indented
         self.accessibility = accessibility
         self.action = action
     }
@@ -399,7 +420,8 @@ private struct MenuRow<Title: View, Trailing: View>: View {
                 Spacer(minLength: 8)
                 trailing()
             }
-            .padding(.horizontal, CompactMenuDrawer.hInset)
+            .padding(.leading, CompactMenuDrawer.hInset + (indented ? CompactMenuDrawer.iconColumn + CompactMenuDrawer.iconGap : 0))
+            .padding(.trailing, CompactMenuDrawer.hInset)
             .frame(height: CompactMenuDrawer.rowHeight)
             .frame(maxWidth: .infinity, alignment: .leading)
             .contentShape(Rectangle())
