@@ -401,8 +401,12 @@ public struct EffectDetailView: View {
     /// Nudged down 7pt to sit a touch lower in the bar.
     private var chipZone: some View {
         HStack(spacing: 16 * uiScale) {
-            // Non-interactive display marker — stays on the left.
-            Chip(text: effect.isMono ? "Mono" : "Stereo process", role: .inert, size: .small)
+            // Non-interactive display marker — stays on the left. Only
+            // stereo-process effects get one (see ChannelMark for why the
+            // rest are not "mono").
+            if !effect.isMono {
+                Chip(text: "Stereo process", role: .inert, size: .small)
+            }
 
             Spacer(minLength: 8 * uiScale)
 

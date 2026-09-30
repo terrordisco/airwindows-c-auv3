@@ -606,7 +606,9 @@ public struct CompactBrowserView: View {
             }
 
             HStack(spacing: 8) {
-                Chip(text: effect.isMono ? "Mono" : "Stereo process", role: .inert, size: .small)
+                if !effect.isMono {
+                    Chip(text: "Stereo process", role: .inert, size: .small)
+                }
                 if !effect.firstCommitDate.isEmpty {
                     Chip(text: String(effect.firstCommitDate.prefix(4)), role: .inert, size: .small)
                 }
@@ -711,7 +713,9 @@ public struct CompactBrowserView: View {
                     }
 
                     HStack(spacing: 8) {
-                        Chip(text: effect.isMono ? "Mono" : "Stereo process", role: .inert, size: .small)
+                        if !effect.isMono {
+                            Chip(text: "Stereo process", role: .inert, size: .small)
+                        }
                         if !effect.firstCommitDate.isEmpty {
                             Chip(text: effect.firstCommitDate, role: .inert, size: .small)
                         }

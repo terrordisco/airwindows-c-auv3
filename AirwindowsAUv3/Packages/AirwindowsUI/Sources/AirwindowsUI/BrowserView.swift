@@ -547,7 +547,9 @@ private struct FlowMetaRow: View {
         // the other — every effect is one of those two, so neither is a
         // meaningful "default" to leave unmarked.
         HStack(spacing: 8 * uiScale) {
-            Chip(text: effect.isMono ? "Mono" : "Stereo process", role: .inert)
+            if !effect.isMono {
+                Chip(text: "Stereo process", role: .inert)
+            }
             if !effect.firstCommitDate.isEmpty {
                 Chip(text: effect.firstCommitDate, role: .inert)
             }

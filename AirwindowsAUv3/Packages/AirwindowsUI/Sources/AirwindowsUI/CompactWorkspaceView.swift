@@ -321,7 +321,11 @@ public struct CompactWorkspaceView: View {
         HStack(spacing: 0) {
             LevelPot(label: "In", value: $inputLevel, display: inputDisplay)
             Spacer(minLength: 8)
-            Chip(text: effect.isMono ? "Mono" : "Stereo process", role: .inert, size: .small)
+            // Only stereo-process effects get a chip; the rest are per-channel
+            // and calling them "mono" was wrong (see ChannelMark).
+            if !effect.isMono {
+                Chip(text: "Stereo process", role: .inert, size: .small)
+            }
             Spacer(minLength: 8)
             LevelPot(label: "Out", value: $outputLevel, display: outputDisplay, trailing: true)
         }
