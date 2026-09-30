@@ -126,7 +126,7 @@ struct BrowserCatalog {
     /// Human label for a selection: "All effects", "Favorites", or the
     /// category name. Count is appended by the caller as it sees fit.
     func title(for selection: String) -> String {
-        if selection.isEmpty { return "All effects" }
+        if selection.isEmpty { return "All Effects" }
         if selection == Self.favoritesCategoryName { return "Favorites" }
         return selection
     }

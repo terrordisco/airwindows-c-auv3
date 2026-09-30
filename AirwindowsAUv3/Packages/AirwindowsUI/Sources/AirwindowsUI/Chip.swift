@@ -126,7 +126,10 @@ public struct Chip: View {
                     .font(.system(size: metrics.iconSize * uiScale, weight: metrics.weight))
             }
             if let text {
-                Text(text)
+                // House style: chip labels are always ALL CAPS, applied here
+                // so no call site has to remember. Callers pass natural-case
+                // text ("Stereo process", "Save settings").
+                Text(text.uppercased())
                     .font(.system(size: metrics.fontSize * uiScale, weight: metrics.weight))
                     .kerning(metrics.kerning)
             }
@@ -167,8 +170,8 @@ public struct Chip: View {
     private var metrics: ChipMetrics {
         switch size {
         case .small:   return ChipMetrics(fontSize: 13, iconSize: 13, weight: .semibold, padH: 8, padV: 4, kerning: 0.5)
-        case .regular: return ChipMetrics(fontSize: 14, iconSize: 15, weight: .medium, padH: 10, padV: 6, kerning: 0)
-        case .large:   return ChipMetrics(fontSize: 17, iconSize: 17, weight: .semibold, padH: 20, padV: 10, kerning: 0)
+        case .regular: return ChipMetrics(fontSize: 13, iconSize: 15, weight: .medium, padH: 10, padV: 6, kerning: 0.5)
+        case .large:   return ChipMetrics(fontSize: 15, iconSize: 17, weight: .semibold, padH: 20, padV: 10, kerning: 0.6)
         }
     }
 }

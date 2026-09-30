@@ -249,14 +249,14 @@ public struct CompactMenuDrawer: View {
         if let onToggleFavorite {
             MenuRow(
                 systemName: isFavorite ? "star.fill" : "star",
-                title: isFavorite ? "Remove from favorites" : "Add to favorites",
+                title: isFavorite ? "Remove from Favorites" : "Add to Favorites",
                 action: onToggleFavorite
             )
         }
         if let onRandomize {
-            MenuRow(systemName: "dice", title: "Randomize settings", action: onRandomize)
+            MenuRow(systemName: "dice", title: "Randomize Settings", action: onRandomize)
         }
-        MenuRow(systemName: "arrow.counterclockwise", title: "Reset settings", action: onReset)
+        MenuRow(systemName: "arrow.counterclockwise", title: "Reset Settings", action: onReset)
 
         // Per-effect saved settings. The effect always loads factory defaults;
         // once a snapshot exists the row becomes "Recall settings" and a
@@ -264,15 +264,15 @@ public struct CompactMenuDrawer: View {
         // replaces the full-mode chip's long-press with a visible row).
         if let onSaveSettings, let onRecallSettings, onClearSavedSettings != nil {
             if hasSavedSettings {
-                MenuRow(systemName: "bookmark.fill", title: "Recall settings", action: onRecallSettings)
+                MenuRow(systemName: "bookmark.fill", title: "Recall Settings", action: onRecallSettings)
                 MenuRow(
                     systemName: "bookmark.slash",
-                    title: "Forget saved settings",
+                    title: "Forget Saved Settings",
                     isSecondary: true,
                     action: { showClearSavedSettingsDialog = true }
                 )
             } else {
-                MenuRow(systemName: "bookmark", title: "Remember settings", action: onSaveSettings)
+                MenuRow(systemName: "bookmark", title: "Remember Settings", action: onSaveSettings)
             }
         }
     }
@@ -312,7 +312,7 @@ public struct CompactMenuDrawer: View {
 
         if let compactEverywhere {
             MenuRow(systemName: "rectangle.compress.vertical",
-                    titleView: { Text("Compact at every size") },
+                    titleView: { Text("Compact at Every Size") },
                     trailing: { StyleSwitchGlyph(isOn: compactEverywhere.wrappedValue) },
                     accessibility: compactEverywhere.wrappedValue
                         ? "Compact layout at every size, on. Tap to follow the window size instead."
@@ -322,7 +322,7 @@ public struct CompactMenuDrawer: View {
 
         if let onToggleMonitoring {
             MenuRow(systemName: isMonitoring ? "speaker.wave.2.fill" : "speaker.slash.fill",
-                    titleView: { Text("Input monitoring") },
+                    titleView: { Text("Input Monitoring") },
                     trailing: {
                         Text(isMonitoring ? "Live" : "Muted")
                             .font(.system(size: 12))
@@ -430,7 +430,7 @@ private struct ScaleRow: View {
                     .font(.system(size: 16, weight: .regular))
                     .foregroundStyle(.secondary)
                     .frame(width: CompactMenuDrawer.iconColumn)
-                Text("Interface scale")
+                Text("Interface Scale")
                     .font(.system(size: 15))
                     .foregroundStyle(.primary)
                 Spacer(minLength: 8)

@@ -316,7 +316,7 @@ public struct CompactBrowserView: View {
                 HStack(spacing: 14) {
                     Image(systemName: "dice")
                         .font(.system(size: 16, weight: .regular))
-                    Text("Random effect")
+                    Text("Random Effect")
                         .font(.system(size: 15, weight: .semibold))
                     Spacer(minLength: 0)
                 }
@@ -420,8 +420,9 @@ public struct CompactBrowserView: View {
                     HStack(spacing: 5) {
                         Image(systemName: "arrow.up.arrow.down")
                             .font(.system(size: 11, weight: .medium))
-                        Text(context.sortMode.rawValue)
-                            .font(.system(size: 12))
+                        Text(context.sortMode.rawValue.uppercased())
+                            .font(.system(size: 12, weight: .medium))
+                            .kerning(0.5)
                     }
                     .foregroundStyle(.primary)
                     .padding(.horizontal, 10)

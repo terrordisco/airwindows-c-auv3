@@ -29,7 +29,7 @@ public struct SidebarView: View {
     public let onAboutTap: (() -> Void)?
     public let onRandomTap: (() -> Void)?
     public let onSettingsTap: (() -> Void)?
-    /// Favorites pseudo-category. The row is pinned above "All categories" and
+    /// Favorites pseudo-category. The row is pinned above "All Categories" and
     /// only appears once at least one effect is favorited (count > 0).
     public let favoritesCount: Int
     public let isFavoritesSelected: Bool
@@ -109,7 +109,7 @@ public struct SidebarView: View {
             // Category list
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: 0) {
-                    // Favorites pinned above "All categories" — only once the
+                    // Favorites pinned above "All Categories" — only once the
                     // user has starred something, so it never reads as an empty
                     // dead end. A star icon stands in for the category dot.
                     if favoritesCount > 0, let onSelectFavorites {
@@ -120,12 +120,12 @@ public struct SidebarView: View {
                         )
                     }
                     CategoryRow(
-                        title: "All categories",
+                        title: "All Categories",
                         count: totalCount,
                         isSelected: selectedCategory == "",
                         dotColor: .secondary
                     ) {
-                        // Empty-string sentinel for "All categories" so the
+                        // Empty-string sentinel for "All Categories" so the
                         // parent can distinguish it from the initial nil state.
                         selectedCategory = ""
                     }
@@ -151,7 +151,7 @@ public struct SidebarView: View {
             if let onRandomTap {
                 SidebarActionButton(
                     systemName: "shuffle",
-                    label: "Random effect",
+                    label: "Random Effect",
                     action: onRandomTap
                 )
             }

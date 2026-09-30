@@ -402,7 +402,7 @@ public struct EffectDetailView: View {
     private var chipZone: some View {
         HStack(spacing: 16 * uiScale) {
             // Non-interactive display marker — stays on the left.
-            Chip(text: effect.isMono ? "MONO" : "STEREO PROCESS", role: .inert, size: .small)
+            Chip(text: effect.isMono ? "Mono" : "Stereo process", role: .inert, size: .small)
 
             Spacer(minLength: 8 * uiScale)
 

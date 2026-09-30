@@ -941,6 +941,16 @@ SwiftUI. Writing this down so we don't repeat it:
   benefit from sample-accurate ramping anyway. Revisit if specific effects
   feel laggy under modulation.
 
+## Copy Style (2026-09-30)
+
+House rules for authored UI text, applied in a sweep on 2026-09-30:
+
+- **Chips are ALL CAPS**, enforced once in the `Chip` primitive (`text.uppercased()` + light kerning at every size). Call sites pass natural-case text ("Stereo process", "Save settings", "Select"). Chip-styled buttons that aren't the primitive (the compact browser's sort button) uppercase their label too.
+- **Titles, headings and menu rows are Title Case**: "All Effects", "All Categories", "Random Effect", "Add to Favorites", "Randomize Settings", "Remember Settings" / "Recall Settings" / "Forget Saved Settings", "Night Mode", "Input Monitoring", "Interface Scale", "Compact at Every Size", "Airwindows Settings…", "About Airwindows"; Preferences section headings likewise. The full browser's sort caption is displayed `.capitalized` ("Newest First") while `EffectSortMode` raw values stay lowercase.
+- **Body copy, descriptions, alerts and empty-state messages are sentence case** ("This effect has no parameters", "Pick a category", the tooltip).
+- **Indicators** are Title Case words separated by " / " ("Auto / Night / Day", "Left / Right / Off"), current choice in primary ink.
+- **Chris's text is never restyled** — taglines, awpdoc, parameter names render as authored.
+
 ## View Terminology
 
 Canonical names for each UI element, so we can refer to things consistently.

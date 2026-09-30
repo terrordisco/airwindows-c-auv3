@@ -64,7 +64,7 @@ public struct PreferencesView: View {
 
             ScrollView {
                 VStack(alignment: .leading, spacing: 14) {
-                    Text("Interface scale")
+                    Text("Interface Scale")
                         .font(.system(size: 22, weight: .semibold))
 
                     Text("Sizes the whole interface — controls, text, and spacing — as one piece. Lower percentages fit more on screen; 100% is tuned for a 13\u{2033} iPad. A smaller iPad set to its mark shows the same amount as a 13\u{2033}.")
@@ -99,7 +99,7 @@ public struct PreferencesView: View {
                         .fixedSize(horizontal: false, vertical: true)
 
                     Toggle(isOn: $compactEverywhere) {
-                        Text("Compact layout at every size")
+                        Text("Compact Layout at Every Size")
                             .font(.system(size: 17, weight: .medium))
                     }
                     .tint(AirwindowsPalette.actionButton)
@@ -119,7 +119,7 @@ public struct PreferencesView: View {
                         .fixedSize(horizontal: false, vertical: true)
 
                     Toggle(isOn: $personalisationEnabled) {
-                        Text("Personalisation features")
+                        Text("Personalisation Features")
                             .font(.system(size: 17, weight: .medium))
                     }
                     .tint(AirwindowsPalette.actionButton)
@@ -133,7 +133,7 @@ public struct PreferencesView: View {
                             .opacity(0.4)
                             .padding(.top, 18)
 
-                        Text("Default effect")
+                        Text("Default Effect")
                             .font(.system(size: 22, weight: .semibold))
                             .padding(.top, 18)
 
@@ -151,7 +151,7 @@ public struct PreferencesView: View {
                             Button {
                                 defaultEffectName = ""
                             } label: {
-                                Text("Remove default")
+                                Text("Remove Default")
                                     .font(.system(size: 15, weight: .medium))
                                     .foregroundStyle(AirwindowsPalette.actionButton)
                             }
@@ -169,7 +169,7 @@ public struct PreferencesView: View {
                             .opacity(0.4)
                             .padding(.top, 18)
 
-                        Text("Plugin window")
+                        Text("Plugin Window")
                             .font(.system(size: 22, weight: .semibold))
                             .padding(.top, 18)
 

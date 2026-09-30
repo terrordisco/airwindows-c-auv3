@@ -265,7 +265,7 @@ private struct EffectListColumn: View {
                     .foregroundStyle(.primary)
                 Button(action: onSortTap) {
                     HStack(spacing: 4 * uiScale) {
-                        Text(sortLabel)
+                        Text(sortLabel.capitalized)
                             .font(.system(size: 15 * uiScale))
                             .foregroundStyle(.secondary)
                         Image(systemName: "arrow.up.arrow.down")
