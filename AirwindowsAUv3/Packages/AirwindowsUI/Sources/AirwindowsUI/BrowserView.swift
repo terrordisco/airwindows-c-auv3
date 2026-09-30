@@ -361,7 +361,9 @@ private struct NumberedEffectRow: View {
                 .foregroundStyle(.primary)
                 .lineLimit(1)
 
-            Spacer()
+            Spacer(minLength: 8)
+
+            ChannelMark(isMono: effect.isMono)
         }
         .hEdgePadding(22)
         .padding(.vertical, 7 * uiScale)
@@ -369,7 +371,7 @@ private struct NumberedEffectRow: View {
         .contentShape(Rectangle())
         // Stable anchor for the UI smoke test (shared with the compact browser).
         .accessibilityIdentifier("effectRow")
-        .accessibilityLabel(effect.name)
+        .accessibilityLabel("\(effect.name), \(effect.isMono ? "mono" : "stereo")")
         .accessibilityAddTraits(.isButton)
     }
 }

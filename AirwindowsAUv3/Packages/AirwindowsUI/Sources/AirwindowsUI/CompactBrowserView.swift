@@ -536,7 +536,8 @@ public struct CompactBrowserView: View {
                     .foregroundStyle(.primary)
                     .lineLimit(1)
                     .minimumScaleFactor(0.8)
-                Spacer(minLength: 0)
+                Spacer(minLength: 8)
+                ChannelMark(isMono: effect.isMono)
             }
             .padding(.horizontal, Self.hInset)
             .frame(height: 40 * max(uiScale, 0.85))
@@ -547,7 +548,7 @@ public struct CompactBrowserView: View {
         .buttonStyle(.plain)
         .id(effect.registryIndex)
         .accessibilityIdentifier("effectRow")
-        .accessibilityLabel(effect.name)
+        .accessibilityLabel("\(effect.name), \(effect.isMono ? "mono" : "stereo")")
         .accessibilityHint(isHighlighted && maxFit == 1 ? "Tap again to read about it" : "Shows a preview")
     }
 
