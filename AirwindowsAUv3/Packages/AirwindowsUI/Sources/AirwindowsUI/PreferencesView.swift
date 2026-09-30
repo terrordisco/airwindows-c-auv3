@@ -36,9 +36,6 @@ public struct PreferencesView: View {
     /// key AirwindowsAUView reads to gate the on-screen affordances. The default
     /// MUST match AirwindowsAUView's (both read this App-Group-shared key).
     @AppStorage("airwindows.personalisation", store: UserDefaults.airwindowsShared) private var personalisationEnabled: Bool = true
-    /// Review switch: compact layout at every size. See LayoutModeConfig.
-    @AppStorage(LayoutModeConfig.compactEverywhereKey, store: .airwindowsShared)
-    private var compactEverywhere: Bool = LayoutModeConfig.compactEverywhereDefault
 
     /// The effect that loads on a fresh launch instead of the browser
     /// ("" = none). Set via the pin button in the browser preview pane;
@@ -84,26 +81,6 @@ public struct PreferencesView: View {
                     }
                     .buttonStyle(.plain)
                     .padding(.top, 4)
-
-                    Divider()
-                        .opacity(0.4)
-                        .padding(.top, 18)
-
-                    Text("Layout")
-                        .font(.system(size: 22, weight: .semibold))
-                        .padding(.top, 18)
-
-                    Text("The compact layout puts every action in a menu behind the ≡ button and the effect browser behind the ▤ button. It switches on by itself in narrow or short windows; this makes it the layout at every size.")
-                        .font(.system(size: 15))
-                        .foregroundStyle(.secondary)
-                        .fixedSize(horizontal: false, vertical: true)
-
-                    Toggle(isOn: $compactEverywhere) {
-                        Text("Compact Layout at Every Size")
-                            .font(.system(size: 17, weight: .medium))
-                    }
-                    .tint(AirwindowsPalette.actionButton)
-                    .padding(.top, 6)
 
                     Divider()
                         .opacity(0.4)

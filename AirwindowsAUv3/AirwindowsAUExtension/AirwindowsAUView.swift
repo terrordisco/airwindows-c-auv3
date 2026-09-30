@@ -8,17 +8,20 @@
 //
 //  Owns the two top-level UI states:
 //
-//    - showBrowser:   fullScreenCover that lists every effect by
-//                     category. Forced open at launch so the user must
-//                     pick something — opening "into" an effect would
-//                     hide the breadth of the plugin.
+//    - showBrowser:   the effect browser drawer (CompactBrowserView), slid
+//                     in from the left over the dimmed workspace. Forced
+//                     open at launch so the user must pick something —
+//                     opening "into" an effect would hide the breadth of
+//                     the plugin.
 //    - currentBrowseModel (via viewModel): which effect (if any) is
 //                     selected. Until something is picked, audio passes
 //                     through unchanged and NoSelectionView is shown.
 //
 //  Everything else — parameter bindings, prev/next nav, theme, level
-//  controls — fans out from the viewModel through to EffectDetailView,
-//  which lives in the shared AirwindowsUI Swift package.
+//  controls — fans out from the viewModel through to CompactWorkspaceView,
+//  which lives in the shared AirwindowsUI Swift package. (The original
+//  full-size three-column layout was retired on 2026-09-30; the compact
+//  layout is the only layout at every size.)
 //
 
 import SwiftUI
@@ -58,7 +61,7 @@ struct AirwindowsAUView: View {
     /// restored effect's page instead of leaving it covering the workspace.
     @State private var browserOpenedAtLaunch: Bool = false
     /// The user's place in the browser (category, filter, search, sort).
-    /// Owned here — not by BrowserView — so it survives the fullScreenCover
+    /// Owned here — not by the browser drawer — so it survives the drawer
     /// being torn down: reopening the browser lands exactly where the user
     /// left off, instead of resetting to the active effect's category.
     @State private var browserContext = BrowserContext()
@@ -115,11 +118,6 @@ struct AirwindowsAUView: View {
     /// saved snapshots untouched. App-Group-shared like the rest.
     @AppStorage("airwindows.personalisation", store: .airwindowsShared) private var personalisationEnabled: Bool = true
 
-    /// Review switch: compact layout at every container size (see
-    /// LayoutModeConfig.compactEverywhereKey). Toggled in Preferences.
-    @AppStorage(LayoutModeConfig.compactEverywhereKey, store: .airwindowsShared)
-    private var compactEverywhere: Bool = LayoutModeConfig.compactEverywhereDefault
-
     /// Preferences sheet, opened from the workspace bottom bar's Settings box
     /// (full layout) or the menu drawer (compact layout).
     @State private var showPreferences: Bool = false
@@ -164,20 +162,16 @@ struct AirwindowsAUView: View {
 
     var body: some View {
         GeometryReader { geo in
-            // Discrete layout mode — full vs compact — from the container size.
-            // See LayoutMode.swift for the thresholds.
-            let layoutMode = LayoutModeConfig.mode(for: geo.size, compactEverywhere: compactEverywhere)
             ZStack(alignment: .leading) {
-                detailContent(mode: layoutMode)
+                detailContent
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .accessibilityHidden(layoutMode == .compact && showBrowser)
+                    .accessibilityHidden(showBrowser)
 
-                // Compact layout: the browser is a drawer from the LEFT over
-                // the dimmed workspace (the menu drawer mirrors it from the
-                // right). The full layout keeps the fullScreenCover below.
+                // The browser is a drawer from the LEFT over the dimmed
+                // workspace (the menu drawer mirrors it from the right).
                 // zIndex on both layers: a view leaving a ZStack otherwise
                 // drops behind its siblings during its exit transition.
-                if layoutMode == .compact, showBrowser {
+                if showBrowser {
                     Color.black.opacity(resolvedScheme == .dark ? 0.35 : 0.18)
                         .ignoresSafeArea()
                         .onTapGesture { closeBrowser() }
@@ -202,7 +196,6 @@ struct AirwindowsAUView: View {
                 // Live container size — research instrument for the responsive
                 // UI work; PreferencesView displays it. See ContainerSize.swift.
                 .environment(\.containerSize, geo.size)
-                .environment(\.layoutMode, layoutMode)
                 // First launch: size the scale to the container so a smaller
                 // iPad starts at the same density a 13" shows at 100%. Runs on
                 // size changes but no-ops after the one-time auto-set. Also
@@ -215,53 +208,12 @@ struct AirwindowsAUView: View {
                     PreferencesView(onClose: { showPreferences = false })
                         .environment(\.colorScheme, resolvedScheme)
                         .environment(\.containerSize, geo.size)
-                        .environment(\.layoutMode, layoutMode)
-                }
+                        }
                 .sheet(isPresented: $showAbout) {
                     AboutView(onClose: { showAbout = false })
                         .environment(\.colorScheme, resolvedScheme)
                         .environment(\.uiScale, CGFloat(uiScale))
-                        .environment(\.layoutMode, layoutMode)
-                }
-                .fullScreenCover(isPresented: Binding(
-                    get: { showBrowser && layoutMode == .full },
-                    set: { showBrowser = $0 }
-                )) {
-                // The browser reopens into the persistent browserContext —
-                // whatever category/filter/search the user last had — with the
-                // active effect highlighted so the preview pane still reads as
-                // "where you were". On a clean first launch the context is
-                // empty and nothing is preselected.
-                BrowserView(
-                    allEffects: viewModel.browsableModels,
-                    categories: viewModel.allCategories,
-                    countsByCategory: viewModel.countsByCategory,
-                    context: $browserContext,
-                    initialHighlight: viewModel.currentBrowseModel,
-                    descriptionProvider: { effect in
-                        viewModel.description(for: effect)
-                    },
-                    favorites: personalisationEnabled ? favorites : nil,
-                    showDefaultEffectPin: personalisationEnabled,
-                    onSelect: { effect, pool in
-                        // Pool first: selecting swaps the effect, and the
-                        // prev/next labels should resolve against the list the
-                        // user picked from right away.
-                        viewModel.setBrowsePool(pool)
-                        viewModel.selectEffect(at: effect.registryIndex)
-                    },
-                    onClose: { showBrowser = false }
-                )
-                .environment(\.colorScheme, resolvedScheme)
-                // fullScreenCover doesn't reliably inherit custom environment
-                // values, so pass the scale explicitly (same reason colorScheme
-                // is re-applied above). Without this the browser sidebar renders
-                // at scale 1.0 while the workspace uses the real scale, so the
-                // Settings box and the first column stop matching width.
-                .environment(\.uiScale, CGFloat(uiScale))
-                .environment(\.containerSize, geo.size)
-                .environment(\.layoutMode, layoutMode)
-            }
+                        }
             .task {
                 // Map the legacy dark-mode Bool onto the Day/Night/Auto
                 // setting (no-op once migrated).
@@ -302,8 +254,7 @@ struct AirwindowsAUView: View {
         }
     }
 
-    /// The compact-layout browser drawer. Same inputs and callbacks as the
-    /// full BrowserView in the fullScreenCover, same shared browserContext.
+    /// The browser drawer, sharing browserContext with the workspace.
     /// It sizes its own width: one, two or three 300pt columns as the user
     /// drills in, within what the container can fit (see CompactBrowserView).
     private var compactBrowser: some View {
@@ -376,97 +327,26 @@ struct AirwindowsAUView: View {
         uiScaleAutoSet = true
     }
 
-    /// Flips Day ↔ Night from the full layout's chip. An Auto setting becomes
-    /// the explicit opposite of whatever is currently rendered, so the chip's
-    /// "destination" label stays truthful.
-    private func toggleTheme() {
-        appearanceRaw = (isDarkMode ? AirwindowsAppearance.day : .night).rawValue
-    }
-
-    /// Auto → Night → Day → Auto, from the compact menu drawer's Night Mode row.
+    /// Auto → Night → Day → Auto, from the menu drawer's Night Mode row.
     private func cycleAppearance() {
         appearanceRaw = appearance.next.rawValue
     }
 
     @ViewBuilder
-    private func detailContent(mode: LayoutMode) -> some View {
-        if let effect = viewModel.currentBrowseModel, mode == .compact {
-            compactWorkspace(for: effect)
-        } else if let effect = viewModel.currentBrowseModel {
-            EffectDetailView(
-                effect: effect,
-                parameterCount: viewModel.parameterCount,
-                parameterNames: viewModel.parameterNames,
-                parameterDisplays: viewModel.parameterDisplays,
-                parameterLabels: viewModel.parameterLabels,
-                parameterStepCounts: viewModel.parameterStepCounts,
-                parameterDefaults: viewModel.parameterDefaults,
-                description: viewModel.effectDescription,
-                previousName: viewModel.previousEffect?.name,
-                nextName: viewModel.nextEffect?.name,
-                inputDisplay: viewModel.inputLevelDisplay,
-                outputDisplay: viewModel.outputLevelDisplay,
-                parameterValues: Binding(
-                    get: { viewModel.parameterValues },
-                    set: { newValues in
-                        for (i, v) in newValues.enumerated() where i < viewModel.parameterCount {
-                            if v != viewModel.parameterValues[i] {
-                                viewModel.setParameterValue(v, at: i)
-                            }
-                        }
-                    }
-                ),
-                inputLevel: Binding(
-                    get: { viewModel.inputLevel },
-                    set: { viewModel.setInputLevel($0) }
-                ),
-                outputLevel: Binding(
-                    get: { viewModel.outputLevel },
-                    set: { viewModel.setOutputLevel($0) }
-                ),
-                onPrevious: { viewModel.selectPreviousEffect() },
-                onNext: { viewModel.selectNextEffect() },
-                onTitleTap: { openBrowser() },
-                onReset: { viewModel.resetParameters() },
-                onRandomize: { viewModel.randomizeParameters() },
-                onUndo: { viewModel.undo() },
-                onRedo: { viewModel.redo() },
-                canUndo: viewModel.canUndo,
-                canRedo: viewModel.canRedo,
-                isDarkMode: isDarkMode,
-                onToggleTheme: { toggleTheme() },
-                useRotaryPots: effectiveUseRotaryPots,
-                // Personalisation-gated affordances: passing nil hides the chip
-                // entirely (EffectDetailView renders each only when its closure
-                // is non-nil). Auto pots-for-dense-effects still applies even
-                // when the manual swap is hidden.
-                onToggleControlStyle: personalisationEnabled ? { toggleControlStyle() } : nil,
-                hasSavedSettings: personalisationEnabled && savedSettings.hasSaved(effect.name),
-                onSaveSettings: personalisationEnabled ? {
-                    savedSettings.save(viewModel.currentParameterSnapshot, for: effect.name)
-                } : nil,
-                onRecallSettings: personalisationEnabled ? {
-                    if let values = savedSettings.savedValues(for: effect.name) {
-                        viewModel.applySavedSettings(values)
-                    }
-                } : nil,
-                onClearSavedSettings: personalisationEnabled ? { savedSettings.clear(effect.name) } : nil,
-                favorites: personalisationEnabled ? favorites : nil,
-                onOpenSettings: { showPreferences = true },
-                isMonitoring: isMonitoring,
-                onToggleMonitoring: onToggleMonitoring
-            )
+    private var detailContent: some View {
+        if let effect = viewModel.currentBrowseModel {
+            workspace(for: effect)
         } else {
             NoSelectionView(onBrowse: { openBrowser() })
                 .environment(\.colorScheme, resolvedScheme)
         }
     }
 
-    /// The compact-layout workspace. Same bindings and gating as the full
-    /// EffectDetailView above; the differences are arrangement (see
-    /// CompactWorkspaceView) plus two things the compact layout adds: the
-    /// tri-state appearance cycle and About reachable from the workspace.
-    private func compactWorkspace(for effect: EffectBrowseModel) -> some View {
+    /// The workspace for the selected effect. Personalisation-gated
+    /// affordances are passed as nil to hide them (CompactWorkspaceView and
+    /// its menu drawer render each only when its closure is non-nil); auto
+    /// pots-for-dense-effects still applies with the manual swap hidden.
+    private func workspace(for effect: EffectBrowseModel) -> some View {
         CompactWorkspaceView(
             effect: effect,
             parameterCount: viewModel.parameterCount,
@@ -522,14 +402,17 @@ struct AirwindowsAUView: View {
             } : nil,
             onClearSavedSettings: personalisationEnabled ? { savedSettings.clear(effect.name) } : nil,
             favorites: personalisationEnabled ? favorites : nil,
+            isDefaultEffect: defaultEffectName == effect.name,
+            onToggleDefaultEffect: personalisationEnabled ? {
+                defaultEffectName = defaultEffectName == effect.name ? "" : effect.name
+            } : nil,
             onOpenSettings: { showPreferences = true },
             onOpenAbout: { showAbout = true },
             isMonitoring: isMonitoring,
             onToggleMonitoring: onToggleMonitoring,
             scrollpad: scrollpad,
             onCycleScrollpad: { cycleScrollpad() },
-            uiScaleBinding: $uiScale,
-            compactEverywhereBinding: $compactEverywhere
+            uiScaleBinding: $uiScale
         )
     }
 }

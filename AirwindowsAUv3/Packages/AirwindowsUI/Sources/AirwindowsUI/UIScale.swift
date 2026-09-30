@@ -126,17 +126,3 @@ private struct HorizontalEdgePadding: ViewModifier {
         content.padding(.horizontal, airwindowsEdgeInset(base, scale: uiScale))
     }
 }
-
-// MARK: - Fixed layout constants
-
-/// Layout dimensions that are deliberately NOT affected by `uiScale` — they
-/// belong to the plugin's chrome, not its scalable content. Keeping them in
-/// one place lets surfaces that must align (the browser sidebar and the
-/// workspace bottom bar's Settings box) share a single source of truth.
-public enum AirwindowsLayout {
-    /// Width of the browser's left sidebar column, and — matched to it on
-    /// purpose — the workspace bottom bar's Settings box. The two surfaces
-    /// echo each other, so a user moving between browser and workspace sees
-    /// the same left-column width in both. Fixed: it's structural chrome.
-    public static let sidebarWidth: CGFloat = 280
-}

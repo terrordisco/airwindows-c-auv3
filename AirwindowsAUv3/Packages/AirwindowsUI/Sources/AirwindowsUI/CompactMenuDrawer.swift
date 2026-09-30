@@ -42,6 +42,10 @@ public struct CompactMenuDrawer: View {
     // This effect
     public let isFavorite: Bool
     public let onToggleFavorite: (() -> Void)?
+    /// Startup-effect pin (same store the browser's pin button writes). nil
+    /// hides the row (personalisation off).
+    public let isDefaultEffect: Bool
+    public let onToggleDefaultEffect: (() -> Void)?
     public let onRandomize: (() -> Void)?
     public let onReset: () -> Void
     public let hasSavedSettings: Bool
@@ -66,14 +70,12 @@ public struct CompactMenuDrawer: View {
     public let scrollpad: ScrollpadPlacement
     public let onCycleScrollpad: () -> Void
 
-    // Settings that moved in from the Preferences sheet (Sveinbjörn,
-    // 2026-09-30): the global interface scale and the compact-everywhere
-    // switch. Personalisation and the window-size readout stay in the sheet
-    // behind "Airwindows Settings…". Both are bindings straight onto the
-    // shared @AppStorage keys, so dragging the slider rescales the live
+    // The global interface scale, moved in from the Preferences sheet
+    // (Sveinbjörn, 2026-09-30). Personalisation and the window-size readout
+    // stay in the sheet behind "Airwindows Settings…". A binding straight onto
+    // the shared @AppStorage key, so dragging the slider rescales the live
     // workspace behind the drawer. nil hides the row (previews).
     public let uiScale: Binding<Double>?
-    public let compactEverywhere: Binding<Bool>?
 
     @Environment(\.colorScheme) private var scheme
     @State private var showClearSavedSettingsDialog = false
@@ -87,6 +89,8 @@ public struct CompactMenuDrawer: View {
         canRedo: Bool = false,
         isFavorite: Bool = false,
         onToggleFavorite: (() -> Void)? = nil,
+        isDefaultEffect: Bool = false,
+        onToggleDefaultEffect: (() -> Void)? = nil,
         onRandomize: (() -> Void)? = nil,
         onReset: @escaping () -> Void,
         hasSavedSettings: Bool = false,
@@ -103,8 +107,7 @@ public struct CompactMenuDrawer: View {
         onOpenAbout: (() -> Void)? = nil,
         scrollpad: ScrollpadPlacement = .left,
         onCycleScrollpad: @escaping () -> Void = {},
-        uiScale: Binding<Double>? = nil,
-        compactEverywhere: Binding<Bool>? = nil
+        uiScale: Binding<Double>? = nil
     ) {
         self.effectName = effectName
         self.onClose = onClose
@@ -114,6 +117,8 @@ public struct CompactMenuDrawer: View {
         self.canRedo = canRedo
         self.isFavorite = isFavorite
         self.onToggleFavorite = onToggleFavorite
+        self.isDefaultEffect = isDefaultEffect
+        self.onToggleDefaultEffect = onToggleDefaultEffect
         self.onRandomize = onRandomize
         self.onReset = onReset
         self.hasSavedSettings = hasSavedSettings
@@ -131,7 +136,6 @@ public struct CompactMenuDrawer: View {
         self.scrollpad = scrollpad
         self.onCycleScrollpad = onCycleScrollpad
         self.uiScale = uiScale
-        self.compactEverywhere = compactEverywhere
     }
 
     // Fixed chrome metrics (see file header for why these don't scale).
@@ -253,6 +257,13 @@ public struct CompactMenuDrawer: View {
                 action: onToggleFavorite
             )
         }
+        if let onToggleDefaultEffect {
+            MenuRow(
+                systemName: isDefaultEffect ? "pin.fill" : "pin",
+                title: isDefaultEffect ? "Remove as Default Effect" : "Make This the Default Effect",
+                action: onToggleDefaultEffect
+            )
+        }
         if let onRandomize {
             MenuRow(systemName: "dice", title: "Randomize Settings", action: onRandomize)
         }
@@ -308,16 +319,6 @@ public struct CompactMenuDrawer: View {
 
         if let uiScale {
             ScaleRow(scale: uiScale)
-        }
-
-        if let compactEverywhere {
-            MenuRow(systemName: "rectangle.compress.vertical",
-                    titleView: { Text("Compact at Every Size") },
-                    trailing: { StyleSwitchGlyph(isOn: compactEverywhere.wrappedValue) },
-                    accessibility: compactEverywhere.wrappedValue
-                        ? "Compact layout at every size, on. Tap to follow the window size instead."
-                        : "Compact layout at every size, off. Tap to turn on.",
-                    action: { compactEverywhere.wrappedValue.toggle() })
         }
 
         if let onToggleMonitoring {

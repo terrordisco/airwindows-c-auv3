@@ -65,6 +65,9 @@ public struct CompactWorkspaceView: View {
     public let onRecallSettings: (() -> Void)?
     public let onClearSavedSettings: (() -> Void)?
     public let favorites: FavoritesStore?
+    /// Startup-effect pin for the menu drawer. nil hides the row.
+    public let isDefaultEffect: Bool
+    public let onToggleDefaultEffect: (() -> Void)?
     public let onOpenSettings: (() -> Void)?
     public let onOpenAbout: (() -> Void)?
     public let isMonitoring: Bool
@@ -72,9 +75,8 @@ public struct CompactWorkspaceView: View {
     /// Scrollpad edge (left / right / off) and the menu row's cycle action.
     public let scrollpad: ScrollpadPlacement
     public let onCycleScrollpad: () -> Void
-    /// Settings rows in the menu drawer (see CompactMenuDrawer). nil hides them.
+    /// Interface-scale row in the menu drawer (see CompactMenuDrawer). nil hides it.
     public let uiScaleBinding: Binding<Double>?
-    public let compactEverywhereBinding: Binding<Bool>?
 
     @Environment(\.colorScheme) private var scheme
     @Environment(\.uiScale) private var uiScale
@@ -121,14 +123,15 @@ public struct CompactWorkspaceView: View {
         onRecallSettings: (() -> Void)? = nil,
         onClearSavedSettings: (() -> Void)? = nil,
         favorites: FavoritesStore? = nil,
+        isDefaultEffect: Bool = false,
+        onToggleDefaultEffect: (() -> Void)? = nil,
         onOpenSettings: (() -> Void)? = nil,
         onOpenAbout: (() -> Void)? = nil,
         isMonitoring: Bool = false,
         onToggleMonitoring: (() -> Void)? = nil,
         scrollpad: ScrollpadPlacement = .left,
         onCycleScrollpad: @escaping () -> Void = {},
-        uiScaleBinding: Binding<Double>? = nil,
-        compactEverywhereBinding: Binding<Bool>? = nil
+        uiScaleBinding: Binding<Double>? = nil
     ) {
         self.effect = effect
         self.parameterCount = parameterCount
@@ -163,6 +166,8 @@ public struct CompactWorkspaceView: View {
         self.onRecallSettings = onRecallSettings
         self.onClearSavedSettings = onClearSavedSettings
         self.favorites = favorites
+        self.isDefaultEffect = isDefaultEffect
+        self.onToggleDefaultEffect = onToggleDefaultEffect
         self.onOpenSettings = onOpenSettings
         self.onOpenAbout = onOpenAbout
         self.isMonitoring = onToggleMonitoring == nil ? false : isMonitoring
@@ -170,7 +175,6 @@ public struct CompactWorkspaceView: View {
         self.scrollpad = scrollpad
         self.onCycleScrollpad = onCycleScrollpad
         self.uiScaleBinding = uiScaleBinding
-        self.compactEverywhereBinding = compactEverywhereBinding
     }
 
     /// Scrollpad strip width. Flush to the container edge, no outer inset —
@@ -453,6 +457,8 @@ public struct CompactWorkspaceView: View {
             canRedo: canRedo,
             isFavorite: favorites?.isFavorite(effect.name) ?? false,
             onToggleFavorite: favorites.map { store in { store.toggle(effect.name) } },
+            isDefaultEffect: isDefaultEffect,
+            onToggleDefaultEffect: onToggleDefaultEffect,
             onRandomize: closing(onRandomize),
             onReset: closing(onReset) ?? onReset,
             hasSavedSettings: hasSavedSettings,
@@ -469,8 +475,7 @@ public struct CompactWorkspaceView: View {
             onOpenAbout: closing(onOpenAbout),
             scrollpad: scrollpad,
             onCycleScrollpad: onCycleScrollpad,
-            uiScale: uiScaleBinding,
-            compactEverywhere: compactEverywhereBinding
+            uiScale: uiScaleBinding
         )
     }
 }
@@ -552,14 +557,12 @@ private struct LevelPot: View {
     CompactPreviewWrapper(paramCount: 4)
         .frame(width: 390, height: 640)
         .environment(\.containerSize, CGSize(width: 390, height: 640))
-        .environment(\.layoutMode, .compact)
 }
 
 #Preview("Compact — 6 params, dark") {
     CompactPreviewWrapper(paramCount: 6, mono: true)
         .frame(width: 375, height: 560)
         .environment(\.containerSize, CGSize(width: 375, height: 560))
-        .environment(\.layoutMode, .compact)
         .environment(\.colorScheme, .dark)
 }
 
