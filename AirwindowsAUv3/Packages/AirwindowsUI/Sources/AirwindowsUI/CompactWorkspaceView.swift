@@ -321,7 +321,7 @@ public struct CompactWorkspaceView: View {
         HStack(spacing: 0) {
             LevelPot(label: "In", value: $inputLevel, display: inputDisplay)
             Spacer(minLength: 8)
-            Chip(text: effect.isMono ? "MONO" : "STEREO", role: .inert, size: .small)
+            Chip(text: effect.isMono ? "MONO" : "STEREO PROCESS", role: .inert, size: .small)
             Spacer(minLength: 8)
             LevelPot(label: "Out", value: $outputLevel, display: outputDisplay, trailing: true)
         }

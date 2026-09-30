@@ -371,7 +371,7 @@ private struct NumberedEffectRow: View {
         .contentShape(Rectangle())
         // Stable anchor for the UI smoke test (shared with the compact browser).
         .accessibilityIdentifier("effectRow")
-        .accessibilityLabel("\(effect.name), \(effect.isMono ? "mono" : "stereo")")
+        .accessibilityLabel(effect.isMono ? effect.name : "\(effect.name), stereo process")
         .accessibilityAddTraits(.isButton)
     }
 }
@@ -547,7 +547,7 @@ private struct FlowMetaRow: View {
         // the other — every effect is one of those two, so neither is a
         // meaningful "default" to leave unmarked.
         HStack(spacing: 8 * uiScale) {
-            Chip(text: effect.isMono ? "Mono" : "Stereo", role: .inert)
+            Chip(text: effect.isMono ? "Mono" : "Stereo process", role: .inert)
             if !effect.firstCommitDate.isEmpty {
                 Chip(text: effect.firstCommitDate, role: .inert)
             }

@@ -548,7 +548,7 @@ public struct CompactBrowserView: View {
         .buttonStyle(.plain)
         .id(effect.registryIndex)
         .accessibilityIdentifier("effectRow")
-        .accessibilityLabel("\(effect.name), \(effect.isMono ? "mono" : "stereo")")
+        .accessibilityLabel(effect.isMono ? effect.name : "\(effect.name), stereo process")
         .accessibilityHint(isHighlighted && maxFit == 1 ? "Tap again to read about it" : "Shows a preview")
     }
 
@@ -605,7 +605,7 @@ public struct CompactBrowserView: View {
             }
 
             HStack(spacing: 8) {
-                Chip(text: effect.isMono ? "Mono" : "Stereo", role: .inert, size: .small)
+                Chip(text: effect.isMono ? "Mono" : "Stereo process", role: .inert, size: .small)
                 if !effect.firstCommitDate.isEmpty {
                     Chip(text: String(effect.firstCommitDate.prefix(4)), role: .inert, size: .small)
                 }
@@ -710,7 +710,7 @@ public struct CompactBrowserView: View {
                     }
 
                     HStack(spacing: 8) {
-                        Chip(text: effect.isMono ? "Mono" : "Stereo", role: .inert, size: .small)
+                        Chip(text: effect.isMono ? "Mono" : "Stereo process", role: .inert, size: .small)
                         if !effect.firstCommitDate.isEmpty {
                             Chip(text: effect.firstCommitDate, role: .inert, size: .small)
                         }
