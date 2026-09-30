@@ -327,6 +327,14 @@ struct AirwindowsAUView: View {
         uiScaleAutoSet = true
     }
 
+    /// Random effect from everything browsable, for the workspace's footer
+    /// button. Prev/next then walk the whole catalogue.
+    private func pickRandomEffect() {
+        guard let picked = viewModel.browsableModels.randomElement() else { return }
+        viewModel.setBrowsePool(viewModel.browsableModels)
+        viewModel.selectEffect(at: picked.registryIndex)
+    }
+
     /// Auto → Night → Day → Auto, from the menu drawer's Night Mode row.
     private func cycleAppearance() {
         appearanceRaw = appearance.next.rawValue
@@ -408,6 +416,7 @@ struct AirwindowsAUView: View {
             } : nil,
             onOpenSettings: { showPreferences = true },
             onOpenAbout: { showAbout = true },
+            onRandomEffect: { pickRandomEffect() },
             isMonitoring: isMonitoring,
             onToggleMonitoring: onToggleMonitoring,
             scrollpad: scrollpad,

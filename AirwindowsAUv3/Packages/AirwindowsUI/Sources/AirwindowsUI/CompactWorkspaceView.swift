@@ -70,6 +70,9 @@ public struct CompactWorkspaceView: View {
     public let onToggleDefaultEffect: (() -> Void)?
     public let onOpenSettings: (() -> Void)?
     public let onOpenAbout: (() -> Void)?
+    /// "Random Effect" button at the very bottom of the page, under the
+    /// description (Sveinbjörn, 2026-09-30). nil hides it.
+    public let onRandomEffect: (() -> Void)?
     public let isMonitoring: Bool
     public let onToggleMonitoring: (() -> Void)?
     /// Scrollpad edge (left / right / off) and the menu row's cycle action.
@@ -127,6 +130,7 @@ public struct CompactWorkspaceView: View {
         onToggleDefaultEffect: (() -> Void)? = nil,
         onOpenSettings: (() -> Void)? = nil,
         onOpenAbout: (() -> Void)? = nil,
+        onRandomEffect: (() -> Void)? = nil,
         isMonitoring: Bool = false,
         onToggleMonitoring: (() -> Void)? = nil,
         scrollpad: ScrollpadPlacement = .left,
@@ -170,6 +174,7 @@ public struct CompactWorkspaceView: View {
         self.onToggleDefaultEffect = onToggleDefaultEffect
         self.onOpenSettings = onOpenSettings
         self.onOpenAbout = onOpenAbout
+        self.onRandomEffect = onRandomEffect
         self.isMonitoring = onToggleMonitoring == nil ? false : isMonitoring
         self.onToggleMonitoring = onToggleMonitoring
         self.scrollpad = scrollpad
@@ -305,10 +310,23 @@ public struct CompactWorkspaceView: View {
                     .font(.system(size: 22 * uiScale, weight: .semibold))
                     .lineLimit(1)
                     .minimumScaleFactor(0.6)
+                    .accessibilityLabel("\(effect.category), \(effect.name)")
+
+                // Favorite star right of the name (personalisation-gated).
+                if let favorites {
+                    let isFav = favorites.isFavorite(effect.name)
+                    Button { favorites.toggle(effect.name) } label: {
+                        Image(systemName: isFav ? "star.fill" : "star")
+                            .font(.system(size: 16 * uiScale, weight: .medium))
+                            .foregroundStyle(isFav ? Color.primary : Color.secondary)
+                            .frame(width: 36, height: 40)
+                            .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel(isFav ? "Remove \(effect.name) from favorites" : "Add \(effect.name) to favorites")
+                }
             }
             .frame(maxWidth: .infinity)
-            .accessibilityElement(children: .combine)
-            .accessibilityLabel("\(effect.category), \(effect.name)")
 
             JogChevron(direction: .next, enabled: nextName != nil, targetName: nextName, action: onNext)
         }
@@ -349,6 +367,7 @@ public struct CompactWorkspaceView: View {
 
                     taglineBand
                     descriptionBlock
+                    randomEffectFooter
                 }
             }
             .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { viewportHeight = $0 }
@@ -363,6 +382,7 @@ public struct CompactWorkspaceView: View {
                     VStack(alignment: .leading, spacing: 0) {
                         taglineBand
                         descriptionBlock
+                        randomEffectFooter
                     }
                 }
                 .scrollIndicators(.automatic)
@@ -435,6 +455,27 @@ public struct CompactWorkspaceView: View {
             EffectDescriptionText(description, omittingHeadingMatching: effect.whatText)
                 .hEdgePadding(16)
                 .padding(.vertical, 16 * uiScale)
+        }
+    }
+
+    /// Centered "Random Effect" chip under the description — the end of the
+    /// page is where you've read about this effect and might want another.
+    @ViewBuilder
+    private var randomEffectFooter: some View {
+        if let onRandomEffect {
+            hairline
+            HStack {
+                Spacer(minLength: 0)
+                Chip(
+                    systemName: "dice",
+                    text: "Random effect",
+                    role: .action,
+                    accessibility: "Pick a random effect",
+                    action: onRandomEffect
+                )
+                Spacer(minLength: 0)
+            }
+            .padding(.vertical, 22 * uiScale)
         }
     }
 
