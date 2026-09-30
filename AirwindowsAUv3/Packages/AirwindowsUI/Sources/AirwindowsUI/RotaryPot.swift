@@ -135,11 +135,17 @@ public struct RotaryPot: View {
 
     public var body: some View {
         VStack(spacing: 2) {
-            Text(label.uppercased())
-                .font(.system(size: labelFontSize, weight: .medium))
-                .kerning(1.0)
-                .foregroundStyle(.secondary)
-                .lineLimit(1)
+            // An empty label renders nothing at all (not an empty line), so a
+            // pot with its caption elsewhere — the workspace IN/OUT pots with
+            // their readout beside them, the parameter pots with the name in
+            // the row header — centres on its arc.
+            if !label.isEmpty {
+                Text(label.uppercased())
+                    .font(.system(size: labelFontSize, weight: .medium))
+                    .kerning(1.0)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+            }
 
             ZStack {
                 PotTrackShape(
