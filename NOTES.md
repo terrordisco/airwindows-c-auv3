@@ -1139,3 +1139,17 @@ Open: compact browser drawer (categories → effects → preview card, drill-dow
 - `fetch_effect_links.py`: 512 posts, 499 videos, no links lost. **Gotcha found and fixed:** the versioned-predecessor fallback matched BezEQ4 → bezeq3, DeRez5 → derez4, Spiral3 → spiral2 (each is another effect's own post), and `fetch_missing_descriptions.py` then scraped the *wrong effect's* text into their awpdoc. Deleted those three awpdoc files + links; the fetcher now refuses a predecessor slug that is a registered effect's own post (`candidate_slugs_tagged` / `owned` set in `match_slugs`). ConsoleX3's real post (`/consolex3/`) was scraped and kept — its text opens with a GitHub release link rather than a TL;DW.
 - Re-run of the patched fetcher surfaced two more edge cases: DeRez5 fell through to the family ROOT post (`/derez/`) because the `owned` set only recorded each effect's *first* matching own slug (DeRez's first match is a `-vst` follow-up, so plain `derez` wasn't marked owned) — fixed by recording every own slug present in the sitemap. IronOxideClassic2 lost its long-standing link to `/iron-oxide-classic/` (now correctly refused as IronOxideClassic's own post); restored deliberately via `MANUAL_OVERRIDES` since that post covers both versions and the effect has its own awpdoc, so the chips are the only thing at stake.
 - `xcodegen generate` (new autogen sources) + device build green; installed on the iPad. Smoke test green.
+
+## HIG audit (2026-09-30)
+
+Sveinbjörn's rule: Apple's Human Interface Guidelines dictate the design whenever possible. First audit of the compact layout against them — items are open decisions, not yet changed:
+
+1. **Touch targets below 44pt** (HIG minimum 44×44): compact header buttons 40×40, jog chevrons 32×40, star/pin 36×36, list rows 40pt (36 at the iPhone's 90%), chips ~24–30pt tall. Fix: enlarge hit areas (`contentShape` can exceed the visual), rows to 44.
+2. **Back button on the right** on the description pane (Stage Manager clearance workaround). HIG: back is always leading. The native fix is a real navigation bar (`NavigationStack` inside the drawer), which iPadOS insets under the window controls automatically — removing the `CompactChrome.headerTopInset` hack too.
+3. **Custom slide-in drawers + scrim** for browser and menu. HIG on iPad: sidebar (`NavigationSplitView`) for the browser; a toolbar `Menu` / popover for actions. Trade-off: `Menu` can't host the scale slider or the choice indicators — those would move back to Settings (HIG-consistent: settings live in Settings).
+4. **Chips ALL CAPS** — Apple's own tags/pills are Title Case; accepted deviation (house style).
+5. **Fixed point sizes, no Dynamic Type** — on the roadmap's Accessibility pass; HIG expects text styles.
+6. **Custom lists (`LazyVStack`)** instead of `List` — lose standard row height, separators, selection, swipe actions. Medium.
+7. **Custom search field** vs `.searchable`. Low.
+8. **Touch tooltip on the pin** — iOS has no tooltip pattern; HIG would confirm with haptic + a label change. Low; user-requested.
+9. **Hamburger** — HIG discourages hidden navigation; the plugin's container size justifies an overflow, but the HIG glyph is `ellipsis.circle` ("More"), not three lines.

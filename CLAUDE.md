@@ -4,7 +4,7 @@ Native iOS AUv3 plugin wrapping all 500+ Airwindows effects. Swift/SwiftUI + C++
 
 ## Design Philosophy
 
-- **"Part of the OS"** — the UI should feel like a default Apple component. Deeply designed to appear barely designed.
+- **"Part of the OS"** — the UI should feel like a default Apple component. Deeply designed to appear barely designed. **Apple's Human Interface Guidelines dictate the design whenever possible**; where a request deviates from them, say so and name the native pattern before building (2026-09-30).
 - **Never touch the DSP** — the sound is Chris Johnson's domain. This project is a window into his work, not a fork.
 - **Open source, community-first** — MIT licensed, welcoming to contributors, transparent about AI-assisted development.
 
