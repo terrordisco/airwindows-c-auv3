@@ -69,6 +69,9 @@ public struct CompactWorkspaceView: View {
     public let onOpenAbout: (() -> Void)?
     public let isMonitoring: Bool
     public let onToggleMonitoring: (() -> Void)?
+    /// Scrollpad edge (left / right / off) and the menu row's cycle action.
+    public let scrollpad: ScrollpadPlacement
+    public let onCycleScrollpad: () -> Void
 
     @Environment(\.colorScheme) private var scheme
     @Environment(\.uiScale) private var uiScale
@@ -112,7 +115,9 @@ public struct CompactWorkspaceView: View {
         onOpenSettings: (() -> Void)? = nil,
         onOpenAbout: (() -> Void)? = nil,
         isMonitoring: Bool = false,
-        onToggleMonitoring: (() -> Void)? = nil
+        onToggleMonitoring: (() -> Void)? = nil,
+        scrollpad: ScrollpadPlacement = .left,
+        onCycleScrollpad: @escaping () -> Void = {}
     ) {
         self.effect = effect
         self.parameterCount = parameterCount
@@ -151,7 +156,14 @@ public struct CompactWorkspaceView: View {
         self.onOpenAbout = onOpenAbout
         self.isMonitoring = onToggleMonitoring == nil ? false : isMonitoring
         self.onToggleMonitoring = onToggleMonitoring
+        self.scrollpad = scrollpad
+        self.onCycleScrollpad = onCycleScrollpad
     }
+
+    /// Scrollpad strip width. Flush to the container edge, no outer inset —
+    /// the point is that a thumb resting on the edge lands on it.
+    private static let scrollpadWidth: CGFloat = 44
+    private static let scrollpadGap: CGFloat = 12
 
     // Fixed chrome metrics — the header row is chrome and doesn't scale.
     private static let chromeInset: CGFloat = 12
@@ -309,20 +321,9 @@ public struct CompactWorkspaceView: View {
         if parameterCount > 0 {
             ParameterScrollView {
                 VStack(alignment: .leading, spacing: 0) {
-                    ParameterGrid(
-                        parameterCount: parameterCount,
-                        parameterNames: parameterNames,
-                        parameterDisplays: parameterDisplays,
-                        parameterLabels: parameterLabels,
-                        parameterValues: $parameterValues,
-                        parameterStepCounts: parameterStepCounts,
-                        parameterDefaults: parameterDefaults,
-                        useRotaryPots: useRotaryPots,
-                        maxSliderColumns: sliderColumnCap
-                    )
-                    .hEdgePadding(16)
-                    .padding(.top, 14 * uiScale)
-                    .padding(.bottom, 20 * uiScale)
+                    parameterField
+                        .padding(.top, 14 * uiScale)
+                        .padding(.bottom, 20 * uiScale)
 
                     taglineBand
                     descriptionBlock
@@ -342,6 +343,38 @@ public struct CompactWorkspaceView: View {
                     }
                 }
                 .scrollIndicators(.automatic)
+            }
+        }
+    }
+
+    /// The parameter grid with the scrollpad strip on the chosen edge. The
+    /// strip is a background so it tracks the grid's height exactly (a
+    /// `maxHeight: .infinity` frame collapses inside a ScrollView), stopping
+    /// one hatch line short of the last row. The grid keeps the usual edge
+    /// inset on the strip-less side; on the strip side it clears the strip by
+    /// `scrollpadGap`, and the strip itself touches the edge.
+    private var parameterField: some View {
+        let stripWidth = Self.scrollpadWidth * uiScale
+        let gap = Self.scrollpadGap * uiScale
+        let edge = airwindowsEdgeInset(16, scale: uiScale)
+        return ParameterGrid(
+            parameterCount: parameterCount,
+            parameterNames: parameterNames,
+            parameterDisplays: parameterDisplays,
+            parameterLabels: parameterLabels,
+            parameterValues: $parameterValues,
+            parameterStepCounts: parameterStepCounts,
+            parameterDefaults: parameterDefaults,
+            useRotaryPots: useRotaryPots,
+            maxSliderColumns: sliderColumnCap
+        )
+        .padding(.leading, scrollpad == .left ? stripWidth + gap : edge)
+        .padding(.trailing, scrollpad == .right ? stripWidth + gap : edge)
+        .background(alignment: scrollpad == .right ? .topTrailing : .topLeading) {
+            if scrollpad != .off {
+                ScrollHatchGutter()
+                    .frame(width: stripWidth)
+                    .padding(.bottom, ScrollHatchGutter.lineStep)
             }
         }
     }
@@ -406,7 +439,9 @@ public struct CompactWorkspaceView: View {
             isMonitoring: isMonitoring,
             onToggleMonitoring: onToggleMonitoring,
             onOpenSettings: closing(onOpenSettings),
-            onOpenAbout: closing(onOpenAbout)
+            onOpenAbout: closing(onOpenAbout),
+            scrollpad: scrollpad,
+            onCycleScrollpad: onCycleScrollpad
         )
     }
 }

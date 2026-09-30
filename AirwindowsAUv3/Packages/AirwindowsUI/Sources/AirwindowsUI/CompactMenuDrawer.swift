@@ -62,6 +62,10 @@ public struct CompactMenuDrawer: View {
     public let onOpenSettings: (() -> Void)?
     public let onOpenAbout: (() -> Void)?
 
+    // Scrollpad edge
+    public let scrollpad: ScrollpadPlacement
+    public let onCycleScrollpad: () -> Void
+
     @Environment(\.colorScheme) private var scheme
     @State private var showClearSavedSettingsDialog = false
 
@@ -87,7 +91,9 @@ public struct CompactMenuDrawer: View {
         isMonitoring: Bool = false,
         onToggleMonitoring: (() -> Void)? = nil,
         onOpenSettings: (() -> Void)? = nil,
-        onOpenAbout: (() -> Void)? = nil
+        onOpenAbout: (() -> Void)? = nil,
+        scrollpad: ScrollpadPlacement = .left,
+        onCycleScrollpad: @escaping () -> Void = {}
     ) {
         self.effectName = effectName
         self.onClose = onClose
@@ -111,6 +117,8 @@ public struct CompactMenuDrawer: View {
         self.onToggleMonitoring = onToggleMonitoring
         self.onOpenSettings = onOpenSettings
         self.onOpenAbout = onOpenAbout
+        self.scrollpad = scrollpad
+        self.onCycleScrollpad = onCycleScrollpad
     }
 
     // Fixed chrome metrics (see file header for why these don't scale).
@@ -275,9 +283,15 @@ public struct CompactMenuDrawer: View {
 
         MenuRow(systemName: appearance == .day ? "sun.max" : "moon",
                 titleView: { Text("Night Mode") },
-                trailing: { AppearanceIndicator(current: appearance) },
+                trailing: { ChoiceIndicator(options: AirwindowsAppearance.allCases.map(\.label), current: appearance.label) },
                 accessibility: "Night mode, \(appearance.label). Tap to change.",
                 action: onCycleAppearance)
+
+        MenuRow(systemName: scrollpad == .right ? "inset.filled.righthalf.rectangle" : "inset.filled.lefthalf.rectangle",
+                titleView: { Text("Scrollpad") },
+                trailing: { ChoiceIndicator(options: ScrollpadPlacement.allCases.map(\.label), current: scrollpad.label) },
+                accessibility: "Scrollpad, \(scrollpad.label). Tap to change.",
+                action: onCycleScrollpad)
 
         if let onToggleMonitoring {
             MenuRow(systemName: isMonitoring ? "speaker.wave.2.fill" : "speaker.slash.fill",
@@ -376,18 +390,20 @@ private extension MenuRow where Title == Text, Trailing == EmptyView {
     }
 }
 
-/// The Auto / Night / Day indicator on the Night Mode row. The current
-/// choice is primary ink, the other two are dimmed; the separators stay dim.
-private struct AppearanceIndicator: View {
-    let current: AirwindowsAppearance
+/// "A / B / C" choice indicator (Night Mode's Auto / Night / Day, the
+/// Scrollpad's Left / Right / Off). The current choice is primary ink, the
+/// others are dimmed; the separators stay dim.
+private struct ChoiceIndicator: View {
+    let options: [String]
+    let current: String
 
     var body: some View {
         HStack(spacing: 0) {
-            ForEach(Array(AirwindowsAppearance.allCases.enumerated()), id: \.element) { i, option in
+            ForEach(Array(options.enumerated()), id: \.offset) { i, option in
                 if i > 0 {
                     Text(" / ").foregroundStyle(Color.secondary.opacity(0.6))
                 }
-                Text(option.label)
+                Text(option)
                     .foregroundStyle(option == current ? Color.primary : Color.secondary.opacity(0.6))
             }
         }

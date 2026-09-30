@@ -539,7 +539,7 @@ public struct EffectDetailView: View {
 /// landing here scrolls the workspace (unlike a touch on a fader). The lines
 /// match the UI's dividers (`Color(.separator)` at 0.4 opacity, hairline) and
 /// sit 5pt apart.
-private struct ScrollHatchGutter: View {
+struct ScrollHatchGutter: View {
     private static let lineSpacing: CGFloat = 5
     private static let lineThickness: CGFloat = 2
     /// Center-to-center distance between hatch lines; also the amount the

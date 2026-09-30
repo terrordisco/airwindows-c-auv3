@@ -137,9 +137,22 @@ struct AirwindowsAUView: View {
         switch controlStylePreference {
         case "pots": return true
         case "sliders": return false
-        default: return viewModel.parameterCount >= autoPotsThreshold
+        default:
+            // iPhone defaults to pots: a phone-width single column of sliders
+            // is long and thin, while pots tile the width. iPad keeps the
+            // count rule until the user flips the switch.
+            return Self.isPhone || viewModel.parameterCount >= autoPotsThreshold
         }
     }
+
+    private static var isPhone: Bool { UIDevice.current.userInterfaceIdiom == .phone }
+
+    /// Scrollpad edge in the compact layout (left / right / off). App-Group
+    /// shared like the other layout choices; cycled from the menu drawer.
+    @AppStorage(ScrollpadPlacement.storageKey, store: .airwindowsShared)
+    private var scrollpadRaw: String = ScrollpadPlacement.left.rawValue
+    private var scrollpad: ScrollpadPlacement { ScrollpadPlacement(rawValue: scrollpadRaw) ?? .left }
+    private func cycleScrollpad() { scrollpadRaw = scrollpad.next.rawValue }
 
     private func toggleControlStyle() {
         // Flip to the opposite of whatever's currently rendered. This works
@@ -355,7 +368,11 @@ struct AirwindowsAUView: View {
         guard !uiScaleAutoSet else { return }
         let shortSide = min(size.width, size.height)
         guard shortSide > 100 else { return }
-        uiScale = Double(UIScaleConfig.autoScale(forShortSide: shortSide))
+        // iPhone: a fixed 90% (the compact layout's design size) rather than
+        // the container ratio, which would clamp to the 65% floor.
+        uiScale = Self.isPhone
+            ? Double(UIScaleConfig.phoneDefault)
+            : Double(UIScaleConfig.autoScale(forShortSide: shortSide))
         uiScaleAutoSet = true
     }
 
@@ -508,7 +525,9 @@ struct AirwindowsAUView: View {
             onOpenSettings: { showPreferences = true },
             onOpenAbout: { showAbout = true },
             isMonitoring: isMonitoring,
-            onToggleMonitoring: onToggleMonitoring
+            onToggleMonitoring: onToggleMonitoring,
+            scrollpad: scrollpad,
+            onCycleScrollpad: { cycleScrollpad() }
         )
     }
 }

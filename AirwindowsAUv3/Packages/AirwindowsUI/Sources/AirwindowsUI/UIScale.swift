@@ -66,6 +66,11 @@ public enum UIScaleConfig {
         Swift.min(Swift.max(value, minimum), maximum)
     }
 
+    /// Fresh-install default on an iPhone. The container-based auto-match
+    /// below would clamp a 390pt phone to `minimum` (0.65), which is too
+    /// small to hit; the compact layout is designed around this value instead.
+    public static let phoneDefault: CGFloat = 0.9
+
     /// Auto-match default for a fresh install: map the container's short side
     /// to a proportional scale so a smaller iPad starts out showing the same
     /// density as the 13". Container-based (not `UIScreen`) because that's the
