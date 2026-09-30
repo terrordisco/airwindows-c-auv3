@@ -502,7 +502,7 @@ public struct CompactBrowserView: View {
             }
 
             if showCard, let highlighted, effects.contains(highlighted) {
-                previewCard(for: highlighted)
+                effectCard(for: highlighted, linksToDescription: true)
                     .transition(.move(edge: .bottom).combined(with: .opacity))
             }
         }
@@ -553,29 +553,42 @@ public struct CompactBrowserView: View {
         .accessibilityHint(isHighlighted && maxFit == 1 ? "Tap again to read about it" : "Shows a preview")
     }
 
-    // MARK: - Preview card (bottom of page 2)
+    // MARK: - Effect card
 
-    private func previewCard(for effect: EffectBrowseModel) -> some View {
-        VStack(alignment: .leading, spacing: 10) {
+    /// The effect card: name (with a › into the description when the
+    /// description isn't already on screen), ★ and pin, the tagline in New
+    /// York italic, the year / STEREO PROCESS chips, and SELECT. Sits at the
+    /// bottom of the effects column in the single-column layout and at the
+    /// bottom of the description column at every column count (Sveinbjörn,
+    /// 2026-09-30), so Select is always in the same place. Roomy on purpose.
+    private func effectCard(for effect: EffectBrowseModel, linksToDescription: Bool) -> some View {
+        VStack(alignment: .leading, spacing: 14) {
             HStack(spacing: 4) {
-                // Name doubles as the way into the full description page.
-                Button {
-                    withAnimation(Self.pageAnimation) { describing = effect }
-                } label: {
-                    HStack(spacing: 6) {
-                        Text(effect.name)
-                            .font(.system(size: 17 * uiScale, weight: .semibold))
-                            .lineLimit(1)
-                            .minimumScaleFactor(0.7)
-                        Image(systemName: "chevron.right")
-                            .font(.system(size: 11, weight: .semibold))
-                            .foregroundStyle(.secondary)
+                if linksToDescription {
+                    Button {
+                        withAnimation(Self.pageAnimation) { describing = effect }
+                    } label: {
+                        HStack(spacing: 6) {
+                            Text(effect.name)
+                                .font(.system(size: 19 * uiScale, weight: .semibold))
+                                .lineLimit(1)
+                                .minimumScaleFactor(0.7)
+                            Image(systemName: "chevron.right")
+                                .font(.system(size: 12, weight: .semibold))
+                                .foregroundStyle(.secondary)
+                        }
+                        .foregroundStyle(.primary)
+                        .contentShape(Rectangle())
                     }
-                    .foregroundStyle(.primary)
-                    .contentShape(Rectangle())
+                    .buttonStyle(.plain)
+                    .accessibilityLabel("Read about \(effect.name)")
+                } else {
+                    Text(effect.name.camelCaseSoftHyphenated)
+                        .font(.system(size: 19 * uiScale, weight: .semibold))
+                        .lineLimit(2)
+                        .minimumScaleFactor(0.7)
+                        .accessibilityLabel(effect.name)
                 }
-                .buttonStyle(.plain)
-                .accessibilityLabel("Read about \(effect.name)")
 
                 Spacer(minLength: 8)
 
@@ -583,9 +596,9 @@ public struct CompactBrowserView: View {
                     let isFav = favorites.isFavorite(effect.name)
                     Button { favorites.toggle(effect.name) } label: {
                         Image(systemName: isFav ? "star.fill" : "star")
-                            .font(.system(size: 17, weight: .medium))
+                            .font(.system(size: 18, weight: .medium))
                             .foregroundStyle(isFav ? Color.primary : Color.secondary)
-                            .frame(width: 36, height: 36)
+                            .frame(width: 44, height: 44)
                             .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
@@ -593,7 +606,7 @@ public struct CompactBrowserView: View {
                 }
 
                 if showDefaultEffectPin {
-                    DefaultEffectPinButton(effect: effect, size: 36, glyphSize: 17)
+                    DefaultEffectPinButton(effect: effect, size: 44, glyphSize: 18)
                 }
             }
 
@@ -601,7 +614,7 @@ public struct CompactBrowserView: View {
                 Text("\u{201C}\(effect.whatText)\u{201D}")
                     .font(.system(size: 17 * uiScale, weight: .regular, design: .serif).italic())
                     .foregroundStyle(.secondary)
-                    .lineLimit(3)
+                    .lineLimit(4)
                     .fixedSize(horizontal: false, vertical: true)
             }
 
@@ -622,10 +635,10 @@ public struct CompactBrowserView: View {
             }
         }
         .padding(.horizontal, Self.hInset)
-        .padding(.top, 14)
-        .padding(.bottom, 16)
+        .padding(.top, 18)
+        .padding(.bottom, 22)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(AirwindowsPalette.subtleSurface(scheme))
+        .background(AirwindowsPalette.subtleSurface(scheme).ignoresSafeArea(edges: .bottom))
         .overlay(alignment: .top) {
             Rectangle()
                 .fill(AirwindowsPalette.divider(scheme))
@@ -635,19 +648,16 @@ public struct CompactBrowserView: View {
 
     // MARK: - Page 3: description
 
-    /// - showBack: the "‹ <list>" button (1-column layout, where this page
-    ///   is pushed over the list).
-    /// - showClose: the drawer's close button (2/3-column layouts, where this
-    ///   is the rightmost column and the categories page's × may be off
-    ///   screen or absent).
+    /// The description column/page: navigation up top (back when pushed over
+    /// the list, close when this is the rightmost column), the awpdoc text
+    /// scrolling in the middle with the blog / video chips after it, and the
+    /// effect card pinned at the bottom.
     private func descriptionPage(for effect: EffectBrowseModel, showBack: Bool, showClose: Bool) -> some View {
         let description = descriptionProvider(effect)
         return VStack(spacing: 0) {
-            // Controls sit at the top RIGHT here (Sveinbjörn's call,
-            // 2026-09-28): the top-left of a standalone iPad window is where
-            // Stage Manager paints its window controls, and this page has
-            // nothing else to put up there. Select lives in a bar pinned to
-            // the bottom of the drawer instead.
+            // Controls sit at the top RIGHT (Sveinbjörn's call, 2026-09-28):
+            // the top-left of a standalone iPad window is where Stage Manager
+            // paints its window controls.
             HStack {
                 Spacer(minLength: 8)
                 if showBack {
@@ -662,7 +672,7 @@ public struct CompactBrowserView: View {
                                 .lineLimit(1)
                         }
                         .foregroundStyle(.primary)
-                        .frame(height: 40)
+                        .frame(height: 44)
                         .padding(.horizontal, 8)
                         .contentShape(Rectangle())
                     }
@@ -678,51 +688,9 @@ public struct CompactBrowserView: View {
             .padding(.bottom, 6)
 
             ScrollView {
-                VStack(alignment: .leading, spacing: 12) {
-                    HStack(alignment: .firstTextBaseline) {
-                        // Soft hyphens at the CamelCase joins so a long name
-                        // wraps "CrunchyGroove- / Wear", not mid-word.
-                        Text(effect.name.camelCaseSoftHyphenated)
-                            .font(.system(size: 26 * uiScale, weight: .semibold))
-                            .lineLimit(2)
-                            .minimumScaleFactor(0.7)
-                            .accessibilityLabel(effect.name)
-                        Spacer(minLength: 8)
-                        if let favorites {
-                            let isFav = favorites.isFavorite(effect.name)
-                            Button { favorites.toggle(effect.name) } label: {
-                                Image(systemName: isFav ? "star.fill" : "star")
-                                    .font(.system(size: 17, weight: .medium))
-                                    .foregroundStyle(isFav ? Color.primary : Color.secondary)
-                                    .frame(width: 36, height: 36)
-                                    .contentShape(Rectangle())
-                            }
-                            .buttonStyle(.plain)
-                            .accessibilityLabel(isFav ? "Remove \(effect.name) from favorites" : "Add \(effect.name) to favorites")
-                        }
-                        if showDefaultEffectPin {
-                            DefaultEffectPinButton(effect: effect, size: 36, glyphSize: 17)
-                        }
-                    }
-
-                    if !effect.whatText.isEmpty {
-                        Text("\u{201C}\(effect.whatText)\u{201D}")
-                            .font(.system(size: 20 * uiScale, weight: .regular, design: .serif).italic())
-                            .foregroundStyle(.secondary)
-                            .fixedSize(horizontal: false, vertical: true)
-                    }
-
-                    HStack(spacing: 8) {
-                        if !effect.isMono {
-                            Chip(text: "Stereo process", role: .inert, size: .small)
-                        }
-                        if !effect.firstCommitDate.isEmpty {
-                            Chip(text: effect.firstCommitDate, role: .inert, size: .small)
-                        }
-                    }
-
-                    Divider().opacity(0.4)
-
+                VStack(alignment: .leading, spacing: 14) {
+                    // The card below carries the tagline, so a heading that
+                    // repeats it is dropped here.
                     EffectDescriptionText(description.isEmpty ? effect.whatText : description, omittingHeadingMatching: effect.whatText)
 
                     if effect.postURL != nil || effect.videoURL != nil {
@@ -743,27 +711,7 @@ public struct CompactBrowserView: View {
             }
             .scrollIndicators(.visible)
 
-            // Pinned Select bar.
-            Divider().opacity(0.4)
-            Button {
-                select(effect)
-            } label: {
-                Text("Select")
-                    .font(.system(size: 16, weight: .semibold))
-                    .foregroundStyle(Color.white)
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 48)
-                    .background(
-                        RoundedRectangle(cornerRadius: 10)
-                            .fill(AirwindowsPalette.actionButton)
-                    )
-                    .contentShape(Rectangle())
-            }
-            .buttonStyle(.plain)
-            .padding(.horizontal, 12)
-            .padding(.vertical, 12)
-            .background(AirwindowsPalette.subtleSurface(scheme))
-            .accessibilityLabel("Select \(effect.name)")
+            effectCard(for: effect, linksToDescription: false)
         }
     }
 
