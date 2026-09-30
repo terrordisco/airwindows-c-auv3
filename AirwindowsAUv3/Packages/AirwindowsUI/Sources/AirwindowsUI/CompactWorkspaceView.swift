@@ -184,6 +184,8 @@ public struct CompactWorkspaceView: View {
 
     /// Scrollpad strip width. Flush to the container edge, no outer inset —
     /// the point is that a thumb resting on the edge lands on it.
+    /// Scroll anchor at the top of the parameter field (see ScrollViewReader).
+    private static let topAnchor = "workspace-top"
     private static let scrollpadWidth: CGFloat = 44
     private static let scrollpadGap: CGFloat = 12
 
@@ -358,8 +360,13 @@ public struct CompactWorkspaceView: View {
     @ViewBuilder
     private var body_parameters: some View {
         if parameterCount > 0 {
+            // ScrollViewReader so a change of effect (Random Effect at the
+            // bottom of the page, prev/next, a browser pick) starts the new
+            // effect at the top instead of wherever the last one was scrolled.
+            ScrollViewReader { proxy in
             ParameterScrollView {
                 VStack(alignment: .leading, spacing: 0) {
+                    Color.clear.frame(height: 0).id(Self.topAnchor)
                     parameterField
                         .padding(.top, 14 * uiScale)
                         .padding(.bottom, 20 * uiScale)
@@ -371,6 +378,10 @@ public struct CompactWorkspaceView: View {
                 }
             }
             .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { viewportHeight = $0 }
+            .onChange(of: effect.registryIndex) { _, _ in
+                proxy.scrollTo(Self.topAnchor, anchor: .top)
+            }
+            }
         } else {
             VStack(spacing: 0) {
                 Text("This effect has no parameters")
@@ -378,14 +389,20 @@ public struct CompactWorkspaceView: View {
                     .foregroundStyle(.secondary)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 28 * uiScale)
-                ScrollView {
-                    VStack(alignment: .leading, spacing: 0) {
-                        taglineBand
-                        descriptionBlock
-                        randomEffectFooter
+                ScrollViewReader { proxy in
+                    ScrollView {
+                        VStack(alignment: .leading, spacing: 0) {
+                            Color.clear.frame(height: 0).id(Self.topAnchor)
+                            taglineBand
+                            descriptionBlock
+                            randomEffectFooter
+                        }
+                    }
+                    .scrollIndicators(.automatic)
+                    .onChange(of: effect.registryIndex) { _, _ in
+                        proxy.scrollTo(Self.topAnchor, anchor: .top)
                     }
                 }
-                .scrollIndicators(.automatic)
             }
         }
     }
