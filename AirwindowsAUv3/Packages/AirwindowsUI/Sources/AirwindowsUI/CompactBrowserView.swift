@@ -621,16 +621,15 @@ public struct CompactBrowserView: View {
 
             HStack(spacing: 8) {
                 if !effect.isMono {
-                    Chip(text: "Stereo process", role: .inert)
+                    Chip(text: "Stereo process", role: .inert, size: .small)
                 }
                 if !effect.firstCommitDate.isEmpty {
-                    Chip(text: String(effect.firstCommitDate.prefix(4)), role: .inert)
+                    Chip(text: String(effect.firstCommitDate.prefix(4)), role: .inert, size: .small)
                 }
                 Spacer(minLength: 8)
                 Chip(
                     text: "Select",
                     role: .primary,
-                    size: .large,
                     accessibility: "Select \(effect.name)",
                     action: { select(effect) }
                 )
