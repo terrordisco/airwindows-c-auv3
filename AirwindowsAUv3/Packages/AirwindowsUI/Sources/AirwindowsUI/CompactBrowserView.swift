@@ -560,9 +560,10 @@ public struct CompactBrowserView: View {
     /// York italic, the year / STEREO PROCESS chips, and SELECT. Sits at the
     /// bottom of the effects column in the single-column layout and at the
     /// bottom of the description column at every column count (Sveinbjörn,
-    /// 2026-09-30), so Select is always in the same place. Roomy on purpose.
+    /// 2026-09-30), so Select is always in the same place. "Roomier" here
+    /// means larger type, chips and glyphs — not more padding.
     private func effectCard(for effect: EffectBrowseModel, linksToDescription: Bool) -> some View {
-        VStack(alignment: .leading, spacing: 14) {
+        VStack(alignment: .leading, spacing: 12) {
             HStack(spacing: 4) {
                 if linksToDescription {
                     Button {
@@ -570,11 +571,11 @@ public struct CompactBrowserView: View {
                     } label: {
                         HStack(spacing: 6) {
                             Text(effect.name)
-                                .font(.system(size: 19 * uiScale, weight: .semibold))
+                                .font(.system(size: 23 * uiScale, weight: .semibold))
                                 .lineLimit(1)
                                 .minimumScaleFactor(0.7)
                             Image(systemName: "chevron.right")
-                                .font(.system(size: 12, weight: .semibold))
+                                .font(.system(size: 14, weight: .semibold))
                                 .foregroundStyle(.secondary)
                         }
                         .foregroundStyle(.primary)
@@ -584,7 +585,7 @@ public struct CompactBrowserView: View {
                     .accessibilityLabel("Read about \(effect.name)")
                 } else {
                     Text(effect.name.camelCaseSoftHyphenated)
-                        .font(.system(size: 19 * uiScale, weight: .semibold))
+                        .font(.system(size: 23 * uiScale, weight: .semibold))
                         .lineLimit(2)
                         .minimumScaleFactor(0.7)
                         .accessibilityLabel(effect.name)
@@ -596,7 +597,7 @@ public struct CompactBrowserView: View {
                     let isFav = favorites.isFavorite(effect.name)
                     Button { favorites.toggle(effect.name) } label: {
                         Image(systemName: isFav ? "star.fill" : "star")
-                            .font(.system(size: 18, weight: .medium))
+                            .font(.system(size: 21, weight: .medium))
                             .foregroundStyle(isFav ? Color.primary : Color.secondary)
                             .frame(width: 44, height: 44)
                             .contentShape(Rectangle())
@@ -606,13 +607,13 @@ public struct CompactBrowserView: View {
                 }
 
                 if showDefaultEffectPin {
-                    DefaultEffectPinButton(effect: effect, size: 44, glyphSize: 18)
+                    DefaultEffectPinButton(effect: effect, size: 44, glyphSize: 21)
                 }
             }
 
             if !effect.whatText.isEmpty {
                 Text("\u{201C}\(effect.whatText)\u{201D}")
-                    .font(.system(size: 17 * uiScale, weight: .regular, design: .serif).italic())
+                    .font(.system(size: 19 * uiScale, weight: .regular, design: .serif).italic())
                     .foregroundStyle(.secondary)
                     .lineLimit(4)
                     .fixedSize(horizontal: false, vertical: true)
@@ -620,23 +621,24 @@ public struct CompactBrowserView: View {
 
             HStack(spacing: 8) {
                 if !effect.isMono {
-                    Chip(text: "Stereo process", role: .inert, size: .small)
+                    Chip(text: "Stereo process", role: .inert)
                 }
                 if !effect.firstCommitDate.isEmpty {
-                    Chip(text: String(effect.firstCommitDate.prefix(4)), role: .inert, size: .small)
+                    Chip(text: String(effect.firstCommitDate.prefix(4)), role: .inert)
                 }
                 Spacer(minLength: 8)
                 Chip(
                     text: "Select",
                     role: .primary,
+                    size: .large,
                     accessibility: "Select \(effect.name)",
                     action: { select(effect) }
                 )
             }
         }
         .padding(.horizontal, Self.hInset)
-        .padding(.top, 18)
-        .padding(.bottom, 22)
+        .padding(.top, 14)
+        .padding(.bottom, 16)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(AirwindowsPalette.subtleSurface(scheme).ignoresSafeArea(edges: .bottom))
         .overlay(alignment: .top) {
