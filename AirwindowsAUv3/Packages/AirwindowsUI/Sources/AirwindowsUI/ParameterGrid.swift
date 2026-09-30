@@ -29,6 +29,11 @@ public struct ParameterRow: View {
     /// The value a fresh instance of this effect assigns to this parameter.
     /// Double-tapping the fader or pot resets to it.
     public let defaultValue: Double
+    /// Locked: keeps its value through Randomize / Reset. Draws dimmed with a
+    /// padlock. Still adjustable by hand.
+    public let isLocked: Bool
+    /// Long-press handler (toggles the lock). nil = the setting is off.
+    public let onToggleLock: (() -> Void)?
     @Binding public var value: Double
 
     /// Global UI scale — multiplies this row's fonts, glyph circle, pot size,
@@ -43,7 +48,9 @@ public struct ParameterRow: View {
         value: Binding<Double>,
         useRotaryPots: Bool = false,
         stepCount: Int = 0,
-        defaultValue: Double = 0.5
+        defaultValue: Double = 0.5,
+        isLocked: Bool = false,
+        onToggleLock: (() -> Void)? = nil
     ) {
         self.index = index
         self.name = name
@@ -52,7 +59,34 @@ public struct ParameterRow: View {
         self.useRotaryPots = useRotaryPots
         self.stepCount = stepCount
         self.defaultValue = defaultValue
+        self.isLocked = isLocked
+        self.onToggleLock = onToggleLock
         self._value = value
+    }
+
+    /// Long press toggles the lock when the setting is on. Simultaneous with
+    /// the control's own drag: a still finger for 0.6s locks, a moving one
+    /// adjusts. Locked rows dim to read as "held".
+    @ViewBuilder
+    private func lockable<V: View>(_ control: V) -> some View {
+        control
+            .opacity(isLocked ? 0.45 : 1)
+            .simultaneousGesture(
+                LongPressGesture(minimumDuration: 0.6)
+                    .onEnded { _ in onToggleLock?() },
+                including: onToggleLock == nil ? .none : .all
+            )
+    }
+
+    /// Small padlock beside the value when locked.
+    @ViewBuilder
+    private var lockGlyph: some View {
+        if isLocked {
+            Image(systemName: "lock.fill")
+                .font(.system(size: 11 * uiScale, weight: .semibold))
+                .foregroundStyle(.secondary)
+                .accessibilityLabel("Locked")
+        }
     }
 
     public var body: some View {
@@ -110,20 +144,25 @@ public struct ParameterRow: View {
             // scrolling the workspace, so the drag adjusts the value instead.
             // Size carries the global UI scale; RotaryPot derives its text
             // sizes from `size`, so caption + readout scale with it.
-            RotaryPot(
-                value: $value,
-                label: "",
-                size: 56 * uiScale,
-                defaultValue: defaultValue,
-                stepCount: stepCount
+            lockable(
+                RotaryPot(
+                    value: $value,
+                    label: "",
+                    size: 56 * uiScale,
+                    defaultValue: defaultValue,
+                    stepCount: stepCount
+                )
+                .scrollDragControl()
             )
-            .scrollDragControl()
 
-            Text(formattedValue)
-                .font(.system(size: 13 * uiScale).monospacedDigit())
-                .foregroundStyle(.secondary)
-                .lineLimit(1)
-                .multilineTextAlignment(.center)
+            HStack(spacing: 4 * uiScale) {
+                lockGlyph
+                Text(formattedValue)
+                    .font(.system(size: 13 * uiScale).monospacedDigit())
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+                    .multilineTextAlignment(.center)
+            }
         }
     }
 
@@ -143,9 +182,11 @@ public struct ParameterRow: View {
                     .font(.system(size: 17 * uiScale, weight: .medium))
                     .foregroundStyle(.primary)
                     .lineLimit(1)
+                    .opacity(isLocked ? 0.45 : 1)
 
                 Spacer(minLength: 8 * uiScale)
 
+                lockGlyph
                 Text(formattedValue)
                     .font(.system(size: 15 * uiScale).monospacedDigit())
                     .foregroundStyle(.secondary)
@@ -156,8 +197,10 @@ public struct ParameterRow: View {
             // Double-tap resets to the effect's default for this parameter.
             // `.scrollDragControl()` keeps a touch that lands on the fader from
             // scrolling the workspace, so the drag adjusts the value instead.
-            LinearFader(value: $value, defaultValue: defaultValue, stepCount: stepCount)
-                .scrollDragControl()
+            lockable(
+                LinearFader(value: $value, defaultValue: defaultValue, stepCount: stepCount)
+                    .scrollDragControl()
+            )
         }
     }
 
@@ -198,6 +241,10 @@ public struct ParameterGrid: View {
     /// parameter count. nil = the count-based rule below. Pots ignore this:
     /// their adaptive grid already reflows with the available width.
     public let maxSliderColumns: Int?
+    /// Locked parameter indices (dimmed, padlocked) and the long-press
+    /// toggle. nil `onToggleLock` = the long-press-to-lock setting is off.
+    public let lockedIndices: Set<Int>
+    public let onToggleLock: ((Int) -> Void)?
     @Binding public var parameterValues: [Double]
 
     /// Global UI scale — multiplies column widths, column spacing, and row
@@ -215,7 +262,9 @@ public struct ParameterGrid: View {
         parameterStepCounts: [Int] = [],
         parameterDefaults: [Double] = [],
         useRotaryPots: Bool = false,
-        maxSliderColumns: Int? = nil
+        maxSliderColumns: Int? = nil,
+        lockedIndices: Set<Int> = [],
+        onToggleLock: ((Int) -> Void)? = nil
     ) {
         self.parameterCount = parameterCount
         self.parameterNames = parameterNames
@@ -225,6 +274,8 @@ public struct ParameterGrid: View {
         self.parameterDefaults = parameterDefaults
         self.useRotaryPots = useRotaryPots
         self.maxSliderColumns = maxSliderColumns
+        self.lockedIndices = lockedIndices
+        self.onToggleLock = onToggleLock
         self._parameterValues = parameterValues
     }
 
@@ -264,7 +315,9 @@ public struct ParameterGrid: View {
                 ),
                 useRotaryPots: useRotaryPots,
                 stepCount: safeStepCount(at: i),
-                defaultValue: safeDefault(at: i)
+                defaultValue: safeDefault(at: i),
+                isLocked: lockedIndices.contains(i),
+                onToggleLock: onToggleLock.map { toggle in { toggle(i) } }
             )
         }
     }

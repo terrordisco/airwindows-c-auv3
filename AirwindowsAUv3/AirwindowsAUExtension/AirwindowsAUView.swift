@@ -54,6 +54,12 @@ struct AirwindowsAUView: View {
     /// Drives the Save/Recall settings chip in the workspace bottom bar.
     @State private var savedSettings = SavedSettingsStore()
 
+    /// Per-effect parameter locks (App Group backed). Locked parameters keep
+    /// their value through Randomize / Reset; toggled by long press when the
+    /// "Long Press to Lock" setting is on.
+    @State private var parameterLocks = ParameterLockStore()
+    @AppStorage("airwindows.longPressLock", store: .airwindowsShared) private var longPressLock: Bool = false
+
     @State private var showBrowser: Bool = false
     /// True when the browser was force-opened at launch because nothing was
     /// selected yet. If a host then restores an effect late (Cubasis restores
@@ -397,8 +403,8 @@ struct AirwindowsAUView: View {
             onPrevious: { viewModel.selectPreviousEffect() },
             onNext: { viewModel.selectNextEffect() },
             onOpenBrowser: { openBrowser() },
-            onReset: { viewModel.resetParameters() },
-            onRandomize: { viewModel.randomizeParameters() },
+            onReset: { viewModel.resetParameters(excluding: parameterLocks.locked(for: effect.name)) },
+            onRandomize: { viewModel.randomizeParameters(excluding: parameterLocks.locked(for: effect.name)) },
             isLimiterOn: limiterEnabled,
             onToggleLimiter: { limiterEnabled.toggle() },
             onUndo: { viewModel.undo() },
@@ -409,6 +415,10 @@ struct AirwindowsAUView: View {
             onCycleAppearance: { cycleAppearance() },
             useRotaryPots: effectiveUseRotaryPots,
             onToggleControlStyle: personalisationEnabled ? { toggleControlStyle() } : nil,
+            lockedParameters: parameterLocks.locked(for: effect.name),
+            onToggleParameterLock: { index in parameterLocks.toggle(effect.name, index: index) },
+            isLongPressLockOn: longPressLock,
+            onToggleLongPressLock: { longPressLock.toggle() },
             hasSavedSettings: personalisationEnabled && savedSettings.hasSaved(effect.name),
             onSaveSettings: personalisationEnabled ? {
                 savedSettings.save(viewModel.currentParameterSnapshot, for: effect.name)

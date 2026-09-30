@@ -419,13 +419,15 @@ final class AirwindowsAudioUnitViewModel {
     /// valid case center so they always land on a real setting rather than
     /// between two. In/Out levels are deliberately left alone — randomizing gain
     /// is rarely useful and risks a sudden volume jump.
-    func randomizeParameters() {
+    /// - Parameter locked: parameter indices to leave untouched (the user's
+    ///   parameter locks).
+    func randomizeParameters(excluding locked: Set<Int> = []) {
         guard audioUnit != nil else { return }
         // One undo step for the whole randomize, not one per parameter.
         recordChange(.randomize)
         suppressUndoRecording = true
         defer { suppressUndoRecording = false }
-        for i in 0..<parameterCount {
+        for i in 0..<parameterCount where !locked.contains(i) {
             let stepCount = i < parameterStepCounts.count ? parameterStepCounts[i] : 0
             let value: Double
             if stepCount >= 2 {
@@ -463,14 +465,21 @@ final class AirwindowsAudioUnitViewModel {
 
     /// Reset all of the current effect's parameters to the values the registry
     /// generator provides on a fresh instance.
-    func resetParameters() {
+    /// - Parameter locked: parameter indices whose current values survive
+    ///   the reset (the user's parameter locks).
+    func resetParameters(excluding locked: Set<Int> = []) {
         guard let au = audioUnit else { return }
         // Snapshot the pre-reset values so the reset is undoable.
         recordChange(.reset)
+        let kept = locked.filter { $0 < parameterValues.count }.map { ($0, parameterValues[$0]) }
         // Re-selecting the current effect re-loads its default parameter values
         // via the registry generator, which is the simplest correct path.
         au.selectEffect(at: effectIndex)
         refreshEffectInfo()
+        // Put the locked values back, inside the same undo step.
+        suppressUndoRecording = true
+        defer { suppressUndoRecording = false }
+        for (i, v) in kept { setParameterValue(v, at: i) }
     }
 
     // MARK: - Undo / Redo engine

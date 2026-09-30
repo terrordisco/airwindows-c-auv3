@@ -63,6 +63,12 @@ public struct CompactWorkspaceView: View {
     public let onCycleAppearance: () -> Void
     public let useRotaryPots: Bool
     public let onToggleControlStyle: (() -> Void)?
+    /// Parameter locks: which indices are locked, the long-press toggle, and
+    /// the menu switch that enables the gesture.
+    public let lockedParameters: Set<Int>
+    public let onToggleParameterLock: ((Int) -> Void)?
+    public let isLongPressLockOn: Bool
+    public let onToggleLongPressLock: (() -> Void)?
     public let hasSavedSettings: Bool
     public let onSaveSettings: (() -> Void)?
     public let onRecallSettings: (() -> Void)?
@@ -126,6 +132,10 @@ public struct CompactWorkspaceView: View {
         onCycleAppearance: @escaping () -> Void = {},
         useRotaryPots: Bool = false,
         onToggleControlStyle: (() -> Void)? = nil,
+        lockedParameters: Set<Int> = [],
+        onToggleParameterLock: ((Int) -> Void)? = nil,
+        isLongPressLockOn: Bool = false,
+        onToggleLongPressLock: (() -> Void)? = nil,
         hasSavedSettings: Bool = false,
         onSaveSettings: (() -> Void)? = nil,
         onRecallSettings: (() -> Void)? = nil,
@@ -172,6 +182,10 @@ public struct CompactWorkspaceView: View {
         self.onCycleAppearance = onCycleAppearance
         self.useRotaryPots = useRotaryPots
         self.onToggleControlStyle = onToggleControlStyle
+        self.lockedParameters = lockedParameters
+        self.onToggleParameterLock = onToggleParameterLock
+        self.isLongPressLockOn = isLongPressLockOn
+        self.onToggleLongPressLock = onToggleLongPressLock
         self.hasSavedSettings = hasSavedSettings
         self.onSaveSettings = onSaveSettings
         self.onRecallSettings = onRecallSettings
@@ -441,7 +455,9 @@ public struct CompactWorkspaceView: View {
             parameterStepCounts: parameterStepCounts,
             parameterDefaults: parameterDefaults,
             useRotaryPots: useRotaryPots,
-            maxSliderColumns: sliderColumnCap
+            maxSliderColumns: sliderColumnCap,
+            lockedIndices: lockedParameters,
+            onToggleLock: isLongPressLockOn ? onToggleParameterLock : nil
         )
         .padding(.leading, strip && scrollpad == .left ? stripWidth + gap : edge)
         .padding(.trailing, strip && scrollpad == .right ? stripWidth + gap : edge)
@@ -534,6 +550,8 @@ public struct CompactWorkspaceView: View {
             onClearSavedSettings: onClearSavedSettings,
             useRotaryPots: useRotaryPots,
             onToggleControlStyle: onToggleControlStyle,
+            isLongPressLockOn: isLongPressLockOn,
+            onToggleLongPressLock: onToggleLongPressLock,
             appearance: appearance,
             onCycleAppearance: onCycleAppearance,
             isMonitoring: isMonitoring,
