@@ -348,7 +348,7 @@ public struct CompactWorkspaceView: View {
             // Only stereo-process effects get a chip; the rest are per-channel
             // and calling them "mono" was wrong (see ChannelMark).
             if !effect.isMono {
-                Chip(text: "Stereo process", role: .inert, size: .small)
+                Chip(text: "Stereo process", size: .small)
             }
             Spacer(minLength: 8)
             LevelPot(label: "Out", value: $outputLevel, display: outputDisplay, trailing: true)
@@ -483,10 +483,10 @@ public struct CompactWorkspaceView: View {
             hairline
             HStack {
                 Spacer(minLength: 0)
-                Chip(
+                ActionButton(
                     systemName: "dice",
-                    text: "Random effect",
-                    role: .action,
+                    text: "Random Effect",
+                    role: .outlined,
                     accessibility: "Pick a random effect",
                     action: onRandomEffect
                 )

@@ -642,15 +642,14 @@ public struct CompactBrowserView: View {
 
             HStack(spacing: 8) {
                 if !effect.isMono {
-                    Chip(text: "Stereo process", role: .inert, size: .small)
+                    Chip(text: "Stereo process", size: .small)
                 }
                 if !effect.firstCommitDate.isEmpty {
-                    Chip(text: String(effect.firstCommitDate.prefix(4)), role: .inert, size: .small)
+                    Chip(text: String(effect.firstCommitDate.prefix(4)), size: .small)
                 }
                 Spacer(minLength: 8)
-                Chip(
+                ActionButton(
                     text: "Select",
-                    role: .primary,
                     accessibility: "Select \(effect.name)",
                     action: { select(effect) }
                 )
@@ -718,10 +717,10 @@ public struct CompactBrowserView: View {
                     if effect.postURL != nil || effect.videoURL != nil {
                         HStack(spacing: 8) {
                             if let post = effect.postURL {
-                                LinkChip(url: post, systemName: "safari", text: "blog post", accessibility: "Read blog post on airwindows.com")
+                                LinkChip(url: post, systemName: "safari", text: "Blog Post", accessibility: "Read blog post on airwindows.com")
                             }
                             if let video = effect.videoURL {
-                                LinkChip(url: video, systemName: "play.rectangle", text: "youtube video", accessibility: "Watch video on YouTube")
+                                LinkChip(url: video, systemName: "play.rectangle", text: "YouTube Video", accessibility: "Watch video on YouTube")
                             }
                         }
                         .padding(.top, 4)

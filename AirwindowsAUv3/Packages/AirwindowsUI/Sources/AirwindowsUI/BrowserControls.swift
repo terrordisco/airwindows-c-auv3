@@ -59,7 +59,7 @@ struct CollectionTabStrip: View {
         FitToWidth {
             HStack(spacing: 6 * uiScale) {
                 ForEach(items) { item in
-                    Chip(
+                    ActionButton(
                         text: item.rawValue,
                         role: .toggle(isOn: selection == item),
                         accessibility: item.rawValue,
@@ -162,10 +162,10 @@ struct LinkChip: View {
     }
 
     var body: some View {
-        Chip(
+        ActionButton(
             systemName: systemName,
             text: text,
-            role: .action,
+            role: .outlined,
             accessibility: accessibility,
             action: { openURL(url) }
         )
