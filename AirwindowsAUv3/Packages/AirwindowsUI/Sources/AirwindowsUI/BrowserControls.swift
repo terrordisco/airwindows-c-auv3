@@ -196,3 +196,26 @@ struct ScrollHatchGutter: View {
         .accessibilityHidden(true)
     }
 }
+
+// MARK: - Horizontal swipe
+
+enum HorizontalSwipe { case left, right }
+
+extension View {
+    /// Reports a decisive horizontal swipe — mostly sideways, at least 60pt —
+    /// without stealing vertical scrolling from lists underneath (a vertical
+    /// ScrollView claims vertical drags; this only fires when the drag is
+    /// clearly horizontal). Used for "swipe back" and "swipe to close" on the
+    /// drawers, mirroring the system's edge-swipe navigation.
+    func onHorizontalSwipe(_ handler: @escaping (HorizontalSwipe) -> Void) -> some View {
+        simultaneousGesture(
+            DragGesture(minimumDistance: 24, coordinateSpace: .local)
+                .onEnded { value in
+                    let dx = value.translation.width
+                    let dy = value.translation.height
+                    guard abs(dx) >= 60, abs(dx) > abs(dy) * 1.5 else { return }
+                    handler(dx > 0 ? .right : .left)
+                }
+        )
+    }
+}

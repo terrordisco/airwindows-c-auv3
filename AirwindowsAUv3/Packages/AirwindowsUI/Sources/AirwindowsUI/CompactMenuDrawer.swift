@@ -179,6 +179,10 @@ public struct CompactMenuDrawer: View {
                 .frame(width: 1)
                 .ignoresSafeArea()
         }
+        // Swipe the drawer off toward its edge to close it.
+        .onHorizontalSwipe { swipe in
+            if swipe == .right { onClose() }
+        }
         .alert("Forget the saved settings for \(effectName)?", isPresented: $showClearSavedSettingsDialog) {
             Button("Forget", role: .destructive) {
                 onClearSavedSettings?()

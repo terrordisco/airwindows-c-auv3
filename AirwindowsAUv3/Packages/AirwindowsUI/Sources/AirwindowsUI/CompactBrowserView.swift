@@ -199,6 +199,14 @@ public struct CompactBrowserView: View {
         }
         .frame(width: drawerWidth, alignment: .leading)
         .clipped()
+        // Swipe right = back one level (like the system back swipe); swipe
+        // left = push the drawer off toward its edge, i.e. close.
+        .onHorizontalSwipe { swipe in
+            switch swipe {
+            case .right: goBack()
+            case .left: onClose()
+            }
+        }
         // Background and edge hairline run through the safe area (one sheet
         // top to bottom); page content stays inside it.
         .background(AirwindowsPalette.surface(scheme).ignoresSafeArea())
@@ -333,6 +341,19 @@ public struct CompactBrowserView: View {
     }
 
     private static let pageAnimation: Animation = .spring(duration: 0.28, bounce: 0)
+
+    /// One level up the drill-down, for the swipe-back gesture: description →
+    /// list (single-column layout), list → categories when the categories
+    /// column isn't already showing. At the top there is nowhere to go.
+    private func goBack() {
+        withAnimation(Self.pageAnimation) {
+            if maxFit == 1, describing != nil {
+                describing = nil
+            } else if !categoriesVisible {
+                showCategories = true
+            }
+        }
+    }
 
     private func open(_ category: String) {
         withAnimation(Self.pageAnimation) {
