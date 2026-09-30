@@ -560,10 +560,10 @@ public struct CompactBrowserView: View {
     /// York italic, the year / STEREO PROCESS chips, and SELECT. Sits at the
     /// bottom of the effects column in the single-column layout and at the
     /// bottom of the description column at every column count (Sveinbjörn,
-    /// 2026-09-30), so Select is always in the same place. "Roomier" here
-    /// means larger type, chips and glyphs — not more padding.
+    /// 2026-09-30), so Select is always in the same place. "Roomier" = larger
+    /// type, chips and glyphs first, with padding scaled up in proportion.
     private func effectCard(for effect: EffectBrowseModel, linksToDescription: Bool) -> some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: 15) {
             HStack(spacing: 4) {
                 if linksToDescription {
                     Button {
@@ -637,8 +637,8 @@ public struct CompactBrowserView: View {
             }
         }
         .padding(.horizontal, Self.hInset)
-        .padding(.top, 14)
-        .padding(.bottom, 16)
+        .padding(.top, 18)
+        .padding(.bottom, 20)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(AirwindowsPalette.subtleSurface(scheme).ignoresSafeArea(edges: .bottom))
         .overlay(alignment: .top) {
