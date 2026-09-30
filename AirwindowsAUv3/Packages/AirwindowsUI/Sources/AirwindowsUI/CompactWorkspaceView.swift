@@ -72,6 +72,9 @@ public struct CompactWorkspaceView: View {
     /// Scrollpad edge (left / right / off) and the menu row's cycle action.
     public let scrollpad: ScrollpadPlacement
     public let onCycleScrollpad: () -> Void
+    /// Settings rows in the menu drawer (see CompactMenuDrawer). nil hides them.
+    public let uiScaleBinding: Binding<Double>?
+    public let compactEverywhereBinding: Binding<Bool>?
 
     @Environment(\.colorScheme) private var scheme
     @Environment(\.uiScale) private var uiScale
@@ -117,7 +120,9 @@ public struct CompactWorkspaceView: View {
         isMonitoring: Bool = false,
         onToggleMonitoring: (() -> Void)? = nil,
         scrollpad: ScrollpadPlacement = .left,
-        onCycleScrollpad: @escaping () -> Void = {}
+        onCycleScrollpad: @escaping () -> Void = {},
+        uiScaleBinding: Binding<Double>? = nil,
+        compactEverywhereBinding: Binding<Bool>? = nil
     ) {
         self.effect = effect
         self.parameterCount = parameterCount
@@ -158,6 +163,8 @@ public struct CompactWorkspaceView: View {
         self.onToggleMonitoring = onToggleMonitoring
         self.scrollpad = scrollpad
         self.onCycleScrollpad = onCycleScrollpad
+        self.uiScaleBinding = uiScaleBinding
+        self.compactEverywhereBinding = compactEverywhereBinding
     }
 
     /// Scrollpad strip width. Flush to the container edge, no outer inset —
@@ -441,7 +448,9 @@ public struct CompactWorkspaceView: View {
             onOpenSettings: closing(onOpenSettings),
             onOpenAbout: closing(onOpenAbout),
             scrollpad: scrollpad,
-            onCycleScrollpad: onCycleScrollpad
+            onCycleScrollpad: onCycleScrollpad,
+            uiScale: uiScaleBinding,
+            compactEverywhere: compactEverywhereBinding
         )
     }
 }

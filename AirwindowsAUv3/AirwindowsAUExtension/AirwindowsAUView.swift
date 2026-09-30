@@ -527,7 +527,9 @@ struct AirwindowsAUView: View {
             isMonitoring: isMonitoring,
             onToggleMonitoring: onToggleMonitoring,
             scrollpad: scrollpad,
-            onCycleScrollpad: { cycleScrollpad() }
+            onCycleScrollpad: { cycleScrollpad() },
+            uiScaleBinding: $uiScale,
+            compactEverywhereBinding: $compactEverywhere
         )
     }
 }

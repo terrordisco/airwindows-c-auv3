@@ -66,6 +66,15 @@ public struct CompactMenuDrawer: View {
     public let scrollpad: ScrollpadPlacement
     public let onCycleScrollpad: () -> Void
 
+    // Settings that moved in from the Preferences sheet (Sveinbjörn,
+    // 2026-09-30): the global interface scale and the compact-everywhere
+    // switch. Personalisation and the window-size readout stay in the sheet
+    // behind "Airwindows Settings…". Both are bindings straight onto the
+    // shared @AppStorage keys, so dragging the slider rescales the live
+    // workspace behind the drawer. nil hides the row (previews).
+    public let uiScale: Binding<Double>?
+    public let compactEverywhere: Binding<Bool>?
+
     @Environment(\.colorScheme) private var scheme
     @State private var showClearSavedSettingsDialog = false
 
@@ -93,7 +102,9 @@ public struct CompactMenuDrawer: View {
         onOpenSettings: (() -> Void)? = nil,
         onOpenAbout: (() -> Void)? = nil,
         scrollpad: ScrollpadPlacement = .left,
-        onCycleScrollpad: @escaping () -> Void = {}
+        onCycleScrollpad: @escaping () -> Void = {},
+        uiScale: Binding<Double>? = nil,
+        compactEverywhere: Binding<Bool>? = nil
     ) {
         self.effectName = effectName
         self.onClose = onClose
@@ -119,6 +130,8 @@ public struct CompactMenuDrawer: View {
         self.onOpenAbout = onOpenAbout
         self.scrollpad = scrollpad
         self.onCycleScrollpad = onCycleScrollpad
+        self.uiScale = uiScale
+        self.compactEverywhere = compactEverywhere
     }
 
     // Fixed chrome metrics (see file header for why these don't scale).
@@ -293,6 +306,20 @@ public struct CompactMenuDrawer: View {
                 accessibility: "Scrollpad, \(scrollpad.label). Tap to change.",
                 action: onCycleScrollpad)
 
+        if let uiScale {
+            ScaleRow(scale: uiScale)
+        }
+
+        if let compactEverywhere {
+            MenuRow(systemName: "rectangle.compress.vertical",
+                    titleView: { Text("Compact at every size") },
+                    trailing: { StyleSwitchGlyph(isOn: compactEverywhere.wrappedValue) },
+                    accessibility: compactEverywhere.wrappedValue
+                        ? "Compact layout at every size, on. Tap to follow the window size instead."
+                        : "Compact layout at every size, off. Tap to turn on.",
+                    action: { compactEverywhere.wrappedValue.toggle() })
+        }
+
         if let onToggleMonitoring {
             MenuRow(systemName: isMonitoring ? "speaker.wave.2.fill" : "speaker.slash.fill",
                     titleView: { Text("Input monitoring") },
@@ -387,6 +414,43 @@ private extension MenuRow where Title == Text, Trailing == EmptyView {
             accessibility: title,
             action: action
         )
+    }
+}
+
+/// Interface-scale row: icon, label, live percentage, and the slider on its
+/// own line beneath so it has the full drawer width to travel. Bounds and
+/// the 100% reference come from UIScaleConfig, same as the Preferences sheet.
+private struct ScaleRow: View {
+    @Binding var scale: Double
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            HStack(spacing: CompactMenuDrawer.iconGap) {
+                Image(systemName: "textformat.size")
+                    .font(.system(size: 16, weight: .regular))
+                    .foregroundStyle(.secondary)
+                    .frame(width: CompactMenuDrawer.iconColumn)
+                Text("Interface scale")
+                    .font(.system(size: 15))
+                    .foregroundStyle(.primary)
+                Spacer(minLength: 8)
+                Text("\(Int((scale * 100).rounded()))%")
+                    .font(.system(size: 12).monospacedDigit())
+                    .foregroundStyle(.secondary)
+            }
+            Slider(
+                value: $scale,
+                in: Double(UIScaleConfig.minimum)...Double(UIScaleConfig.maximum),
+                step: 0.01
+            )
+            .tint(Color.primary)
+            .padding(.leading, CompactMenuDrawer.iconColumn + CompactMenuDrawer.iconGap)
+            .accessibilityLabel("Interface scale")
+            .accessibilityValue("\(Int((scale * 100).rounded())) percent")
+        }
+        .padding(.horizontal, CompactMenuDrawer.hInset)
+        .padding(.top, 10)
+        .padding(.bottom, 6)
     }
 }
 
