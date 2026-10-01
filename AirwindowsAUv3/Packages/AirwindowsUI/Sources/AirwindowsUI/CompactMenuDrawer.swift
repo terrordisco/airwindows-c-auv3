@@ -61,7 +61,8 @@ public struct CompactMenuDrawer: View {
     public let useRotaryPots: Bool
     public let onToggleControlStyle: (() -> Void)?
     /// "Long Press to Lock" — enables the long-press gesture that locks a
-    /// parameter against Randomize / Reset. nil hides the row.
+    /// parameter against Randomize / Reset. Shown indented under Randomize
+    /// Settings, next to the Limiter. nil hides the row.
     public let isLongPressLockOn: Bool
     public let onToggleLongPressLock: (() -> Void)?
     public let appearance: AirwindowsAppearance
@@ -294,6 +295,18 @@ public struct CompactMenuDrawer: View {
                         accessibility: isLimiterOn ? "Limiter on. Tap to turn off." : "Limiter off. Tap to turn on.",
                         action: onToggleLimiter)
             }
+            // Parameter locks are what you set up so Randomize leaves some
+            // controls alone, so the switch lives under Randomize too.
+            if let onToggleLongPressLock {
+                MenuRow(systemName: "lock",
+                        titleView: { Text("Long Press to Lock") },
+                        trailing: { StyleSwitchGlyph(isOn: isLongPressLockOn) },
+                        indented: true,
+                        accessibility: isLongPressLockOn
+                            ? "Long press to lock a parameter, on. Tap to turn off."
+                            : "Long press to lock a parameter, off. Tap to turn on.",
+                        action: onToggleLongPressLock)
+            }
         }
         MenuRow(systemName: "arrow.counterclockwise", title: "Reset Settings", action: onReset)
 
@@ -331,16 +344,6 @@ public struct CompactMenuDrawer: View {
                     trailing: { StyleSwitchGlyph(isOn: !useRotaryPots) },
                     accessibility: useRotaryPots ? "Switch parameter controls to sliders" : "Switch parameter controls to pots",
                     action: onToggleControlStyle)
-        }
-
-        if let onToggleLongPressLock {
-            MenuRow(systemName: "lock",
-                    titleView: { Text("Long Press to Lock") },
-                    trailing: { StyleSwitchGlyph(isOn: isLongPressLockOn) },
-                    accessibility: isLongPressLockOn
-                        ? "Long press to lock a parameter, on. Tap to turn off."
-                        : "Long press to lock a parameter, off. Tap to turn on.",
-                    action: onToggleLongPressLock)
         }
 
         MenuRow(systemName: appearance == .day ? "sun.max" : "moon",
