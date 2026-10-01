@@ -1174,3 +1174,14 @@ Sveinbjörn's call after reviewing compact-everywhere on the 13": the "Compact a
 - **Review contact** created via API (name/email/phone + reviewer notes, no demo account). Subtitle changed 350+ → 500+ (Sveinbjörn's call).
 - `reviewSubmission f264ee92-…` → `WAITING_FOR_REVIEW`. Release type AFTER_APPROVAL. iPhone device family included (first iPhone release). Limiter and tempo sync default off; "Compact" layout is the only layout.
 - `scripts/asc.py` is the reusable ASC API client (ES256 JWT via openssl, no deps).
+
+## Release automation — scripts in place (2026-10-01)
+
+Goal (Sveinbjörn): weekly, 100% unattended. Schedule from the data: Chris commits Sat evening ET (26/40 commits), Paul's airwin2rack mirror — our upstream — follows within hours (mostly Sun), Chris's blog post + YouTube video land together Sun 12:40–17:51 ET (29/30 posts). **Run Mondays 06:00 UTC.**
+
+- `scripts/sync_upstream.py` — pull/clone airwin2rack + `updateToLatest.sh`, mirror autogen/ModuleAdd/awpdoc (upstream wins, scraped only fills gaps, skips upstream's stray `.txt`), run the three scrapers, family-rule categories for Unclassified arrivals (siblings by trailing digit, Console* → Consoles) with the rest listed under "⚠️ Unclassified — Sveinbjörn, your call", Markdown report + suggested What's New, `--bump` = MARKETING_VERSION 1.0.x+1 & CURRENT_PROJECT_VERSION+1. Exit 10 = nothing changed. Dry-run verified: 524 → 524, clean tree, Weave flagged.
+- `scripts/release.py` — xcodebuild archive/export with `-authenticationKey…` (API-key provisioning), altool validate+upload, wait for VALID, TestFlight external group + What to Test, App Store: reuse an editable version or create 1.0.x, set What's New, attach, review submission. If a version is in flight (e.g. 1.0 WAITING_FOR_REVIEW now) it leaves the store alone and says so. `--dry-run` verified against live ASC.
+- `scripts/asc.py` — ES256 JWT via openssl; `@file` bodies.
+- **CI signing without the Mac:** Apple Distribution certificate `79TGG933S4` created headlessly via the certificates API from an openssl CSR (expires 2027-10-01); key/cert/p12 in `~/.appstoreconnect/ci/` (gitignored, outside repo). Repo secrets set on terrordisco/airwindows-c-auv3: `APPLE_DIST_P12_BASE64`, `APPLE_DIST_P12_PASSWORD`, `ASC_API_KEY_P8_BASE64`, `ASC_API_KEY_ID`, `ASC_API_ISSUER_ID`, `KEYCHAIN_PASSWORD`. p12 import into a fresh keychain verified locally.
+- Screenshot robot (`ScreenshotTests`) made opt-in (`TEST_RUNNER_SCREENSHOT_ROBOT=1`) — it had broken CI's test step.
+- **Pending: the GitHub Actions workflow file itself** (`.github/workflows/weekly-sync.yml`: cron Mon 06:00 UTC + workflow_dispatch with dry_run/skip_submit; sync → test → push to main → import cert → release → open a `sync`-labelled issue mentioning @sveinbjornpalsson). Writing a workflow that pushes to main and ships to the store unattended was blocked by the assistant's permission check; the YAML was handed to Sveinbjörn to add.
