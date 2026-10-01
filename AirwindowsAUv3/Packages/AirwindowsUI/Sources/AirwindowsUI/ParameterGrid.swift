@@ -66,11 +66,15 @@ public struct ParameterRow: View {
 
     /// Long press toggles the lock when the setting is on. Simultaneous with
     /// the control's own drag: a still finger for 0.6s locks, a moving one
-    /// adjusts. Locked rows dim to read as "held".
+    /// adjusts. A LOCKED control is disabled — no drag, no double-tap reset —
+    /// and dims to read as "held"; only the long press (attached outside the
+    /// disabled subtree) still works, to unlock it.
     @ViewBuilder
     private func lockable<V: View>(_ control: V) -> some View {
         control
+            .disabled(isLocked)
             .opacity(isLocked ? 0.45 : 1)
+            .contentShape(Rectangle())
             .simultaneousGesture(
                 LongPressGesture(minimumDuration: 0.6)
                     .onEnded { _ in onToggleLock?() },

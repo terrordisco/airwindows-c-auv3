@@ -3,8 +3,8 @@
 //  AirwindowsUI package — shared by AirwindowsApp + AirwindowsAUExtension
 //
 //  Per-effect parameter locks. A locked parameter keeps its value through
-//  Randomize Settings and Reset Settings (you can still move it by hand —
-//  the lock protects the value you chose, it doesn't disable the control).
+//  Randomize Settings and Reset Settings AND can't be moved by hand — the
+//  control is disabled until you long-press it again to unlock.
 //  Toggled by a long press on the fader/pot when the "Long Press to Lock"
 //  setting is on; locked controls draw dimmed with a small padlock.
 //

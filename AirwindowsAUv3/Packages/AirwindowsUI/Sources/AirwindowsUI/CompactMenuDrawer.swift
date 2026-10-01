@@ -274,19 +274,19 @@ public struct CompactMenuDrawer: View {
         if let onToggleFavorite {
             MenuRow(
                 systemName: isFavorite ? "star.fill" : "star",
-                title: isFavorite ? "Remove from Favorites" : "Add to Favorites",
+                title: isFavorite ? "Remove Effect from Favorites" : "Add Effect to Favorites",
                 action: onToggleFavorite
             )
         }
         if let onToggleDefaultEffect {
             MenuRow(
                 systemName: isDefaultEffect ? "pin.fill" : "pin",
-                title: isDefaultEffect ? "Remove as Default Effect" : "Make This the Default Effect",
+                title: isDefaultEffect ? "Remove as Default Effect" : "Make Default Effect",
                 action: onToggleDefaultEffect
             )
         }
         if let onRandomize {
-            MenuRow(systemName: "dice", title: "Randomize Settings", action: onRandomize)
+            MenuRow(systemName: "dice", title: "Randomize Effect Settings", action: onRandomize)
             if let onToggleLimiter {
                 MenuRow(systemName: "waveform.badge.exclamationmark",
                         titleView: { Text("Limiter") },
@@ -299,7 +299,7 @@ public struct CompactMenuDrawer: View {
             // controls alone, so the switch lives under Randomize too.
             if let onToggleLongPressLock {
                 MenuRow(systemName: "lock",
-                        titleView: { Text("Long Press to Lock") },
+                        titleView: { Text("Long Press to Lock Parameter") },
                         trailing: { StyleSwitchGlyph(isOn: isLongPressLockOn) },
                         indented: true,
                         accessibility: isLongPressLockOn
@@ -308,7 +308,7 @@ public struct CompactMenuDrawer: View {
                         action: onToggleLongPressLock)
             }
         }
-        MenuRow(systemName: "arrow.counterclockwise", title: "Reset Settings", action: onReset)
+        MenuRow(systemName: "arrow.counterclockwise", title: "Reset Effect Settings", action: onReset)
 
         // Per-effect saved settings. The effect always loads factory defaults;
         // once a snapshot exists the row becomes "Recall settings" and a
@@ -316,15 +316,15 @@ public struct CompactMenuDrawer: View {
         // replaces the full-mode chip's long-press with a visible row).
         if let onSaveSettings, let onRecallSettings, onClearSavedSettings != nil {
             if hasSavedSettings {
-                MenuRow(systemName: "bookmark.fill", title: "Recall Settings", action: onRecallSettings)
+                MenuRow(systemName: "bookmark.fill", title: "Recall Effect Settings", action: onRecallSettings)
                 MenuRow(
                     systemName: "bookmark.slash",
-                    title: "Forget Saved Settings",
+                    title: "Forget Saved Effect Settings",
                     isSecondary: true,
                     action: { showClearSavedSettingsDialog = true }
                 )
             } else {
-                MenuRow(systemName: "bookmark", title: "Remember Settings", action: onSaveSettings)
+                MenuRow(systemName: "bookmark", title: "Remember Effect Settings", action: onSaveSettings)
             }
         }
     }
