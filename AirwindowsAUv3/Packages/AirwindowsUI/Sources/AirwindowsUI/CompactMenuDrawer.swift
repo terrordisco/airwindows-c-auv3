@@ -444,13 +444,17 @@ private struct MenuRow<Title: View, Trailing: View>: View {
                 titleView()
                     .font(.system(size: 15))
                     .foregroundStyle(isSecondary ? Color.secondary : Color.primary)
-                    .lineLimit(1)
+                    // Long titles ("Long Press to Lock Parameter") wrap to a
+                    // second line rather than truncating; the row grows.
+                    .lineLimit(2)
+                    .fixedSize(horizontal: false, vertical: true)
                 Spacer(minLength: 8)
                 trailing()
             }
             .padding(.leading, CompactMenuDrawer.hInset + (indented ? CompactMenuDrawer.iconColumn + CompactMenuDrawer.iconGap : 0))
             .padding(.trailing, CompactMenuDrawer.hInset)
-            .frame(height: CompactMenuDrawer.rowHeight)
+            .padding(.vertical, 6)
+            .frame(minHeight: CompactMenuDrawer.rowHeight)
             .frame(maxWidth: .infinity, alignment: .leading)
             .contentShape(Rectangle())
         }

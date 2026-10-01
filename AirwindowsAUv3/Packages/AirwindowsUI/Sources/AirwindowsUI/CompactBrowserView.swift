@@ -441,6 +441,8 @@ public struct CompactBrowserView: View {
                         Text(context.sortMode.rawValue.uppercased())
                             .font(.system(size: 12, weight: .medium))
                             .kerning(0.5)
+                            .lineLimit(1)
+                            .fixedSize()
                     }
                     .foregroundStyle(.primary)
                     .padding(.horizontal, 10)
