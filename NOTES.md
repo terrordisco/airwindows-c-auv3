@@ -1186,3 +1186,28 @@ Goal (Sveinbjörn): weekly, 100% unattended. Schedule from the data: Chris commi
 - Screenshot robot (`ScreenshotTests`) made opt-in (`TEST_RUNNER_SCREENSHOT_ROBOT=1`) — it had broken CI's test step.
 - **Workflow added 2026-10-01 on Sveinbjörn's explicit instruction** (first version was blocked by the assistant's permission check; he asked for it in so many words). First run: `workflow_dispatch` with `dry_run=true`.
 - Earlier note, superseded: the GitHub Actions workflow file itself (`.github/workflows/weekly-sync.yml`: cron Mon 06:00 UTC + workflow_dispatch with dry_run/skip_submit; sync → test → push to main → import cert → release → open a `sync`-labelled issue mentioning @sveinbjornpalsson). Writing a workflow that pushes to main and ships to the store unattended was blocked by the assistant's permission check; the YAML was handed to Sveinbjörn to add.
+
+### 2026-10-01 — Weekly sync: first dry run flagged a phantom change
+
+The first `weekly-sync.yml` dry run bumped to 1.0.1 with an empty report. Cause: Paul's
+tree still carries wrapper files for effects no longer in his registry
+(`ConsoleX3Buss/Channel/Pre`, folded into `ConsoleX3`). rsync copied them in as untracked
+files and the old check — `git status --porcelain` on the DSP tree — called that a change.
+
+Fixes in `scripts/sync_upstream.py`:
+- **Semantic change detection.** `changed` is now the OR of real signals: new/removed
+  effects, DSP edits to existing effects, descriptions added/updated/scraped/cleaned,
+  link values gained, categories auto-assigned. Deleted files are not a signal.
+- **Mirror prunes unregistered wrappers.** Only files whose effect appears in
+  `ModuleAdd.h` survive the copy (this also dropped our own stale `ConsoleXSubIn/Out`).
+- **Merge-only scrape.** `effect_links.json` is merged with the fresh crawl; a value we
+  already had is never removed, so a rate-limited runner can't make a post or video
+  "disappear". Value changes (video added, post changed) are listed in the report.
+- **Noise is reverted and reported.** If git still sees a diff with no semantic change,
+  the report gets a "Noise reverted" section with the stat and the tree is reset, so a
+  quiet week pushes nothing and ships nothing.
+- Report additions: "Hidden — no description yet" (effects Chris committed but hasn't
+  blogged: BezEQ4, DeRez5, Spiral3, Weave today), and What's New names each new effect
+  with the first sentence of Chris's text ("New Airwindows effect: SoftClock3 is a
+  groove-oriented time reference.").
+- Local clone update uses fetch + reset instead of `pull --ff-only` (stray files aborted it).
