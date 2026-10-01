@@ -50,4 +50,4 @@ if __name__ == "__main__":
     method, path = sys.argv[1], sys.argv[2]
     body = json.loads(sys.argv[3]) if len(sys.argv) > 3 else None
     status, out = call(method, path, body)
-    print(status); print(json.dumps(out, indent=2)[:6000])
+    print(status); print(json.dumps(out, indent=2))
