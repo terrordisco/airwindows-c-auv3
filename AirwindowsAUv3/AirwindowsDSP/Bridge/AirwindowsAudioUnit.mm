@@ -102,6 +102,11 @@ static const AUParameterAddress kOutputLevelAddress = 39;
     /// Safety limiter switch (see the header). Atomic: written on main,
     /// read every render.
     std::atomic<bool> _limiterEnabled;
+    /// Host tempo captured on the render thread (see the header).
+    std::atomic<double> _hostTempo;
+    /// Host-provided musical context, cached when render resources are
+    /// allocated (the host installs it before then). Read by the render block.
+    AUHostMusicalContextBlock _musicalContextBlock;
 
     // Old processor to be freed on main thread
     std::atomic<AirwinConsolidatedBase *> _processorToFree;
@@ -142,6 +147,7 @@ static const AUParameterAddress kOutputLevelAddress = 39;
     _effectIndex = -1;
     _inputLevel = 1.0f;
     _limiterEnabled.store(false, std::memory_order_relaxed);
+    _hostTempo.store(0.0, std::memory_order_relaxed);
     _outputLevel = 1.0f;
     _pendingProcessor = nullptr;
     _processorToFree = nullptr;
@@ -523,8 +529,13 @@ static const AUParameterAddress kOutputLevelAddress = 39;
     return _outputBusArray;
 }
 
+- (double)hostTempo {
+    return _hostTempo.load(std::memory_order_relaxed);
+}
+
 - (BOOL)allocateRenderResourcesAndReturnError:(NSError **)outError {
     if (![super allocateRenderResourcesAndReturnError:outError]) return NO;
+    _musicalContextBlock = self.musicalContextBlock;
 
     double sr = _outputBus.format.sampleRate;
     if (_activeProcessor) {
@@ -538,6 +549,7 @@ static const AUParameterAddress kOutputLevelAddress = 39;
 }
 
 - (void)deallocateRenderResources {
+    _musicalContextBlock = nil;
     [super deallocateRenderResources];
 }
 
@@ -550,6 +562,8 @@ static const AUParameterAddress kOutputLevelAddress = 39;
     float *inputLevelPtr = &_inputLevel;
     float *outputLevelPtr = &_outputLevel;
     std::atomic<bool> *limiterEnabledPtr = &_limiterEnabled;
+    std::atomic<double> *hostTempoPtr = &_hostTempo;
+    AUHostMusicalContextBlock __strong *musicalContextPtr = &_musicalContextBlock;
 
     __block AirwinConsolidatedBase *processorPtr = _activeProcessor.get();
 
@@ -616,6 +630,16 @@ static const AUParameterAddress kOutputLevelAddress = 39;
                     break;
             }
             event = event->head.next;
+        }
+
+        // Host tempo, once per render, for the tempo-sync feature. Nil
+        // outside a transport-bearing host; a failed query leaves the last
+        // value in place.
+        if (AUHostMusicalContextBlock mc = *musicalContextPtr) {
+            double tempo = 0;
+            if (mc(&tempo, NULL, NULL, NULL, NULL, NULL) && tempo > 0) {
+                hostTempoPtr->store(tempo, std::memory_order_relaxed);
+            }
         }
 
         // Get buffer pointers

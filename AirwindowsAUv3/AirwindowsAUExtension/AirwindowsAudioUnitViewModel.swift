@@ -386,6 +386,55 @@ final class AirwindowsAudioUnitViewModel {
         refreshParameterDisplay(at: index)
     }
 
+    // MARK: - Tempo sync (SoftClock2 / SoftClock3)
+
+    /// Effects whose first parameter is a Tempo in BPM with Chris's
+    /// `(int)(A*200.99)+40` mapping (40…240 BPM). Only these can sync.
+    static let tempoSyncEffects: Set<String> = ["SoftClock2", "SoftClock3"]
+
+    var supportsTempoSync: Bool {
+        guard let name = currentBrowseModel?.name else { return false }
+        return Self.tempoSyncEffects.contains(name)
+    }
+
+    /// Host tempo as last seen (0 = none). Refreshed while sync is on.
+    private(set) var hostTempo: Double = 0
+
+    /// "Sync Tempo to Host": while on and the effect supports it, parameter 0
+    /// follows the host's tempo. Polled 4×/s — tempo changes are rare and the
+    /// AU captures it on the render thread; the parameter write goes through
+    /// the normal path so the control and the host see it.
+    var tempoSyncEnabled: Bool = false {
+        didSet { updateTempoSyncTimer() }
+    }
+
+    private var tempoSyncTimer: Timer?
+
+    private func updateTempoSyncTimer() {
+        tempoSyncTimer?.invalidate()
+        tempoSyncTimer = nil
+        guard tempoSyncEnabled else { return }
+        tempoSyncTimer = Timer.scheduledTimer(withTimeInterval: 0.25, repeats: true) { [weak self] _ in
+            self?.applyHostTempoIfNeeded()
+        }
+        applyHostTempoIfNeeded()
+    }
+
+    private func applyHostTempoIfNeeded() {
+        guard let au = audioUnit else { return }
+        let tempo = au.hostTempo
+        if tempo != hostTempo { hostTempo = tempo }
+        guard supportsTempoSync, tempo > 0, parameterCount > 0 else { return }
+        // Chris's display: bpm = (int)(A*200.99)+40. Land in the middle of
+        // the integer bin so the readout shows exactly the host's BPM.
+        let bpm = min(240, max(40, Int(tempo.rounded())))
+        let normalized = min(1, max(0, (Double(bpm - 40) + 0.5) / 200.99))
+        guard abs(parameterValues[0] - normalized) > 0.0005 else { return }
+        suppressUndoRecording = true
+        defer { suppressUndoRecording = false }
+        setParameterValue(normalized, at: 0)
+    }
+
     /// Wrapper-level safety limiter (brickwall at 0 dBFS after the effect).
     /// A UI setting pushed straight to the AU; not undoable, not a parameter.
     func setLimiterEnabled(_ enabled: Bool) {

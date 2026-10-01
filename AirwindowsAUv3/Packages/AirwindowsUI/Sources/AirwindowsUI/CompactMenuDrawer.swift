@@ -42,10 +42,13 @@ public struct CompactMenuDrawer: View {
     // This effect
     public let isFavorite: Bool
     public let onToggleFavorite: (() -> Void)?
-    /// Startup-effect pin (same store the browser's pin button writes). nil
-    /// hides the row (personalisation off).
+    /// Startup-effect pin (same store the browser's pin button writes).
     public let isDefaultEffect: Bool
     public let onToggleDefaultEffect: (() -> Void)?
+    /// "Sync Tempo to Host" — only offered for the SoftClock effects, whose
+    /// first parameter is a BPM. nil hides the row.
+    public let isTempoSyncOn: Bool
+    public let onToggleTempoSync: (() -> Void)?
     public let onRandomize: (() -> Void)?
     /// Safety limiter switch, shown indented under Randomize Settings (it's
     /// there for the wild values Randomize can produce). nil hides the row.
@@ -72,18 +75,16 @@ public struct CompactMenuDrawer: View {
     public let onToggleMonitoring: (() -> Void)?
 
     // Elsewhere
-    public let onOpenSettings: (() -> Void)?
     public let onOpenAbout: (() -> Void)?
 
     // Scrollpad edge
     public let scrollpad: ScrollpadPlacement
     public let onCycleScrollpad: () -> Void
 
-    // The global interface scale, moved in from the Preferences sheet
-    // (Sveinbjörn, 2026-09-30). Personalisation and the window-size readout
-    // stay in the sheet behind "Airwindows Settings…". A binding straight onto
-    // the shared @AppStorage key, so dragging the slider rescales the live
-    // workspace behind the drawer. nil hides the row (previews).
+    // The global interface scale (the Preferences sheet it came from was
+    // removed 2026-10-01; the menu is the only settings surface). A binding
+    // straight onto the shared @AppStorage key, so dragging the slider
+    // rescales the live workspace behind the drawer. nil hides the row.
     public let uiScale: Binding<Double>?
 
     @Environment(\.colorScheme) private var scheme
@@ -100,6 +101,8 @@ public struct CompactMenuDrawer: View {
         onToggleFavorite: (() -> Void)? = nil,
         isDefaultEffect: Bool = false,
         onToggleDefaultEffect: (() -> Void)? = nil,
+        isTempoSyncOn: Bool = false,
+        onToggleTempoSync: (() -> Void)? = nil,
         onRandomize: (() -> Void)? = nil,
         isLimiterOn: Bool = false,
         onToggleLimiter: (() -> Void)? = nil,
@@ -116,7 +119,6 @@ public struct CompactMenuDrawer: View {
         onCycleAppearance: @escaping () -> Void = {},
         isMonitoring: Bool = false,
         onToggleMonitoring: (() -> Void)? = nil,
-        onOpenSettings: (() -> Void)? = nil,
         onOpenAbout: (() -> Void)? = nil,
         scrollpad: ScrollpadPlacement = .left,
         onCycleScrollpad: @escaping () -> Void = {},
@@ -132,6 +134,8 @@ public struct CompactMenuDrawer: View {
         self.onToggleFavorite = onToggleFavorite
         self.isDefaultEffect = isDefaultEffect
         self.onToggleDefaultEffect = onToggleDefaultEffect
+        self.isTempoSyncOn = isTempoSyncOn
+        self.onToggleTempoSync = onToggleTempoSync
         self.onRandomize = onRandomize
         self.isLimiterOn = isLimiterOn
         self.onToggleLimiter = onToggleLimiter
@@ -148,7 +152,6 @@ public struct CompactMenuDrawer: View {
         self.onCycleAppearance = onCycleAppearance
         self.isMonitoring = isMonitoring
         self.onToggleMonitoring = onToggleMonitoring
-        self.onOpenSettings = onOpenSettings
         self.onOpenAbout = onOpenAbout
         self.scrollpad = scrollpad
         self.onCycleScrollpad = onCycleScrollpad
@@ -177,7 +180,7 @@ public struct CompactMenuDrawer: View {
                     effectSection
                     sectionDivider
                     viewSection
-                    if onOpenSettings != nil || onOpenAbout != nil {
+                    if onOpenAbout != nil {
                         sectionDivider
                         elsewhereSection
                     }
@@ -285,6 +288,13 @@ public struct CompactMenuDrawer: View {
                 action: onToggleDefaultEffect
             )
         }
+        if let onToggleTempoSync {
+            MenuRow(systemName: "metronome",
+                    titleView: { Text("Sync Tempo to Host") },
+                    trailing: { StyleSwitchGlyph(isOn: isTempoSyncOn) },
+                    accessibility: isTempoSyncOn ? "Sync tempo to host, on. Tap to turn off." : "Sync tempo to host, off. Tap to turn on.",
+                    action: onToggleTempoSync)
+        }
         if let onRandomize {
             MenuRow(systemName: "dice", title: "Randomize Effect Settings", action: onRandomize)
             if let onToggleLimiter {
@@ -377,9 +387,6 @@ public struct CompactMenuDrawer: View {
 
     @ViewBuilder
     private var elsewhereSection: some View {
-        if let onOpenSettings {
-            MenuRow(systemName: "gearshape", title: "Airwindows Settings…", action: onOpenSettings)
-        }
         if let onOpenAbout {
             MenuRow(systemName: "info.circle", title: "About Airwindows", action: onOpenAbout)
         }
@@ -625,7 +632,6 @@ struct CompactChromeButton: View {
         onToggleControlStyle: {},
         appearance: .auto,
         onCycleAppearance: {},
-        onOpenSettings: {},
         onOpenAbout: {}
     )
     .frame(width: 300, height: 640)

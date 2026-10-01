@@ -35,7 +35,6 @@ public struct CompactBrowserView: View {
     public let initialHighlight: EffectBrowseModel?
     public let descriptionProvider: (EffectBrowseModel) -> String
     public let favorites: FavoritesStore?
-    public let showDefaultEffectPin: Bool
     public let onSelect: (EffectBrowseModel, [EffectBrowseModel]) -> Void
     public let onClose: () -> Void
 
@@ -68,7 +67,6 @@ public struct CompactBrowserView: View {
         initialHighlight: EffectBrowseModel? = nil,
         descriptionProvider: @escaping (EffectBrowseModel) -> String = { $0.whatText },
         favorites: FavoritesStore? = nil,
-        showDefaultEffectPin: Bool = true,
         onSelect: @escaping (EffectBrowseModel, [EffectBrowseModel]) -> Void,
         onClose: @escaping () -> Void
     ) {
@@ -78,7 +76,6 @@ public struct CompactBrowserView: View {
         self.initialHighlight = initialHighlight
         self.descriptionProvider = descriptionProvider
         self.favorites = favorites
-        self.showDefaultEffectPin = showDefaultEffectPin
         self.onSelect = onSelect
         self.onClose = onClose
         self._context = context
@@ -627,9 +624,7 @@ public struct CompactBrowserView: View {
                     .accessibilityLabel(isFav ? "Remove \(effect.name) from favorites" : "Add \(effect.name) to favorites")
                 }
 
-                if showDefaultEffectPin {
-                    DefaultEffectPinButton(effect: effect, size: 44, glyphSize: 21)
-                }
+                DefaultEffectPinButton(effect: effect, size: 44, glyphSize: 21)
             }
 
             if !effect.whatText.isEmpty {

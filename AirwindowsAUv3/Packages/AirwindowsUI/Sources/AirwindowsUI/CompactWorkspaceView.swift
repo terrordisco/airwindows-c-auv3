@@ -77,7 +77,9 @@ public struct CompactWorkspaceView: View {
     /// Startup-effect pin for the menu drawer. nil hides the row.
     public let isDefaultEffect: Bool
     public let onToggleDefaultEffect: (() -> Void)?
-    public let onOpenSettings: (() -> Void)?
+    /// Tempo sync (SoftClock effects only). nil hides the row.
+    public let isTempoSyncOn: Bool
+    public let onToggleTempoSync: (() -> Void)?
     public let onOpenAbout: (() -> Void)?
     /// "Random Effect" button at the very bottom of the page, under the
     /// description (Sveinbjörn, 2026-09-30). nil hides it.
@@ -143,7 +145,8 @@ public struct CompactWorkspaceView: View {
         favorites: FavoritesStore? = nil,
         isDefaultEffect: Bool = false,
         onToggleDefaultEffect: (() -> Void)? = nil,
-        onOpenSettings: (() -> Void)? = nil,
+        isTempoSyncOn: Bool = false,
+        onToggleTempoSync: (() -> Void)? = nil,
         onOpenAbout: (() -> Void)? = nil,
         onRandomEffect: (() -> Void)? = nil,
         isMonitoring: Bool = false,
@@ -193,7 +196,8 @@ public struct CompactWorkspaceView: View {
         self.favorites = favorites
         self.isDefaultEffect = isDefaultEffect
         self.onToggleDefaultEffect = onToggleDefaultEffect
-        self.onOpenSettings = onOpenSettings
+        self.isTempoSyncOn = isTempoSyncOn
+        self.onToggleTempoSync = onToggleTempoSync
         self.onOpenAbout = onOpenAbout
         self.onRandomEffect = onRandomEffect
         self.isMonitoring = onToggleMonitoring == nil ? false : isMonitoring
@@ -540,6 +544,8 @@ public struct CompactWorkspaceView: View {
             onToggleFavorite: favorites.map { store in { store.toggle(effect.name) } },
             isDefaultEffect: isDefaultEffect,
             onToggleDefaultEffect: onToggleDefaultEffect,
+            isTempoSyncOn: isTempoSyncOn,
+            onToggleTempoSync: onToggleTempoSync,
             onRandomize: closing(onRandomize),
             isLimiterOn: isLimiterOn,
             onToggleLimiter: onToggleLimiter,
@@ -556,7 +562,6 @@ public struct CompactWorkspaceView: View {
             onCycleAppearance: onCycleAppearance,
             isMonitoring: isMonitoring,
             onToggleMonitoring: onToggleMonitoring,
-            onOpenSettings: closing(onOpenSettings),
             onOpenAbout: closing(onOpenAbout),
             scrollpad: scrollpad,
             onCycleScrollpad: onCycleScrollpad,
@@ -707,7 +712,6 @@ private struct CompactPreviewWrapper: View {
             onSaveSettings: {},
             onRecallSettings: {},
             onClearSavedSettings: {},
-            onOpenSettings: {},
             onOpenAbout: {}
         )
     }

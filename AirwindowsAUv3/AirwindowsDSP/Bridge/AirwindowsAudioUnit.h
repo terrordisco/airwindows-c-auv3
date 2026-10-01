@@ -31,6 +31,12 @@ extern NSString * const AirwindowsAudioUnitDidRestoreStateNotification;
 /// parameter. Read lock-free on the audio thread.
 @property (nonatomic) BOOL outputLimiterEnabled;
 
+/// The host's current tempo in BPM as last reported through the musical
+/// context block on the render thread; 0 when the host provides none (the
+/// standalone app, or a host without a transport). Drives "Sync Tempo to
+/// Host" for the SoftClock effects.
+@property (nonatomic, readonly) double hostTempo;
+
 @property (nonatomic, readonly) NSInteger currentEffectIndex;
 @property (nonatomic, readonly) NSString *currentEffectName;
 @property (nonatomic, readonly) NSString *currentEffectCategory;

@@ -52,15 +52,6 @@ public enum UIScaleConfig {
     /// the auto-match default.
     public static let referenceShortSide: CGFloat = 1024
 
-    /// iPad guide marks for the Preferences slider, as (label, scale) pairs.
-    /// Each scale is that iPad's short-side points ÷ 1024, i.e. the setting at
-    /// which it matches 13" density. Used purely as on-slider signposts.
-    public static let deviceGuides: [(label: String, scale: CGFloat)] = [
-        ("8.3\"", 744.0 / 1024.0),   // iPad mini    ≈ 0.73
-        ("11\"", 834.0 / 1024.0),    // iPad 11"/Air ≈ 0.81
-        ("13\"", 1.0)                // reference
-    ]
-
     /// Clamp an arbitrary scale into the supported range.
     public static func clamp(_ value: CGFloat) -> CGFloat {
         Swift.min(Swift.max(value, minimum), maximum)

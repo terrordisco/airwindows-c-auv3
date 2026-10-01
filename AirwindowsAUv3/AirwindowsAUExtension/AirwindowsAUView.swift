@@ -30,7 +30,7 @@ import os
 
 /// Host view-size research: every container size the host hands us is logged
 /// so the responsive-design work is grounded in real numbers. Filter
-/// Console.app on this subsystem; PreferencesView shows the same value live.
+/// Console.app on this subsystem.
 private let containerLog = Logger(
     subsystem: "com.terrordisco.airwindows.consolidated",
     category: "ContainerSize"
@@ -100,7 +100,7 @@ struct AirwindowsAUView: View {
     @AppStorage("airwindows.controlStyle") private var controlStylePreference: String = "auto"
 
     /// Global UI scale, injected into the AirwindowsUI views as `\.uiScale`.
-    /// 1.0 == reference (13") sizing. Owned here, edited via PreferencesView
+    /// 1.0 == reference (13") sizing. Owned here, edited via the menu drawer
     /// (which writes the same key), read by every sized view. Backed by the App
     /// Group store so the scale is shared across the app and all plugin
     /// instances; within one process instances update live.
@@ -115,18 +115,6 @@ struct AirwindowsAUView: View {
     /// the pin button in the browser preview; cleared there or in Preferences.
     @AppStorage("airwindows.defaultEffect", store: .airwindowsShared) private var defaultEffectName: String = ""
 
-    /// Master switch for the personalisation toolkit. ON by default — favorites,
-    /// the default-effect pin, Save/Recall settings, and the pots/sliders swap
-    /// are all available out of the box; turning it OFF in Preferences strips
-    /// the interface back to just the effect and its controls. The underlying
-    /// stores keep persisting regardless — this only gates the on-screen
-    /// affordances, so toggling it back on restores prior stars, pins, and
-    /// saved snapshots untouched. App-Group-shared like the rest.
-    @AppStorage("airwindows.personalisation", store: .airwindowsShared) private var personalisationEnabled: Bool = true
-
-    /// Preferences sheet, opened from the workspace bottom bar's Settings box
-    /// (full layout) or the menu drawer (compact layout).
-    @State private var showPreferences: Bool = false
     /// About sheet. In the full layout About lives in the browser sidebar;
     /// the compact menu drawer also reaches it from the workspace.
     @State private var showAbout: Bool = false
@@ -155,6 +143,9 @@ struct AirwindowsAUView: View {
     /// for the wild values Randomize can produce. OFF by default — nothing
     /// touches the sound unless asked. Per-process like the appearance.
     @AppStorage("airwindows.limiter") private var limiterEnabled: Bool = false
+
+    /// "Sync Tempo to Host" for the SoftClock effects (see the view model).
+    @AppStorage("airwindows.tempoSync") private var tempoSyncEnabled: Bool = false
 
     /// Scrollpad edge in the compact layout (left / right / off). App-Group
     /// shared like the other layout choices; cycled from the menu drawer.
@@ -205,7 +196,7 @@ struct AirwindowsAUView: View {
                 // Global UI scale: every sized view in AirwindowsUI reads this.
                 .environment(\.uiScale, CGFloat(uiScale))
                 // Live container size — research instrument for the responsive
-                // UI work; PreferencesView displays it. See ContainerSize.swift.
+                // UI work (os_log below). See ContainerSize.swift.
                 .environment(\.containerSize, geo.size)
                 // First launch: size the scale to the container so a smaller
                 // iPad starts at the same density a 13" shows at 100%. Runs on
@@ -215,11 +206,6 @@ struct AirwindowsAUView: View {
                     autoMatchScaleIfNeeded(geo.size)
                     logContainerSizeIfReal(geo.size)
                 }
-                .sheet(isPresented: $showPreferences) {
-                    PreferencesView(onClose: { showPreferences = false })
-                        .environment(\.colorScheme, resolvedScheme)
-                        .environment(\.containerSize, geo.size)
-                        }
                 .sheet(isPresented: $showAbout) {
                     AboutView(onClose: { showAbout = false })
                         .environment(\.colorScheme, resolvedScheme)
@@ -245,7 +231,7 @@ struct AirwindowsAUView: View {
                 savedSettings.refresh()
                 if viewModel.hasSelection {
                     showBrowser = false
-                } else if personalisationEnabled, let pinned = pinnedDefaultEffect() {
+                } else if let pinned = pinnedDefaultEffect() {
                     viewModel.selectEffect(at: pinned.registryIndex)
                     showBrowser = false
                 } else {
@@ -255,6 +241,9 @@ struct AirwindowsAUView: View {
             }
             .onChange(of: limiterEnabled, initial: true) { _, on in
                 viewModel.setLimiterEnabled(on)
+            }
+            .onChange(of: tempoSyncEnabled, initial: true) { _, on in
+                viewModel.tempoSyncEnabled = on
             }
             .onChange(of: viewModel.effectIndex) { _, newIndex in
                 // A late host restore (Cubasis) brought in an effect after we
@@ -279,8 +268,7 @@ struct AirwindowsAUView: View {
             context: $browserContext,
             initialHighlight: viewModel.currentBrowseModel,
             descriptionProvider: { effect in viewModel.description(for: effect) },
-            favorites: personalisationEnabled ? favorites : nil,
-            showDefaultEffectPin: personalisationEnabled,
+            favorites: favorites,
             onSelect: { effect, pool in
                 viewModel.setBrowsePool(pool)
                 viewModel.selectEffect(at: effect.registryIndex)
@@ -340,6 +328,8 @@ struct AirwindowsAUView: View {
             : Double(UIScaleConfig.autoScale(forShortSide: shortSide))
         uiScaleAutoSet = true
     }
+
+    private var tempoSyncActive: Bool { tempoSyncEnabled && viewModel.supportsTempoSync }
 
     /// Random effect from everything browsable, for the workspace's footer
     /// button. Prev/next then walk the whole catalogue.
@@ -414,27 +404,35 @@ struct AirwindowsAUView: View {
             appearance: appearance,
             onCycleAppearance: { cycleAppearance() },
             useRotaryPots: effectiveUseRotaryPots,
-            onToggleControlStyle: personalisationEnabled ? { toggleControlStyle() } : nil,
-            lockedParameters: parameterLocks.locked(for: effect.name),
-            onToggleParameterLock: { index in parameterLocks.toggle(effect.name, index: index) },
+            onToggleControlStyle: { toggleControlStyle() },
+            // A synced Tempo (parameter 0 of the SoftClocks) shows and behaves
+            // as locked; long-pressing it does nothing while synced.
+            lockedParameters: tempoSyncActive
+                ? parameterLocks.locked(for: effect.name).union([0])
+                : parameterLocks.locked(for: effect.name),
+            onToggleParameterLock: { index in
+                if tempoSyncActive && index == 0 { return }
+                parameterLocks.toggle(effect.name, index: index)
+            },
             isLongPressLockOn: longPressLock,
             onToggleLongPressLock: { longPressLock.toggle() },
-            hasSavedSettings: personalisationEnabled && savedSettings.hasSaved(effect.name),
-            onSaveSettings: personalisationEnabled ? {
+            hasSavedSettings: savedSettings.hasSaved(effect.name),
+            onSaveSettings: {
                 savedSettings.save(viewModel.currentParameterSnapshot, for: effect.name)
-            } : nil,
-            onRecallSettings: personalisationEnabled ? {
+            },
+            onRecallSettings: {
                 if let values = savedSettings.savedValues(for: effect.name) {
                     viewModel.applySavedSettings(values)
                 }
-            } : nil,
-            onClearSavedSettings: personalisationEnabled ? { savedSettings.clear(effect.name) } : nil,
-            favorites: personalisationEnabled ? favorites : nil,
+            },
+            onClearSavedSettings: { savedSettings.clear(effect.name) },
+            favorites: favorites,
             isDefaultEffect: defaultEffectName == effect.name,
-            onToggleDefaultEffect: personalisationEnabled ? {
+            onToggleDefaultEffect: {
                 defaultEffectName = defaultEffectName == effect.name ? "" : effect.name
-            } : nil,
-            onOpenSettings: { showPreferences = true },
+            },
+            isTempoSyncOn: tempoSyncEnabled,
+            onToggleTempoSync: viewModel.supportsTempoSync ? { tempoSyncEnabled.toggle() } : nil,
             onOpenAbout: { showAbout = true },
             onRandomEffect: { pickRandomEffect() },
             isMonitoring: isMonitoring,
