@@ -1,0 +1,165 @@
+name: Weekly upstream sync & release
+
+# Every Monday 06:00 UTC — after Chris Johnson's Saturday-evening commit,
+# Paul Walker's airwin2rack mirror (our upstream) a few hours later, and
+# Chris's Sunday-afternoon blog post with the description and video. By
+# Monday morning everything has settled. No human in the loop (Sveinbjörn's
+# explicit decision, 2026-10-01):
+#
+#   sync_upstream.py  → pull upstream, mirror DSP/docs, scrape airwindows.com,
+#                       family-rule categories, bump 1.0.x, write report
+#   build & smoke test → the same test the CI workflow runs
+#   commit & push      → main
+#   release.py         → archive, upload, TestFlight, App Store submission
+#   issue              → the report, with any Unclassified effect flagged,
+#                       so Sveinbjörn gets an email either way
+#
+# `workflow_dispatch` runs it on demand; `dry_run` goes through everything
+# except pushing, uploading and writing to App Store Connect.
+
+on:
+  schedule:
+    - cron: "0 6 * * 1"
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Sync and build, but don't push, upload or submit"
+        type: boolean
+        default: false
+      skip_submit:
+        description: "Upload to TestFlight but skip the App Store submission"
+        type: boolean
+        default: false
+
+concurrency:
+  group: weekly-sync
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  issues: write
+
+jobs:
+  sync:
+    name: Sync, test, release
+    runs-on: macos-15
+    timeout-minutes: 150
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Tools
+        run: brew install xcodegen
+
+      - name: Sync upstream (Paul's airwin2rack) and scrape airwindows.com
+        id: sync
+        run: |
+          set +e
+          python3 scripts/sync_upstream.py \
+            --airwin2rack "$RUNNER_TEMP/airwin2rack" \
+            --bump \
+            --report sync-report.md \
+            --whats-new whatsnew.txt \
+            --github-output "$GITHUB_OUTPUT"
+          code=$?
+          set -e
+          if [ "$code" = "10" ]; then echo "changed=false" >> "$GITHUB_OUTPUT"; echo "Nothing new upstream."; exit 0; fi
+          if [ "$code" != "0" ]; then echo "::error::sync_upstream.py failed ($code)"; exit "$code"; fi
+
+      - name: Upload report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sync-report
+          path: |
+            sync-report.md
+            whatsnew.txt
+          if-no-files-found: ignore
+
+      - name: Nothing to do
+        if: steps.sync.outputs.changed != 'true'
+        run: echo "Upstream unchanged — no build, no release this week."
+
+      - name: Generate Xcode project
+        if: steps.sync.outputs.changed == 'true'
+        working-directory: AirwindowsAUv3
+        run: xcodegen generate
+
+      - name: Build & smoke test (iOS Simulator)
+        if: steps.sync.outputs.changed == 'true'
+        working-directory: AirwindowsAUv3
+        run: |
+          set -o pipefail
+          UDID=$(xcrun simctl list devices available | grep -i ipad | head -1 | grep -oE '[0-9A-F-]{36}' | head -1)
+          [ -n "$UDID" ] || { echo "::error::No iPad simulator on the runner"; exit 1; }
+          xcodebuild test -project AirwindowsAUv3.xcodeproj -scheme AirwindowsApp -configuration Debug \
+            -destination "id=$UDID" CODE_SIGNING_ALLOWED=NO | tee build.log | grep -E "error:|Test Case|TEST (SUCCEEDED|FAILED)"
+          if grep -niE 'backward matching of the unlabeled trailing closure|will never be executed' build.log; then
+            echo "::error::Silent-failure warning detected"; exit 1; fi
+
+      - name: Commit & push to main
+        if: steps.sync.outputs.changed == 'true' && !inputs.dry_run
+        run: |
+          git config user.name "airwindows-sync[bot]"
+          git config user.email "airwindows-sync@users.noreply.github.com"
+          git add AirwindowsAUv3/AirwindowsDSP AirwindowsAUv3/project.yml scripts
+          git commit -m "sync: upstream $(date -u +%F) — ${{ steps.sync.outputs.marketing_version }} (build ${{ steps.sync.outputs.build_number }})" \
+            -m "New effects: ${{ steps.sync.outputs.new_effects || 'none' }}. Unclassified: ${{ steps.sync.outputs.unclassified || 'none' }}. Report in the linked issue."
+          git push origin HEAD:main
+
+      - name: Import signing certificate
+        if: steps.sync.outputs.changed == 'true' && !inputs.dry_run
+        env:
+          P12_BASE64: ${{ secrets.APPLE_DIST_P12_BASE64 }}
+          P12_PASSWORD: ${{ secrets.APPLE_DIST_P12_PASSWORD }}
+          KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
+        run: |
+          KC="$RUNNER_TEMP/ci.keychain-db"
+          echo "$P12_BASE64" | base64 --decode > "$RUNNER_TEMP/dist.p12"
+          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KC"
+          security set-keychain-settings -lut 21600 "$KC"
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KC"
+          security import "$RUNNER_TEMP/dist.p12" -P "$P12_PASSWORD" -A -t cert -f pkcs12 -k "$KC"
+          security set-key-partition-list -S apple-tool:,apple: -k "$KEYCHAIN_PASSWORD" "$KC" >/dev/null
+          security list-keychain -d user -s "$KC" login.keychain-db
+          security find-identity -v -p codesigning "$KC"
+
+      - name: App Store Connect API key
+        if: steps.sync.outputs.changed == 'true'
+        env:
+          P8_BASE64: ${{ secrets.ASC_API_KEY_P8_BASE64 }}
+          KEY_ID: ${{ secrets.ASC_API_KEY_ID }}
+        run: |
+          mkdir -p ~/.appstoreconnect/private_keys
+          echo "$P8_BASE64" | base64 --decode > ~/.appstoreconnect/private_keys/AuthKey_$KEY_ID.p8
+          echo "ASC_API_KEY_PATH=$HOME/.appstoreconnect/private_keys/AuthKey_$KEY_ID.p8" >> "$GITHUB_ENV"
+
+      - name: Release (archive, upload, TestFlight, App Store)
+        if: steps.sync.outputs.changed == 'true'
+        env:
+          ASC_API_KEY_ID: ${{ secrets.ASC_API_KEY_ID }}
+          ASC_API_ISSUER_ID: ${{ secrets.ASC_API_ISSUER_ID }}
+        run: |
+          python3 scripts/release.py \
+            --marketing-version "${{ steps.sync.outputs.marketing_version }}" \
+            --build-number "${{ steps.sync.outputs.build_number }}" \
+            --whats-new whatsnew.txt --report sync-report.md \
+            ${{ inputs.dry_run && '--dry-run' || '' }} \
+            ${{ inputs.skip_submit && '--skip-submit' || '' }}
+
+      - name: Open report issue
+        if: steps.sync.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          UNCLASSIFIED: ${{ steps.sync.outputs.unclassified }}
+          NEW_EFFECTS: ${{ steps.sync.outputs.new_effects }}
+          DRY: ${{ inputs.dry_run }}
+        run: |
+          title="Weekly sync $(date -u +%F): ${{ steps.sync.outputs.marketing_version }}"
+          [ -n "$NEW_EFFECTS" ] && title="$title — new: $NEW_EFFECTS"
+          [ -n "$UNCLASSIFIED" ] && title="⚠️ $title — UNCLASSIFIED: $UNCLASSIFIED"
+          [ "$DRY" = "true" ] && title="[dry run] $title"
+          { echo "@sveinbjornpalsson"; echo; cat sync-report.md; } > issue.md
+          gh issue create --title "$title" --body-file issue.md --label sync
