@@ -154,8 +154,20 @@ public struct CompactBrowserView: View {
     private var descriptionVisible: Bool { depth == 3 }
 
     private var drawerWidth: CGFloat {
-        if containerSize.width > 1, containerSize.width < Self.fullWidthBelow { return containerSize.width }
+        // A phone gets a full-width sheet whatever its width (the 6.9" models
+        // are 440pt, over the old 430pt cut-off, and were getting a 300pt
+        // drawer with a sliver of workspace beside it). iPad containers
+        // narrower than `fullWidthBelow` (Slide Over) do too.
+        if containerSize.width > 1, Self.isPhone || containerSize.width < Self.fullWidthBelow { return containerSize.width }
         return CGFloat(columnsShown) * Self.columnWidth
+    }
+
+    static var isPhone: Bool {
+        #if canImport(UIKit)
+        UIDevice.current.userInterfaceIdiom == .phone
+        #else
+        false
+        #endif
     }
     private var columnWidth: CGFloat { drawerWidth / CGFloat(columnsShown) }
 

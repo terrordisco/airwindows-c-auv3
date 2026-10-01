@@ -258,7 +258,8 @@ public struct CompactWorkspaceView: View {
     }
 
     private var drawerWidth: CGFloat {
-        containerSize.width > 1 && containerSize.width < Self.fullWidthDrawerBelow
+        // Phones always get a full-width drawer (see CompactBrowserView).
+        containerSize.width > 1 && (CompactBrowserView.isPhone || containerSize.width < Self.fullWidthDrawerBelow)
             ? containerSize.width
             : Self.drawerWidth
     }
