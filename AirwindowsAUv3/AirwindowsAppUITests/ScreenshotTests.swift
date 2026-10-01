@@ -44,36 +44,65 @@ final class ScreenshotTests: XCTestCase {
         sleep(1)
 
         // 3. Browser. It opens where you were: the current effect's category
-        //    list with that effect highlighted and its card raised.
+        //    with that effect highlighted. On a phone that is the single-
+        //    column list with the card raised; on an iPad the drawer has room
+        //    for categories | effects | description side by side.
         app.buttons["Browse effects"].firstMatch.tap()
         let readAbout = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Read about ")).firstMatch
-        XCTAssertTrue(readAbout.waitForExistence(timeout: 10), "effects list with card should appear")
-        sleep(1)
-        shoot(app, "03-effects-card-\(appearance)")
+        let isPhone = UIDevice.current.userInterfaceIdiom == .phone
+        if isPhone {
+            XCTAssertTrue(readAbout.waitForExistence(timeout: 10), "effects list with card should appear")
+            sleep(1)
+            shoot(app, "03-effects-card-\(appearance)")
 
-        // 4. Description page.
-        readAbout.tap()
-        let backToList = app.buttons["Back to the list"].firstMatch
-        XCTAssertTrue(backToList.waitForExistence(timeout: 10), "description page should appear")
-        sleep(1)
-        shoot(app, "04-description-\(appearance)")
+            // 4. Description page.
+            readAbout.tap()
+            let backToList = app.buttons["Back to the list"].firstMatch
+            XCTAssertTrue(backToList.waitForExistence(timeout: 10), "description page should appear")
+            sleep(1)
+            shoot(app, "04-description-\(appearance)")
 
-        // 5. Back out to the categories page.
-        backToList.tap()
-        let backToCategories = app.buttons["Back to categories"].firstMatch
-        XCTAssertTrue(backToCategories.waitForExistence(timeout: 10), "list should reappear")
-        backToCategories.tap()
+            // 5. Back out to the categories page.
+            backToList.tap()
+            let backToCategories = app.buttons["Back to categories"].firstMatch
+            XCTAssertTrue(backToCategories.waitForExistence(timeout: 10), "list should reappear")
+            backToCategories.tap()
+        } else {
+            let selectButton = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Select ")).firstMatch
+            XCTAssertTrue(selectButton.waitForExistence(timeout: 10), "three-column browser should appear")
+            sleep(1)
+            shoot(app, "03-browser-columns-\(appearance)")
+        }
+
         let category = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Ambience,")).firstMatch
         XCTAssertTrue(category.waitForExistence(timeout: 10), "categories should list Ambience")
         sleep(1)
-        shoot(app, "05-categories-\(appearance)")
+        if isPhone { shoot(app, "05-categories-\(appearance)") }
 
-        // 6. Another category's list, no card.
+        // 6. Another category's list. On iPad that is categories | effects
+        //    with the description column waiting for a tap; then tap a row.
         category.tap()
         let firstRow = app.descendants(matching: .any).matching(identifier: "effectRow").firstMatch
         XCTAssertTrue(firstRow.waitForExistence(timeout: 10), "effect list should appear")
         sleep(1)
-        shoot(app, "06-effects-\(appearance)")
+        shoot(app, isPhone ? "06-effects-\(appearance)" : "04-browser-category-\(appearance)")
+
+        if !isPhone {
+            firstRow.tap()
+            sleep(1)
+            shoot(app, "05-browser-effect-\(appearance)")
+
+            // 7. iPad landscape: close the browser, rotate, shoot the
+            //    workspace, reopen the browser, shoot it wide.
+            app.buttons["Close browser"].firstMatch.tap()
+            XCUIDevice.shared.orientation = .landscapeLeft
+            sleep(2)
+            shoot(app, "06-workspace-landscape-\(appearance)")
+            app.buttons["Browse effects"].firstMatch.tap()
+            sleep(2)
+            shoot(app, "07-browser-landscape-\(appearance)")
+            XCUIDevice.shared.orientation = .portrait
+        }
     }
 
     private func shoot(_ app: XCUIApplication, _ name: String) {
