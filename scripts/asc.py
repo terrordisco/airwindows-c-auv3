@@ -48,6 +48,8 @@ def call(method, path, body=None):
 
 if __name__ == "__main__":
     method, path = sys.argv[1], sys.argv[2]
-    body = json.loads(sys.argv[3]) if len(sys.argv) > 3 else None
+    raw = sys.argv[3] if len(sys.argv) > 3 else None
+    # "@path" reads the JSON body from a file (sidesteps shell quoting).
+    body = json.load(open(raw[1:])) if raw and raw.startswith("@") else (json.loads(raw) if raw else None)
     status, out = call(method, path, body)
     print(status); print(json.dumps(out, indent=2))

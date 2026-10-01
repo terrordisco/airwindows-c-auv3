@@ -9,7 +9,8 @@
 //      xcodebuild test … -only-testing:AirwindowsAppUITests/ScreenshotTests
 //      xcrun xcresulttool export attachments --path <result>.xcresult --output-path <dir>
 //
-//  Pass SCREENSHOT_APPEARANCE=night (or day) in the test environment to
+//  Opt in with TEST_RUNNER_SCREENSHOT_ROBOT=1 (otherwise the test skips, so
+//  plain CI runs ignore it). Pass SCREENSHOT_APPEARANCE=night (or day) in the test environment to
 //  shoot the other theme; it is forwarded to the app as a launch argument
 //  that seeds the `airwindows.appearance` default. The startup effect comes
 //  from the App Group default `airwindows.defaultEffect`, which the caller
@@ -24,7 +25,13 @@ final class ScreenshotTests: XCTestCase {
         continueAfterFailure = true
     }
 
-    func testShootAppStoreScreens() {
+    func testShootAppStoreScreens() throws {
+        // Opt-in only: this is a screenshot robot, not a test. It needs a
+        // pinned default effect and a seeded simulator, which CI doesn't have,
+        // so a plain `xcodebuild test` skips it. Run it with
+        // TEST_RUNNER_SCREENSHOT_ROBOT=1 in the environment.
+        try XCTSkipUnless(ProcessInfo.processInfo.environment["SCREENSHOT_ROBOT"] == "1",
+                          "screenshot robot runs only with SCREENSHOT_ROBOT=1")
         let app = XCUIApplication()
         let appearance = ProcessInfo.processInfo.environment["SCREENSHOT_APPEARANCE"] ?? "day"
         app.launchArguments += ["-airwindows.appearance", appearance]
