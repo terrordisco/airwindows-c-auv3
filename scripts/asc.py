@@ -8,14 +8,35 @@ processing, attaching a build to an App Store version, submitting for review.
 Usage:  python3 scripts/asc.py GET  "builds?filter[app]=6775213422&limit=3"
         python3 scripts/asc.py POST reviewSubmissions '{"data": {...}}'
         python3 scripts/asc.py PATCH appStoreVersions/<id> '{"data": {...}}'
-Key/issuer come from env ASC_KEY_ID / ASC_ISSUER_ID or the defaults below;
-the .p8 lives at ~/.appstoreconnect/private_keys/AuthKey_<KEY>.p8.
+Credentials never live in this (public) repo. Key ID and issuer ID come from
+env ASC_KEY_ID / ASC_ISSUER_ID (ASC_API_KEY_ID / ASC_API_ISSUER_ID also work,
+that's what the GitHub workflow sets), else from ~/.appstoreconnect/asc.json:
+
+    {"key_id": "XXXXXXXXXX", "issuer_id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"}
+
+The .p8 private key lives at ~/.appstoreconnect/private_keys/AuthKey_<KEY>.p8
+(or wherever ASC_API_KEY_PATH points).
 """
 import base64, json, os, subprocess, sys, time, urllib.request, urllib.error
 
-KEY = os.environ.get("ASC_KEY_ID", "23QZ996SQM")
-ISS = os.environ.get("ASC_ISSUER_ID", "e5d9a5e4-37a2-4caa-8c77-6da3ac0f84c0")
-P8 = os.path.expanduser(f"~/.appstoreconnect/private_keys/AuthKey_{KEY}.p8")
+_CONFIG = os.path.expanduser("~/.appstoreconnect/asc.json")
+
+
+def _credential(env_names: tuple[str, ...], config_key: str) -> str:
+    for name in env_names:
+        if os.environ.get(name):
+            return os.environ[name]
+    if os.path.exists(_CONFIG):
+        with open(_CONFIG) as f:
+            value = json.load(f).get(config_key)
+        if value:
+            return value
+    sys.exit(f"asc.py: no {config_key} — set {env_names[0]} or add it to {_CONFIG}")
+
+
+KEY = _credential(("ASC_KEY_ID", "ASC_API_KEY_ID"), "key_id")
+ISS = _credential(("ASC_ISSUER_ID", "ASC_API_ISSUER_ID"), "issuer_id")
+P8 = os.environ.get("ASC_API_KEY_PATH") or os.path.expanduser(f"~/.appstoreconnect/private_keys/AuthKey_{KEY}.p8")
 BASE = "https://api.appstoreconnect.apple.com/v1/"
 
 def b64(b): return base64.urlsafe_b64encode(b).rstrip(b"=").decode()

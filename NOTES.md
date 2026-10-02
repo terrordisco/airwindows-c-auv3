@@ -1211,3 +1211,14 @@ Fixes in `scripts/sync_upstream.py`:
   with the first sentence of Chris's text ("New Airwindows effect: SoftClock3 is a
   groove-oriented time reference.").
 - Local clone update uses fetch + reset instead of `pull --ff-only` (stray files aborted it).
+
+### 2026-10-01 — Public-repo hygiene sweep
+
+Sveinbjörn asked for a check that nothing sensitive is on GitHub. gitleaks over all 99
+commits plus pattern sweeps (private keys, .p8/.p12, passwords, tokens, the App Review
+phone number, base64 blobs): nothing. Deliberately public and fine: the contact email in
+About/privacy, the team ID (in every signed binary anyway), bundle/App Group IDs, the ASC
+app IDs, the beta-signup Worker URL. Tightened: `scripts/asc.py` no longer carries the ASC
+key ID / issuer ID as defaults — they come from env or `~/.appstoreconnect/asc.json`
+(untracked). They remain in git history; not secrets (useless without the .p8), so no
+history rewrite.
