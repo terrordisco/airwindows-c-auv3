@@ -1222,3 +1222,12 @@ app IDs, the beta-signup Worker URL. Tightened: `scripts/asc.py` no longer carri
 key ID / issuer ID as defaults — they come from env or `~/.appstoreconnect/asc.json`
 (untracked). They remain in git history; not secrets (useless without the .p8), so no
 history rewrite.
+
+### 2026-10-02 — Quiet-upstream notice
+
+Chris's cadence since 2024 (from his git history): commits in 131 of 139 weeks, 131 of 157
+commits on Sat/Sun 14:00–20:00 his time, longest pause three weeks (Aug 2024). Two silent
+weekends as of today (last commit 2026-09-18). Sveinbjörn wants an email after three quiet
+weeks: `sync_upstream.py` now outputs `chris_last_commit` / `silent_days`; the workflow opens
+one `quiet`-labelled issue mentioning @sveinbjornpalsson at ≥21 days (GitHub mails on
+mention), comments on it each further quiet week, and closes it the week changes arrive.
