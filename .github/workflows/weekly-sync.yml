@@ -80,7 +80,38 @@ jobs:
 
       - name: Nothing to do
         if: steps.sync.outputs.changed != 'true'
-        run: echo "Upstream unchanged — no build, no release this week."
+        run: |
+          echo "Upstream unchanged — no build, no release this week."
+          echo "Chris's last commit: ${{ steps.sync.outputs.chris_last_commit }} (${{ steps.sync.outputs.silent_days }} days ago)."
+
+      # Chris commits most weekends; three quiet weeks is unusual (his longest
+      # pause since 2024 was three weeks). One `quiet` issue per silence,
+      # mentioning Sveinbjörn so GitHub emails him; later quiet weeks add a
+      # comment to the same issue, and the week he is back it gets closed.
+      - name: Quiet upstream — tell Sveinbjörn
+        if: steps.sync.outputs.changed != 'true' && !inputs.dry_run && fromJSON(steps.sync.outputs.silent_days || '0') >= 21
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          LAST: ${{ steps.sync.outputs.chris_last_commit }}
+          DAYS: ${{ steps.sync.outputs.silent_days }}
+        run: |
+          weeks=$(( DAYS / 7 ))
+          body="@sveinbjornpalsson — nothing new from Chris for $weeks weeks. Last commit to airwindows/airwindows: $LAST. Paul's mirror and airwindows.com are unchanged too. Nothing was built or released; this issue closes itself the week he is back."
+          existing=$(gh issue list --label quiet --state open --json number --jq '.[0].number')
+          if [ -n "$existing" ]; then
+            gh issue comment "$existing" --body "Still quiet: $weeks weeks as of $(date -u +%F), last commit $LAST."
+          else
+            gh issue create --title "Chris has been quiet upstream for $weeks weeks (last commit $LAST)" --body "$body" --label quiet
+          fi
+
+      - name: Upstream is back — close any quiet issue
+        if: steps.sync.outputs.changed == 'true' && !inputs.dry_run
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          for n in $(gh issue list --label quiet --state open --json number --jq '.[].number'); do
+            gh issue close "$n" --comment "Chris is back — this week's sync found changes (see the \`sync\` issue). Closing."
+          done
 
       - name: Generate Xcode project
         if: steps.sync.outputs.changed == 'true'

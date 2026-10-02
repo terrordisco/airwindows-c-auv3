@@ -82,6 +82,11 @@ def git_head(path: Path) -> str:
     return subprocess.run(["git", "-C", str(path), "rev-parse", "--short", "HEAD"], text=True, capture_output=True).stdout.strip()
 
 
+def last_commit_date(path: Path) -> date:
+    iso = subprocess.run(["git", "-C", str(path), "log", "-1", "--format=%cI"], text=True, capture_output=True).stdout.strip()
+    return date.fromisoformat(iso[:10]) if iso else date.today()
+
+
 def git_log_subjects(path: Path, old: str, new: str) -> list[str]:
     if not old or old == new:
         return []
@@ -309,6 +314,7 @@ def write_report(path: Path | None, ctx: dict) -> str:
     L.append(f"Paul's airwin2rack: `{ctx['paul_before'] or 'fresh clone'}` → `{ctx['paul_after']}`; Chris's airwindows: `{ctx['chris_before'] or '?'}` → `{ctx['chris_after']}`.")
     if ctx["chris_log"]:
         L += ["", "Chris's commits since last sync:", *[f"- {s}" for s in ctx["chris_log"]]]
+    L.append(f"Chris's last commit: {ctx['chris_last']} ({ctx['silent_days']} days ago).")
     L += ["", f"Effects: {len(reg_before)} → {len(reg_after)}.", ""]
     L.append(f"## New effects ({len(new)})")
     L += [f"- {describe(n, reg_after, overrides, links_after)}" for n in new] or ["- none"]
@@ -411,6 +417,8 @@ def main() -> int:
 
     paul_before, paul_after, chris_before, chris_after = update_airwin2rack(repo)
     chris_log = git_log_subjects(repo / "libs" / "airwindows", chris_before, chris_after)
+    chris_last = last_commit_date(repo / "libs" / "airwindows")
+    silent_days = (date.today() - chris_last).days
 
     m = mirror(repo)
     if not args.no_fetch:
@@ -452,7 +460,7 @@ def main() -> int:
 
     ctx = dict(reg_before=reg_before, reg_after=reg_after, links_before=links_before, mirror=m, cats=cats,
                dsp_changed=dsp_changed, scraped_now=scraped_now, docs_rewritten=docs_rewritten, links_delta=links_delta,
-               noise=noise, whats_new=wn, chris_log=chris_log,
+               noise=noise, whats_new=wn, chris_log=chris_log, chris_last=chris_last, silent_days=silent_days,
                paul_before=paul_before, paul_after=paul_after, chris_before=chris_before, chris_after=chris_after)
     report = write_report(args.report, ctx)
     print(report)
@@ -464,6 +472,9 @@ def main() -> int:
             f.write(f"marketing_version={mv}\nbuild_number={bv}\n")
             f.write(f"new_effects={','.join(new)}\n")
             f.write(f"unclassified={','.join(n for n, _ in cats['open'])}\n")
+            # Chris usually commits every weekend; the workflow raises a flag
+            # after three quiet weeks so Sveinbjörn hears about it.
+            f.write(f"chris_last_commit={chris_last.isoformat()}\nsilent_days={silent_days}\n")
     if not changed:
         print("Nothing changed upstream or on airwindows.com.")
         return 10
