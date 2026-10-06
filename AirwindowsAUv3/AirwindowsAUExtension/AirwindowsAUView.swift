@@ -154,6 +154,12 @@ struct AirwindowsAUView: View {
     private var scrollpad: ScrollpadPlacement { ScrollpadPlacement(rawValue: scrollpadRaw) ?? .left }
     private func cycleScrollpad() { scrollpadRaw = scrollpad.next.rawValue }
 
+    /// Keep the Random Effect button on screen (a fixed bar at the bottom
+    /// left of the workspace) instead of at the end of the scrolling page.
+    /// App-Group shared like the other layout choices.
+    @AppStorage("airwindows.persistentRandomButton", store: .airwindowsShared)
+    private var persistentRandomButton: Bool = false
+
     private func toggleControlStyle() {
         // Flip to the opposite of whatever's currently rendered. This works
         // whether the previous state was explicit or coming from the auto
@@ -435,6 +441,8 @@ struct AirwindowsAUView: View {
             onToggleTempoSync: viewModel.supportsTempoSync ? { tempoSyncEnabled.toggle() } : nil,
             onOpenAbout: { showAbout = true },
             onRandomEffect: { pickRandomEffect() },
+            isRandomButtonPersistent: persistentRandomButton,
+            onToggleRandomButtonPersistent: { persistentRandomButton.toggle() },
             isMonitoring: isMonitoring,
             onToggleMonitoring: onToggleMonitoring,
             scrollpad: scrollpad,

@@ -15,10 +15,12 @@
 //      Reset settings
 //      Remember settings   →  Recall settings + Forget saved settings
 //      ─────
+//      Persistent Random Effect Button   [switch]
+//      ─────
 //      Pots / Sliders      [switch]
 //      Night Mode          Auto / Night / Day
 //      ─────
-//      Airwindows Settings…
+//      Help                [switch]   tap anything to learn what it does
 //      About Airwindows
 //
 //  Every action is optional (nil hides its row) so the same gating the
@@ -68,6 +70,12 @@ public struct CompactMenuDrawer: View {
     /// Settings, next to the Limiter. nil hides the row.
     public let isLongPressLockOn: Bool
     public let onToggleLongPressLock: (() -> Void)?
+    /// "Persistent Random Effect Button" — keeps the workspace's Random
+    /// Effect button in a fixed bar at the bottom left instead of at the end
+    /// of the scrolling page. Its own section between the effect rows and
+    /// the view rows. nil hides it.
+    public let isRandomButtonPersistent: Bool
+    public let onToggleRandomButtonPersistent: (() -> Void)?
     public let appearance: AirwindowsAppearance
     public let onCycleAppearance: () -> Void
     /// App-only input monitoring (mic → effect → speaker). nil in the AUv3.
@@ -75,6 +83,10 @@ public struct CompactMenuDrawer: View {
     public let onToggleMonitoring: (() -> Void)?
 
     // Elsewhere
+    /// Help mode (see HelpMode.swift): the row's switch state and toggle.
+    /// Always acts, even while Help is on — it's the way out. nil hides it.
+    public let isHelpOn: Bool
+    public let onToggleHelp: (() -> Void)?
     public let onOpenAbout: (() -> Void)?
 
     // Scrollpad edge
@@ -115,10 +127,14 @@ public struct CompactMenuDrawer: View {
         onToggleControlStyle: (() -> Void)? = nil,
         isLongPressLockOn: Bool = false,
         onToggleLongPressLock: (() -> Void)? = nil,
+        isRandomButtonPersistent: Bool = false,
+        onToggleRandomButtonPersistent: (() -> Void)? = nil,
         appearance: AirwindowsAppearance = .auto,
         onCycleAppearance: @escaping () -> Void = {},
         isMonitoring: Bool = false,
         onToggleMonitoring: (() -> Void)? = nil,
+        isHelpOn: Bool = false,
+        onToggleHelp: (() -> Void)? = nil,
         onOpenAbout: (() -> Void)? = nil,
         scrollpad: ScrollpadPlacement = .left,
         onCycleScrollpad: @escaping () -> Void = {},
@@ -148,10 +164,14 @@ public struct CompactMenuDrawer: View {
         self.onToggleControlStyle = onToggleControlStyle
         self.isLongPressLockOn = isLongPressLockOn
         self.onToggleLongPressLock = onToggleLongPressLock
+        self.isRandomButtonPersistent = isRandomButtonPersistent
+        self.onToggleRandomButtonPersistent = onToggleRandomButtonPersistent
         self.appearance = appearance
         self.onCycleAppearance = onCycleAppearance
         self.isMonitoring = isMonitoring
         self.onToggleMonitoring = onToggleMonitoring
+        self.isHelpOn = isHelpOn
+        self.onToggleHelp = onToggleHelp
         self.onOpenAbout = onOpenAbout
         self.scrollpad = scrollpad
         self.onCycleScrollpad = onCycleScrollpad
@@ -179,8 +199,12 @@ public struct CompactMenuDrawer: View {
 
                     effectSection
                     sectionDivider
+                    if let onToggleRandomButtonPersistent {
+                        randomButtonRow(action: onToggleRandomButtonPersistent)
+                        sectionDivider
+                    }
                     viewSection
-                    if onOpenAbout != nil {
+                    if onOpenAbout != nil || onToggleHelp != nil {
                         sectionDivider
                         elsewhereSection
                     }
@@ -237,6 +261,7 @@ public struct CompactMenuDrawer: View {
         HStack(spacing: 0) {
             if let onUndo {
                 pairHalf(systemName: "arrow.uturn.backward", title: "Undo", enabled: canUndo, action: onUndo)
+                    .helpTip(HelpCopy.undo)
             }
             if onUndo != nil, onRedo != nil {
                 Rectangle()
@@ -245,6 +270,7 @@ public struct CompactMenuDrawer: View {
             }
             if let onRedo {
                 pairHalf(systemName: "arrow.uturn.forward", title: "Redo", enabled: canRedo, action: onRedo)
+                    .helpTip(HelpCopy.redo)
             }
         }
         .frame(height: 44)
@@ -278,6 +304,7 @@ public struct CompactMenuDrawer: View {
             MenuRow(
                 systemName: isFavorite ? "star.fill" : "star",
                 title: isFavorite ? "Remove Effect from Favorites" : "Add Effect to Favorites",
+                help: isFavorite ? HelpCopy.removeFavorite : HelpCopy.addFavorite,
                 action: onToggleFavorite
             )
         }
@@ -285,6 +312,7 @@ public struct CompactMenuDrawer: View {
             MenuRow(
                 systemName: isDefaultEffect ? "pin.fill" : "pin",
                 title: isDefaultEffect ? "Remove as Default Effect" : "Make Default Effect",
+                help: isDefaultEffect ? HelpCopy.removeDefaultEffect : HelpCopy.makeDefaultEffect,
                 action: onToggleDefaultEffect
             )
         }
@@ -293,16 +321,18 @@ public struct CompactMenuDrawer: View {
                     titleView: { Text("Sync Tempo to Host") },
                     trailing: { StyleSwitchGlyph(isOn: isTempoSyncOn) },
                     accessibility: isTempoSyncOn ? "Sync tempo to host, on. Tap to turn off." : "Sync tempo to host, off. Tap to turn on.",
+                    help: HelpCopy.tempoSync,
                     action: onToggleTempoSync)
         }
         if let onRandomize {
-            MenuRow(systemName: "dice", title: "Randomize Effect Settings", action: onRandomize)
+            MenuRow(systemName: "dice", title: "Randomize Effect Settings", help: HelpCopy.randomize, action: onRandomize)
             if let onToggleLimiter {
                 MenuRow(systemName: "waveform.badge.exclamationmark",
                         titleView: { Text("Limiter") },
                         trailing: { StyleSwitchGlyph(isOn: isLimiterOn) },
                         indented: true,
                         accessibility: isLimiterOn ? "Limiter on. Tap to turn off." : "Limiter off. Tap to turn on.",
+                        help: HelpCopy.limiter,
                         action: onToggleLimiter)
             }
             // Parameter locks are what you set up so Randomize leaves some
@@ -315,10 +345,11 @@ public struct CompactMenuDrawer: View {
                         accessibility: isLongPressLockOn
                             ? "Long press to lock a parameter, on. Tap to turn off."
                             : "Long press to lock a parameter, off. Tap to turn on.",
+                        help: HelpCopy.longPressLock,
                         action: onToggleLongPressLock)
             }
         }
-        MenuRow(systemName: "arrow.counterclockwise", title: "Reset Effect Settings", action: onReset)
+        MenuRow(systemName: "arrow.counterclockwise", title: "Reset Effect Settings", help: HelpCopy.reset, action: onReset)
 
         // Per-effect saved settings. The effect always loads factory defaults;
         // once a snapshot exists the row becomes "Recall settings" and a
@@ -326,17 +357,31 @@ public struct CompactMenuDrawer: View {
         // replaces the full-mode chip's long-press with a visible row).
         if let onSaveSettings, let onRecallSettings, onClearSavedSettings != nil {
             if hasSavedSettings {
-                MenuRow(systemName: "bookmark.fill", title: "Recall Effect Settings", action: onRecallSettings)
+                MenuRow(systemName: "bookmark.fill", title: "Recall Effect Settings", help: HelpCopy.recallSettings, action: onRecallSettings)
                 MenuRow(
                     systemName: "bookmark.slash",
                     title: "Forget Saved Effect Settings",
                     isSecondary: true,
+                    help: HelpCopy.forgetSettings,
                     action: { showClearSavedSettingsDialog = true }
                 )
             } else {
-                MenuRow(systemName: "bookmark", title: "Remember Effect Settings", action: onSaveSettings)
+                MenuRow(systemName: "bookmark", title: "Remember Effect Settings", help: HelpCopy.rememberSettings, action: onSaveSettings)
             }
         }
+    }
+
+    /// Its own section, divider above and below, right above Pots / Sliders
+    /// (Sveinbjörn, 2026-10-06). A toggle, so the drawer stays open.
+    private func randomButtonRow(action: @escaping () -> Void) -> some View {
+        MenuRow(systemName: "dice",
+                titleView: { Text("Persistent Random Effect Button") },
+                trailing: { StyleSwitchGlyph(isOn: isRandomButtonPersistent) },
+                accessibility: isRandomButtonPersistent
+                    ? "Persistent random effect button, on. Tap to turn off."
+                    : "Persistent random effect button, off. Tap to turn on.",
+                help: HelpCopy.persistentRandomButton,
+                action: action)
     }
 
     @ViewBuilder
@@ -353,6 +398,7 @@ public struct CompactMenuDrawer: View {
                     },
                     trailing: { StyleSwitchGlyph(isOn: !useRotaryPots) },
                     accessibility: useRotaryPots ? "Switch parameter controls to sliders" : "Switch parameter controls to pots",
+                    help: HelpCopy.potsSliders,
                     action: onToggleControlStyle)
         }
 
@@ -360,16 +406,19 @@ public struct CompactMenuDrawer: View {
                 titleView: { Text("Night Mode") },
                 trailing: { ChoiceIndicator(options: AirwindowsAppearance.allCases.map(\.label), current: appearance.label) },
                 accessibility: "Night mode, \(appearance.label). Tap to change.",
+                help: HelpCopy.nightMode,
                 action: onCycleAppearance)
 
         MenuRow(systemName: scrollpad == .right ? "inset.filled.righthalf.rectangle" : "inset.filled.lefthalf.rectangle",
                 titleView: { Text("Scrollpad") },
                 trailing: { ChoiceIndicator(options: ScrollpadPlacement.allCases.map(\.label), current: scrollpad.label) },
                 accessibility: "Scrollpad, \(scrollpad.label). Tap to change.",
+                help: HelpCopy.scrollpadSetting,
                 action: onCycleScrollpad)
 
         if let uiScale {
             ScaleRow(scale: uiScale)
+                .helpTip(HelpCopy.interfaceScale)
         }
 
         if let onToggleMonitoring {
@@ -381,14 +430,23 @@ public struct CompactMenuDrawer: View {
                             .foregroundStyle(.secondary)
                     },
                     accessibility: isMonitoring ? "Mute input monitoring" : "Start input monitoring",
+                    help: HelpCopy.inputMonitoring,
                     action: onToggleMonitoring)
         }
     }
 
     @ViewBuilder
     private var elsewhereSection: some View {
+        // No help tip on Help itself: while Help is on this row is the exit.
+        if let onToggleHelp {
+            MenuRow(systemName: "questionmark.circle",
+                    titleView: { Text("Help") },
+                    trailing: { StyleSwitchGlyph(isOn: isHelpOn) },
+                    accessibility: isHelpOn ? "Help, on. Tap to turn off." : "Help, off. Tap to turn on, then tap anything to learn what it does.",
+                    action: onToggleHelp)
+        }
         if let onOpenAbout {
-            MenuRow(systemName: "info.circle", title: "About Airwindows", action: onOpenAbout)
+            MenuRow(systemName: "info.circle", title: "About Airwindows", help: HelpCopy.about, action: onOpenAbout)
         }
     }
 
@@ -414,6 +472,8 @@ private struct MenuRow<Title: View, Trailing: View>: View {
     /// (the Limiter switch under Randomize Settings).
     let indented: Bool
     let accessibility: String?
+    /// What help mode says about this row (nil: the row acts even in Help).
+    let help: String?
     let action: () -> Void
 
     init(
@@ -423,6 +483,7 @@ private struct MenuRow<Title: View, Trailing: View>: View {
         isSecondary: Bool = false,
         indented: Bool = false,
         accessibility: String? = nil,
+        help: String? = nil,
         action: @escaping () -> Void
     ) {
         self.systemName = systemName
@@ -431,6 +492,7 @@ private struct MenuRow<Title: View, Trailing: View>: View {
         self.isSecondary = isSecondary
         self.indented = indented
         self.accessibility = accessibility
+        self.help = help
         self.action = action
     }
 
@@ -460,17 +522,19 @@ private struct MenuRow<Title: View, Trailing: View>: View {
         }
         .buttonStyle(.plain)
         .accessibilityLabel(accessibility ?? "")
+        .helpTip(help)
     }
 }
 
 private extension MenuRow where Title == Text, Trailing == EmptyView {
-    init(systemName: String, title: String, isSecondary: Bool = false, action: @escaping () -> Void) {
+    init(systemName: String, title: String, isSecondary: Bool = false, help: String? = nil, action: @escaping () -> Void) {
         self.init(
             systemName: systemName,
             titleView: { Text(title) },
             trailing: { EmptyView() },
             isSecondary: isSecondary,
             accessibility: title,
+            help: help,
             action: action
         )
     }

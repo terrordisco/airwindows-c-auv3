@@ -19,13 +19,16 @@
 //  │        “tagline, centered, italic”       │  tagline band
 //  │ ──────────────────────────────────────── │
 //  │  # Highpass  long description…           │
+//  │ ──────────────────────────────────────── │
+//  │  [⚄ Random Effect]                       │  optional persistent bar
 //  └──────────────────────────────────────────┘
 //  ```
 //
 //  Everything the full layout puts in the bottom bar (Undo/Redo, Random,
 //  Reset, Save/Recall, Pots/Sliders, Night/Day, Settings) lives behind the
 //  menu button in CompactMenuDrawer, which slides in from the right over a
-//  dimmed workspace. The browser button on the left opens the effect
+//  dimmed workspace. The drawer's Help row turns on help mode (HelpMode.swift):
+//  a strip appears under the header and tapping any control explains it. The browser button on the left opens the effect
 //  browser; the title box holds the prev/next jogs and is otherwise inert.
 //
 
@@ -84,6 +87,12 @@ public struct CompactWorkspaceView: View {
     /// "Random Effect" button at the very bottom of the page, under the
     /// description (Sveinbjörn, 2026-09-30). nil hides it.
     public let onRandomEffect: (() -> Void)?
+    /// Persistent Random Effect button (Sveinbjörn, 2026-10-06): when on, the
+    /// button leaves the end of the scrolling page and sits in a fixed bar at
+    /// the bottom left of the workspace, always on screen. Toggled from the
+    /// menu drawer; nil hides the row.
+    public let isRandomButtonPersistent: Bool
+    public let onToggleRandomButtonPersistent: (() -> Void)?
     public let isMonitoring: Bool
     public let onToggleMonitoring: (() -> Void)?
     /// Scrollpad edge (left / right / off) and the menu row's cycle action.
@@ -96,6 +105,10 @@ public struct CompactWorkspaceView: View {
     @Environment(\.uiScale) private var uiScale
     @Environment(\.containerSize) private var containerSize
     @State private var showMenu = false
+    /// Help mode: tap anything to see what it does (see HelpMode.swift).
+    /// Owned here so it survives switching effects and reaches both the
+    /// workspace and the drawer through the environment. Not persisted.
+    @State private var helpMode = HelpMode()
     /// Measured heights for the scrollpad rule: the strip only shows when the
     /// pots/fader field is taller than the scrollable area it sits in, i.e.
     /// when there is actually something to scroll to. A short field that fits
@@ -149,6 +162,8 @@ public struct CompactWorkspaceView: View {
         onToggleTempoSync: (() -> Void)? = nil,
         onOpenAbout: (() -> Void)? = nil,
         onRandomEffect: (() -> Void)? = nil,
+        isRandomButtonPersistent: Bool = false,
+        onToggleRandomButtonPersistent: (() -> Void)? = nil,
         isMonitoring: Bool = false,
         onToggleMonitoring: (() -> Void)? = nil,
         scrollpad: ScrollpadPlacement = .left,
@@ -200,6 +215,8 @@ public struct CompactWorkspaceView: View {
         self.onToggleTempoSync = onToggleTempoSync
         self.onOpenAbout = onOpenAbout
         self.onRandomEffect = onRandomEffect
+        self.isRandomButtonPersistent = isRandomButtonPersistent
+        self.onToggleRandomButtonPersistent = onToggleRandomButtonPersistent
         self.isMonitoring = onToggleMonitoring == nil ? false : isMonitoring
         self.onToggleMonitoring = onToggleMonitoring
         self.scrollpad = scrollpad
@@ -253,6 +270,11 @@ public struct CompactWorkspaceView: View {
             }
         }
         .background(AirwindowsPalette.surface(scheme))
+        // Help mode: anchors are measured in this space; the one bubble is
+        // drawn here, above everything including the drawer.
+        .coordinateSpace(name: HelpMode.coordinateSpace)
+        .overlay { HelpTipOverlay() }
+        .environment(\.helpMode, helpMode)
         // Same stable anchor the full layout exposes for the UI smoke test.
         .accessibilityIdentifier("effectDetailView")
     }
@@ -267,10 +289,13 @@ public struct CompactWorkspaceView: View {
     private static let drawerAnimation: Animation = .spring(duration: 0.32, bounce: 0)
 
     private func openMenu() {
+        // No helpMode.hide() here: the Menu button's passthrough tip is shown
+        // by the same tap, and should float over the opening drawer.
         withAnimation(Self.drawerAnimation) { showMenu = true }
     }
 
     private func closeMenu() {
+        helpMode.hide()
         withAnimation(Self.drawerAnimation) { showMenu = false }
     }
 
@@ -287,10 +312,17 @@ public struct CompactWorkspaceView: View {
         VStack(spacing: 0) {
             header
             hairline
+            if helpMode.isOn {
+                HelpBanner(onDone: { helpMode.isOn = false })
+                    .transition(.move(edge: .top).combined(with: .opacity))
+                hairline
+            }
             levelsRow
             hairline
             body_parameters
+            persistentRandomBar
         }
+        .animation(.easeOut(duration: 0.2), value: helpMode.isOn)
     }
 
     private var hairline: some View {
@@ -301,11 +333,15 @@ public struct CompactWorkspaceView: View {
     private var header: some View {
         HStack(spacing: 8) {
             CompactChromeButton(systemName: "sidebar.left", accessibility: "Browse effects", action: onOpenBrowser)
+                .helpTip(HelpCopy.browserButton)
 
             titleBox
                 .frame(maxWidth: .infinity)
 
+            // Passthrough: in help mode the menu still opens, with its tip
+            // floating over it — otherwise the drawer's tips are unreachable.
             CompactChromeButton(systemName: "line.3.horizontal", accessibility: "Menu", action: { openMenu() })
+                .helpTip(HelpCopy.menuButton, passthrough: true)
         }
         .padding(.horizontal, Self.chromeInset)
         .padding(.top, headerTopInset)
@@ -327,18 +363,22 @@ public struct CompactWorkspaceView: View {
     private var titleBox: some View {
         HStack(spacing: 4) {
             JogChevron(direction: .previous, enabled: previousName != nil, targetName: previousName, action: onPrevious)
+                .helpTip(HelpCopy.previousEffect)
 
             HStack(spacing: 8 * uiScale) {
-                Text(effect.category.uppercased())
-                    .font(.system(size: 10 * uiScale, weight: .semibold))
-                    .kerning(1.2)
-                    .foregroundStyle(.secondary)
-                    .lineLimit(1)
-                Text(effect.name)
-                    .font(.system(size: 22 * uiScale, weight: .semibold))
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.6)
-                    .accessibilityLabel("\(effect.category), \(effect.name)")
+                HStack(spacing: 8 * uiScale) {
+                    Text(effect.category.uppercased())
+                        .font(.system(size: 10 * uiScale, weight: .semibold))
+                        .kerning(1.2)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                    Text(effect.name)
+                        .font(.system(size: 22 * uiScale, weight: .semibold))
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.6)
+                        .accessibilityLabel("\(effect.category), \(effect.name)")
+                }
+                .helpTip(HelpCopy.effectTitle)
 
                 // Favorite star right of the name (personalisation-gated).
                 if let favorites {
@@ -352,11 +392,13 @@ public struct CompactWorkspaceView: View {
                     }
                     .buttonStyle(.plain)
                     .accessibilityLabel(isFav ? "Remove \(effect.name) from favorites" : "Add \(effect.name) to favorites")
+                    .helpTip(HelpCopy.favoriteStar)
                 }
             }
             .frame(maxWidth: .infinity)
 
             JogChevron(direction: .next, enabled: nextName != nil, targetName: nextName, action: onNext)
+                .helpTip(HelpCopy.nextEffect)
         }
         .padding(.horizontal, 6)
         .frame(height: 44)
@@ -370,14 +412,17 @@ public struct CompactWorkspaceView: View {
     private var levelsRow: some View {
         HStack(spacing: 0) {
             LevelPot(label: "In", value: $inputLevel, display: inputDisplay)
+                .helpTip(HelpCopy.inputLevel)
             Spacer(minLength: 8)
             // Only stereo-process effects get a chip; the rest are per-channel
             // and calling them "mono" was wrong (see ChannelMark).
             if !effect.isMono {
                 Chip(text: "Stereo process", size: .small)
+                    .helpTip(HelpCopy.stereoChip)
             }
             Spacer(minLength: 8)
             LevelPot(label: "Out", value: $outputLevel, display: outputDisplay, trailing: true)
+                .helpTip(HelpCopy.outputLevel)
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 8 * uiScale)
@@ -471,6 +516,7 @@ public struct CompactWorkspaceView: View {
                 ScrollHatchGutter()
                     .frame(width: stripWidth)
                     .padding(.bottom, ScrollHatchGutter.lineStep)
+                    .helpTip(HelpCopy.scrollpad)
             }
         }
     }
@@ -490,6 +536,7 @@ public struct CompactWorkspaceView: View {
                 .frame(maxWidth: .infinity)
                 .padding(.horizontal, 24)
                 .padding(.vertical, 14 * uiScale)
+                .helpTip(HelpCopy.tagline)
             hairline
         }
     }
@@ -500,6 +547,7 @@ public struct CompactWorkspaceView: View {
             EffectDescriptionText(description, omittingHeadingMatching: effect.whatText)
                 .hEdgePadding(16)
                 .padding(.vertical, 16 * uiScale)
+                .helpTip(HelpCopy.description)
         }
     }
 
@@ -507,7 +555,7 @@ public struct CompactWorkspaceView: View {
     /// page is where you've read about this effect and might want another.
     @ViewBuilder
     private var randomEffectFooter: some View {
-        if let onRandomEffect {
+        if let onRandomEffect, !isRandomButtonPersistent {
             hairline
             HStack {
                 Spacer(minLength: 0)
@@ -518,9 +566,33 @@ public struct CompactWorkspaceView: View {
                     accessibility: "Pick a random effect",
                     action: onRandomEffect
                 )
+                .helpTip(HelpCopy.randomEffect)
                 Spacer(minLength: 0)
             }
             .padding(.vertical, 22 * uiScale)
+        }
+    }
+
+    /// The persistent alternative to the footer: a fixed bar under the
+    /// scrolling field with the same button at the bottom-left corner, so a
+    /// new effect is one tap away without scrolling to the end of the page.
+    @ViewBuilder
+    private var persistentRandomBar: some View {
+        if let onRandomEffect, isRandomButtonPersistent {
+            hairline
+            HStack {
+                ActionButton(
+                    systemName: "dice",
+                    text: "Random Effect",
+                    role: .outlined,
+                    accessibility: "Pick a random effect",
+                    action: onRandomEffect
+                )
+                .helpTip(HelpCopy.randomEffect)
+                Spacer(minLength: 0)
+            }
+            .hEdgePadding(16)
+            .padding(.vertical, 10 * uiScale)
         }
     }
 
@@ -559,10 +631,14 @@ public struct CompactWorkspaceView: View {
             onToggleControlStyle: onToggleControlStyle,
             isLongPressLockOn: isLongPressLockOn,
             onToggleLongPressLock: onToggleLongPressLock,
+            isRandomButtonPersistent: isRandomButtonPersistent,
+            onToggleRandomButtonPersistent: onRandomEffect == nil ? nil : onToggleRandomButtonPersistent,
             appearance: appearance,
             onCycleAppearance: onCycleAppearance,
             isMonitoring: isMonitoring,
             onToggleMonitoring: onToggleMonitoring,
+            isHelpOn: helpMode.isOn,
+            onToggleHelp: closing { helpMode.isOn.toggle() },
             onOpenAbout: closing(onOpenAbout),
             scrollpad: scrollpad,
             onCycleScrollpad: onCycleScrollpad,

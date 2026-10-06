@@ -1231,3 +1231,33 @@ weekends as of today (last commit 2026-09-18). Sveinbjörn wants an email after 
 weeks: `sync_upstream.py` now outputs `chris_last_commit` / `silent_days`; the workflow opens
 one `quiet`-labelled issue mentioning @sveinbjornpalsson at ≥21 days (GitHub mails on
 mention), comments on it each further quiet week, and closes it the week changes arrive.
+
+### 2026-10-06 — Persistent Random Effect button + Help mode
+
+Two compact-layout features, both from the menu drawer.
+
+- **Persistent Random Effect Button** (`airwindows.persistentRandomButton`, App-Group shared,
+  off by default). On: the Random Effect button leaves the end of the scrolling page and sits in
+  a fixed bar at the bottom-left of the workspace, hairline above, always on screen. Its menu row
+  is its own section — divider above and below — right above Pots / Sliders (Sveinbjörn's placement).
+- **Help** (`HelpMode.swift`, `HelpCopy.swift`). A Help row with a switch sits above About
+  Airwindows. On: the drawer closes, a strip under the header says "Help is on. Tap anything to
+  see what it does." with a Done button, and tapping any marked control shows a bubble explaining
+  it instead of acting. Not persisted — a moment, not a setting. Apple has no touch tooltip; the
+  closest native patterns are TipKit (proactive tips) and Shortcuts' "?" mode; this follows the latter.
+  - `HelpMode` (@Observable, owned by CompactWorkspaceView, in the environment) holds on/off and the
+    one active tip (text + anchor rect in the workspace coordinate space). 5 s auto-dismiss, re-tap restarts.
+  - `.helpTip(text)` marks a control: while Help is on it lays a clear tap-catcher over it (the
+    control never sees the touch) and reports its frame; `passthrough: true` (Menu button only)
+    lets the tap through as well, so the drawer still opens with its tip floating over it.
+  - `HelpTipOverlay` draws the single bubble at the workspace root — above the control when it
+    fits, else below, slid inward to stay on screen with the pointer still aimed at the control.
+    Root-level drawing avoids ScrollView clipping and sibling z-order. `TooltipBubble` is now
+    shared with the pin's transient tooltip (pointer on either edge, offsettable).
+  - Marked: browser + menu buttons, prev/next jogs, title, favorite star, In/Out pots, Stereo
+    chip, every parameter row (text built from name / step count / lock state), scrollpad,
+    tagline, description, Random Effect (both placements), every drawer row incl. Undo/Redo and
+    the scale slider. Not marked (always act): Help row, Close, scrim, Done.
+  - **All copy lives in `HelpCopy.swift`** — one file, edit freely. Sveinbjörn is editing the
+    strings in a Claude Doc ("Airwindows help tooltips"); port back on request.
+- Xcode project was stale (referenced two deleted ConsoleXSub* headers) — regenerated with xcodegen.

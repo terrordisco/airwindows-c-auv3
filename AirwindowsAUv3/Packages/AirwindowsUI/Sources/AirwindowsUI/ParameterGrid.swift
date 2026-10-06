@@ -94,11 +94,21 @@ public struct ParameterRow: View {
     }
 
     public var body: some View {
-        if useRotaryPots {
-            potBody
-        } else {
-            sliderBody
+        Group {
+            if useRotaryPots {
+                potBody
+            } else {
+                sliderBody
+            }
         }
+        .helpTip(helpText)
+    }
+
+    /// What help mode says about this control (see HelpCopy).
+    private var helpText: String {
+        isLocked
+            ? HelpCopy.lockedParameter(name: name)
+            : HelpCopy.parameter(name: name, stepCount: stepCount, lockingEnabled: onToggleLock != nil)
     }
 
     /// Pot layout — compact, vertical, designed to tile in a flowing grid:

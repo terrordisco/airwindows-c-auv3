@@ -62,11 +62,30 @@ private struct TransientTooltipModifier: ViewModifier {
     }
 
     private var bubble: some View {
-        // Inverted surface so the callout reads on both schemes: near-black
-        // on white in Day, near-white on dark in Night.
-        let fill: Color = scheme == .dark ? Color(white: 0.93) : Color(red: 0.11, green: 0.11, blue: 0.12)
-        let ink: Color = scheme == .dark ? Color(red: 0.11, green: 0.11, blue: 0.12) : Color.white
-        return VStack(spacing: 0) {
+        TooltipBubble(text: text)
+    }
+}
+
+// MARK: - The bubble
+
+/// The callout itself: dark rounded box with a pointer on one edge. Shared
+/// by the transient tooltip (pointer below, centered) and help mode's
+/// overlay (pointer on whichever edge faces the control, slid sideways to
+/// keep aiming at it when the bubble has been nudged inward).
+struct TooltipBubble: View {
+    let text: String
+    var pointerEdge: VerticalEdge = .bottom
+    /// Horizontal offset of the pointer from the bubble's center.
+    var pointerOffset: CGFloat = 0
+
+    @Environment(\.colorScheme) private var scheme
+
+    private static let pointerSize: CGFloat = 12
+    private static let pointerRise: CGFloat = 6
+
+    var body: some View {
+        VStack(spacing: 0) {
+            if pointerEdge == .top { pointer }
             Text(text)
                 .font(.system(size: 12, weight: .regular))
                 .foregroundStyle(ink)
@@ -75,17 +94,26 @@ private struct TransientTooltipModifier: ViewModifier {
                 .padding(.vertical, 9)
                 .frame(maxWidth: 240)
                 .background(RoundedRectangle(cornerRadius: 9).fill(fill))
-            // Pointer.
-            Rectangle()
-                .fill(fill)
-                .frame(width: 12, height: 12)
-                .rotationEffect(.degrees(45))
-                .offset(y: -6)
-                .frame(height: 6)
+            if pointerEdge == .bottom { pointer }
         }
         .fixedSize()
         .shadow(color: .black.opacity(0.18), radius: 8, y: 3)
         .allowsHitTesting(false)
         .accessibilityHidden(true)
+    }
+
+    // Inverted surface so the callout reads on both schemes: near-black on
+    // white in Day, near-white on dark in Night.
+    private var fill: Color { scheme == .dark ? Color(white: 0.93) : Color(red: 0.11, green: 0.11, blue: 0.12) }
+    private var ink: Color { scheme == .dark ? Color(red: 0.11, green: 0.11, blue: 0.12) : Color.white }
+
+    /// A rotated square, half tucked under the box so only a triangle shows.
+    private var pointer: some View {
+        Rectangle()
+            .fill(fill)
+            .frame(width: Self.pointerSize, height: Self.pointerSize)
+            .rotationEffect(.degrees(45))
+            .offset(x: pointerOffset, y: pointerEdge == .bottom ? -Self.pointerRise : Self.pointerRise)
+            .frame(height: Self.pointerRise)
     }
 }
