@@ -42,7 +42,7 @@ on:
         type: boolean
         default: false
       whats_new:
-        description: "What's New text for a release_pending run (the sync writes its own otherwise)"
+        description: "What's New text; overrides the generated one (use when earlier weeks never shipped)"
         type: string
         default: ""
 
@@ -96,6 +96,9 @@ jobs:
           fi
           if [ "$code" = "10" ]; then echo "changed=false" >> "$GITHUB_OUTPUT"; echo "Nothing new upstream."; exit 0; fi
           if [ "$code" != "0" ]; then echo "::error::sync_upstream.py failed ($code)"; exit "$code"; fi
+          # An operator-supplied What's New wins over the generated one — the
+          # generated text only covers this week's sync, not earlier unshipped ones.
+          if [ -n "$WHATS_NEW" ]; then printf '%s\n' "$WHATS_NEW" > whatsnew.txt; echo "What's New overridden by dispatch input."; fi
 
       - name: Upload report
         if: always()
