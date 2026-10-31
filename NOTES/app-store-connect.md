@@ -18,11 +18,13 @@ The AU plugin name shown in hosts (AUM, Logic, etc.) is also `Airwindows Consoli
 
 ### Subtitle (max 30)
 
-`500+ Airwindows effects, free` (29) — **recommended**
+`500+ audio effects` (18) — **live in ASC since 2026-10-20**
 
-Alternates:
+**Rule (Guideline 2.3.7, learned the hard way):** the App Name and Subtitle may not mention price — and "free" counts as a price reference. The 1.0 (9) submission was rejected on 2026-10-20 for the subtitle "500+ effects, free forever!". Saying "free" in the *description* is fine.
+
+Alternates (all price-free):
 - `All 500+ effects in one AUv3` (29)
-- `Chris Johnson's full DSP toolkit` (32 — too long, cut to "Chris Johnson's DSP toolkit" at 27)
+- `Chris Johnson's DSP toolkit` (27)
 
 ### Primary Category
 

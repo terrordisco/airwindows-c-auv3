@@ -66,7 +66,8 @@ def api(method: str, path: str, body=None, expect=(200, 201, 204)):
 # 1. build + upload
 # ---------------------------------------------------------------------------
 
-def build_and_upload(build_number: str, key_path: Path, key_id: str, issuer: str) -> Path:
+def build_and_upload(build_number: str, key_path: Path, key_id: str, issuer: str, upload: bool = True) -> Path:
+    """Archive, export and validate; upload too unless `upload` is False (dry run)."""
     build = APP_DIR / "build"
     build.mkdir(exist_ok=True)
     archive = build / f"Airwindows{build_number}.xcarchive"
@@ -95,7 +96,7 @@ def build_and_upload(build_number: str, key_path: Path, key_id: str, issuer: str
     if r.returncode != 0:
         print(r.stdout[-4000:], r.stderr[-2000:]); raise SystemExit("export failed")
     ipa = next(export.glob("*.ipa"))
-    for verb in ("--validate-app", "--upload-app"):
+    for verb in (("--validate-app", "--upload-app") if upload else ("--validate-app",)):
         r = sh(["xcrun", "altool", verb, "-f", str(ipa), "-t", "ios", "--apiKey", key_id, "--apiIssuer", issuer], capture_output=True)
         print(r.stdout[-1500:])
         if r.returncode != 0:
@@ -183,7 +184,7 @@ def main() -> int:
     ap.add_argument("--build-number", required=True)
     ap.add_argument("--whats-new", type=Path, required=True)
     ap.add_argument("--report", type=Path)
-    ap.add_argument("--dry-run", action="store_true", help="no upload, no ASC writes; print what would happen")
+    ap.add_argument("--dry-run", action="store_true", help="archive + validate only: no upload, no ASC writes")
     ap.add_argument("--skip-submit", action="store_true", help="TestFlight + version prep only, no review submission")
     ap.add_argument("--skip-build", action="store_true", help="assume the build is already uploaded")
     args = ap.parse_args()
@@ -195,6 +196,11 @@ def main() -> int:
     lines = [f"## Release {args.marketing_version} (build {args.build_number})", ""]
 
     if args.dry_run:
+        # Still archive, export and validate — that is where SDK and signing
+        # problems surface — but never upload.
+        if not args.skip_build:
+            ipa = build_and_upload(args.build_number, key_path, key_id, issuer, upload=False)
+            lines.append(f"- built and validated `{ipa.name}` (not uploaded)")
         lines.append("Dry run — nothing uploaded or changed in App Store Connect.")
         build_id = "dry"
     else:

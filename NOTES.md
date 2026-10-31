@@ -1261,3 +1261,34 @@ Two compact-layout features, both from the menu drawer.
   - **All copy lives in `HelpCopy.swift`** — one file, edit freely. Sveinbjörn is editing the
     strings in a Claude Doc ("Airwindows help tooltips"); port back on request.
 - Xcode project was stale (referenced two deleted ConsoleXSub* headers) — regenerated with xcodegen.
+
+## 1.0 (build 9) live on the App Store (2026-10-31)
+
+After the 2026-10-20 rejection (Guideline 2.3.7, subtitle said "free") the subtitle was changed
+to "500+ audio effects" and the same build resubmitted. App Store Connect now reports version 1.0
+as READY_FOR_DISTRIBUTION with build 9 attached; the public lookup API shows
+`currentVersionReleaseDate` 2026-10-31T15:10Z, price 0.
+Listing: https://apps.apple.com/us/app/airwindows-consolidated-auv3/id6775213422
+
+Next store version per the versioning scheme: 1.0.1 / build 10 (the 2026-10-05 upstream sync and
+the Random-button + Help work are already on main and not yet shipped).
+
+## Weekly release pipeline: four Monday failures, fixed (2026-10-31)
+
+The sync half worked every week (1.0.2 DeRez5 description, 1.0.3 Echojam + VerbSevens, 1.0.4
+Echojam description — all pushed to main as builds 11–13). The release half failed every week at
+`altool --validate-app`: "This app was built with the iOS 18.5 SDK. All iOS and iPadOS apps must be
+built with the iOS 26 SDK or later". The macos-15 runner's default Xcode is 16.4. Nothing was
+uploaded, so App Store Connect never saw builds 10–13.
+
+Fixes:
+- Both workflows run on `macos-26` (default Xcode 26.6, same as the dev Mac).
+- `release.py --dry-run` now archives, exports and validates (no upload), so a dry run exercises
+  the step that actually failed. The workflow imports the signing certificate on dry runs too.
+- New dispatch inputs `release_pending` + `whats_new`: when upstream is quiet but project.yml
+  already carries an unshipped bump, release that version. Recovery tool for exactly this case.
+- GitHub ran the 06:00 UTC cron at 12:25–14:50 UTC each week (scheduled-run delay, not a bug).
+
+Observation for later: Echojam landed 10-19 without a description (hidden, correctly) and became
+visible 10-26 when its description arrived — but What's New only said "Fresh descriptions for
+Echojam", not "New effect". A hidden effect becoming visible should count as new in What's New.

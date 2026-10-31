@@ -15,7 +15,14 @@ name: Weekly upstream sync & release
 #                       so Sveinbjörn gets an email either way
 #
 # `workflow_dispatch` runs it on demand; `dry_run` goes through everything
-# except pushing, uploading and writing to App Store Connect.
+# — including the archive and `altool --validate-app` — except pushing,
+# uploading and writing to App Store Connect. `release_pending` ships the
+# version already bumped in project.yml when upstream is quiet; use it after
+# a failed Monday run so the week's sync still reaches the store.
+#
+# Runner: macos-26 (default Xcode 26.6, iOS 26 SDK). App Store Connect rejects
+# builds made with older SDKs; macos-15 defaulted to Xcode 16.4 and every
+# Monday run from 2026-10-05 to 10-26 failed at validate-app because of it.
 
 on:
   schedule:
@@ -30,6 +37,14 @@ on:
         description: "Upload to TestFlight but skip the App Store submission"
         type: boolean
         default: false
+      release_pending:
+        description: "Upstream quiet? Release the version already bumped in project.yml anyway"
+        type: boolean
+        default: false
+      whats_new:
+        description: "What's New text for a release_pending run (the sync writes its own otherwise)"
+        type: string
+        default: ""
 
 concurrency:
   group: weekly-sync
@@ -42,7 +57,7 @@ permissions:
 jobs:
   sync:
     name: Sync, test, release
-    runs-on: macos-15
+    runs-on: macos-26
     timeout-minutes: 150
     steps:
       - name: Checkout
@@ -55,6 +70,9 @@ jobs:
 
       - name: Sync upstream (Paul's airwin2rack) and scrape airwindows.com
         id: sync
+        env:
+          RELEASE_PENDING: ${{ inputs.release_pending }}
+          WHATS_NEW: ${{ inputs.whats_new }}
         run: |
           set +e
           python3 scripts/sync_upstream.py \
@@ -65,6 +83,17 @@ jobs:
             --github-output "$GITHUB_OUTPUT"
           code=$?
           set -e
+          if [ "$code" = "10" ] && [ "$RELEASE_PENDING" = "true" ]; then
+            # Nothing new this week, but project.yml already carries an unshipped
+            # bump (a previous run synced and pushed, then failed to release).
+            mv=$(grep -oE 'MARKETING_VERSION: *"[^"]+"' AirwindowsAUv3/project.yml | grep -oE '[0-9.]+' | head -1)
+            bv=$(grep -oE 'CURRENT_PROJECT_VERSION: *"[^"]+"' AirwindowsAUv3/project.yml | grep -oE '[0-9]+' | head -1)
+            printf '%s\n' "${WHATS_NEW:-Upstream fixes and refinements.}" > whatsnew.txt
+            { echo "## Pending release $mv (build $bv)"; echo; echo "Upstream unchanged; shipping the version already bumped in project.yml."; echo; cat sync-report.md 2>/dev/null; } > pending.md
+            mv pending.md sync-report.md
+            { echo "changed=true"; echo "marketing_version=$mv"; echo "build_number=$bv"; } >> "$GITHUB_OUTPUT"
+            echo "Nothing new upstream — releasing pending $mv (build $bv)."; exit 0
+          fi
           if [ "$code" = "10" ]; then echo "changed=false" >> "$GITHUB_OUTPUT"; echo "Nothing new upstream."; exit 0; fi
           if [ "$code" != "0" ]; then echo "::error::sync_upstream.py failed ($code)"; exit "$code"; fi
 
@@ -136,12 +165,13 @@ jobs:
           git config user.name "airwindows-sync[bot]"
           git config user.email "airwindows-sync@users.noreply.github.com"
           git add AirwindowsAUv3/AirwindowsDSP AirwindowsAUv3/project.yml scripts
+          git diff --cached --quiet && { echo "Nothing to commit (pending release)."; exit 0; }
           git commit -m "sync: upstream $(date -u +%F) — ${{ steps.sync.outputs.marketing_version }} (build ${{ steps.sync.outputs.build_number }})" \
             -m "New effects: ${{ steps.sync.outputs.new_effects || 'none' }}. Unclassified: ${{ steps.sync.outputs.unclassified || 'none' }}. Report in the linked issue."
           git push origin HEAD:main
 
       - name: Import signing certificate
-        if: steps.sync.outputs.changed == 'true' && !inputs.dry_run
+        if: steps.sync.outputs.changed == 'true'
         env:
           P12_BASE64: ${{ secrets.APPLE_DIST_P12_BASE64 }}
           P12_PASSWORD: ${{ secrets.APPLE_DIST_P12_PASSWORD }}
