@@ -354,8 +354,15 @@ def write_report(path: Path | None, ctx: dict) -> str:
     return text
 
 
-def whats_new(new: list[str], changed_dsp_effects: list[str], docs_added: list[str], registry: dict) -> str:
+def whats_new(new: list[str], changed_dsp_effects: list[str], docs_added: list[str], registry: dict,
+              newly_visible: list[str] = ()) -> str:
+    """Suggested store text. `newly_visible` = effects that were already in the
+    build but hidden (no description) and got their first description this run —
+    to the user they are new effects, not "fresh descriptions" (lesson from
+    Echojam, 2026-10-26, and PunchyDeluxe, 2026-10-31)."""
     visible_new = [n for n in new if (AWPDOC / f"{n}.txt").exists() or registry[n]["what"].strip()]
+    visible_new += [n for n in newly_visible if n not in visible_new]
+    docs_added = [d for d in docs_added if d not in visible_new]
     parts = []
     for n in visible_new:
         what = short_description(n, registry)
@@ -437,7 +444,9 @@ def main() -> int:
     scraped_now = sorted(set(p.stem for p in AWPDOC.glob("*.txt")) - docs_before - set(m["docs_added"]))
     new = sorted(set(reg_after) - set(reg_before))
     removed = sorted(set(reg_before) - set(reg_after))
-    wn = whats_new(new, changed_effects, m["docs_added"] + scraped_now, reg_after)
+    newly_visible = sorted(n for n in set(m["docs_added"]) | set(scraped_now)
+                           if n not in new and n not in docs_before and not reg_before.get(n, {}).get("what", "").strip())
+    wn = whats_new(new, changed_effects, m["docs_added"] + scraped_now, reg_after, newly_visible)
     docs_hash_after = awpdoc_hashes()
     already = set(m["docs_added"]) | set(m["docs_updated"]) | set(m["docs_replaced_scraped"]) | set(scraped_now)
     docs_rewritten = sorted(n for n, h in docs_hash_after.items() if n in docs_hash_before and docs_hash_before[n] != h and n not in already)

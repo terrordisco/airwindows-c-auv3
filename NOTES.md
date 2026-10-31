@@ -1292,3 +1292,17 @@ Fixes:
 Observation for later: Echojam landed 10-19 without a description (hidden, correctly) and became
 visible 10-26 when its description arrived — but What's New only said "Fresh descriptions for
 Echojam", not "New effect". A hidden effect becoming visible should count as new in What's New.
+
+### Pipeline verified live (2026-10-31, later)
+
+- Dry run 41226564849 on macos-26: archive + export + `--validate-app` clean.
+- Live run 41228483354 (`skip_submit`): synced Chris's 10-29/10-31 commits (new hidden: FastDistance2,
+  TapeHack3, Ultralight3; PunchyDeluxe got its description and became visible; Echojam description
+  updated; 9 Proc.cpp refinements), pushed `f327516` (1.0.5, build 14), uploaded, processed, added to
+  TestFlight with What to Test, created App Store version 1.0.5 (PREPARE_FOR_SUBMISSION) with the build
+  attached. Not submitted — Sveinbjörn's call. Report: issue #3.
+- Unclassified for Sveinbjörn: Weave, WoodenChest (both hidden until Chris posts).
+- What's New gap fixed in `sync_upstream.py`: an effect already shipped hidden that gains its first
+  description is announced as a new effect, not "fresh descriptions" (PunchyDeluxe this week, Echojam
+  last). The 1.0.5 text in ASC was patched by hand to include PunchyDeluxe.
+- `asc.py` paths are relative to `/v1/` — a leading `/v1/` makes ASC return 404 "path does not match".
