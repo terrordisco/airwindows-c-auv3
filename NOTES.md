@@ -1328,4 +1328,9 @@ Fix: `.subviews` (the view's own gestures stay on, only the added one is off).
   iPad (10th generation) and iPad Pro 13" (M4) devices exist for it. The screenshot robot's iPad
   branch assumes a three-column browser; at 820 pt (iPad 10th gen) the browser drills down instead,
   so the robot fails there on every OS — a robot assumption, not a bug.
-- Ships as 1.0.5 build 15 (build 14 on TestFlight has the Help-mode variant of the bug too).
+- Meanwhile 1.0.5 (build 14) had been submitted by hand on 2026-11-01 and went live the same evening,
+  so the App Store build now has BOTH halves of the bug (faders since 1.0, Menu since 1.0.5).
+- The fix went out through the pipeline on 2026-11-02 (run 41459856951, `skip_submit`): the sync
+  found PunchyDeluxe's post + video links, so it bumped to **1.0.6 (build 16)** rather than my manual
+  15. Build 16 is on TestFlight with "Fixes faders and the Menu button on iOS and iPadOS 17" leading
+  What's New; App Store version 1.0.6 is prepared with the build attached, not submitted.
