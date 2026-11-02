@@ -1334,3 +1334,11 @@ Fix: `.subviews` (the view's own gestures stay on, only the added one is off).
   found PunchyDeluxe's post + video links, so it bumped to **1.0.6 (build 16)** rather than my manual
   15. Build 16 is on TestFlight with "Fixes faders and the Menu button on iOS and iPadOS 17" leading
   What's New; App Store version 1.0.6 is prepared with the build attached, not submitted.
+- **Submitted 2026-11-02 16:27 UTC** (review submission `2c5b1d48-022a-403c-b05b-aaca985e3c6b`, state
+  WAITING_FOR_REVIEW, releases automatically on approval). Done with the same three ASC calls
+  `release.py` makes (reviewSubmissions → reviewSubmissionItems → PATCH submitted=true).
+- Unclassified check (Weave, WoodenChest): both have no awpdoc, no post, no family. Paul's
+  `registerAirwindow` drops any effect with an empty whatText outright, so they do not exist in his
+  Rack/CLAP builds either; effects with text but category "Unclassified" (CStrip, Pafnuty) show in his
+  menus under a literal "Unclassified" group, which we avoid via category_overrides.json. Not an issue;
+  the weekly sync flags them the moment a description appears.
