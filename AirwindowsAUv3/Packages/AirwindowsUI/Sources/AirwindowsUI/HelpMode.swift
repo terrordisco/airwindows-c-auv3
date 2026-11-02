@@ -121,7 +121,12 @@ private struct HelpTipModifier: ViewModifier {
                 TapGesture().onEnded {
                     if isActive, passthrough, let text { helpMode?.show(text, anchor: frame) }
                 },
-                including: isActive && passthrough ? .all : .none
+                // `.subviews` keeps the view's own gestures (the Button's tap,
+                // a fader's drag) alive while our tap is off. `.none` disables
+                // every gesture in the subtree, the control's included — iOS 17
+                // honours that literally and the control goes dead; iOS 18+ let
+                // the Button through anyway, which hid the bug (2026-11-02).
+                including: isActive && passthrough ? .all : .subviews
             )
             .overlay {
                 if isActive, !passthrough, let text {

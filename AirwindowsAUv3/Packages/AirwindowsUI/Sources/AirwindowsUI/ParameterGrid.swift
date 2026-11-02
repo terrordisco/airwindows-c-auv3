@@ -78,7 +78,12 @@ public struct ParameterRow: View {
             .simultaneousGesture(
                 LongPressGesture(minimumDuration: 0.6)
                     .onEnded { _ in onToggleLock?() },
-                including: onToggleLock == nil ? .none : .all
+                // `.subviews` keeps the control's own drag and double-tap
+                // alive while the long press is off. `.none` disables every
+                // gesture in the subtree, the control's included; iOS 17 honours
+                // that literally and the fader goes dead (iOS 18+ let the drag
+                // through anyway, which hid it until 2026-11-02).
+                including: onToggleLock == nil ? .subviews : .all
             )
     }
 
@@ -167,6 +172,10 @@ public struct ParameterRow: View {
                     stepCount: stepCount
                 )
                 .scrollDragControl()
+                .accessibilityElement()
+                .accessibilityIdentifier("parameterPot")
+                .accessibilityLabel(name)
+                .accessibilityValue(formattedValue)
             )
 
             HStack(spacing: 4 * uiScale) {
@@ -214,6 +223,10 @@ public struct ParameterRow: View {
             lockable(
                 LinearFader(value: $value, defaultValue: defaultValue, stepCount: stepCount)
                     .scrollDragControl()
+                    .accessibilityElement()
+                    .accessibilityIdentifier("parameterFader")
+                    .accessibilityLabel(name)
+                    .accessibilityValue(formattedValue)
             )
         }
     }

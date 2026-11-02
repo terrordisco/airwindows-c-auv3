@@ -1306,3 +1306,26 @@ Echojam", not "New effect". A hidden effect becoming visible should count as new
   description is announced as a new effect, not "fresh descriptions" (PunchyDeluxe this week, Echojam
   last). The 1.0.5 text in ASC was patched by hand to include PunchyDeluxe.
 - `asc.py` paths are relative to `/v1/` — a leading `/v1/` makes ASC return 404 "path does not match".
+
+## iOS 17: dead faders and Menu button (2026-11-02)
+
+Reports of 1.0 "not working properly" on iOS/iPadOS 17.7.1 (the last OS for iPhone X/8, iPad 5/6,
+first-gen iPad Pro). Reproduced on the iOS 17.5 simulator: the workspace renders, but faders do
+not drag and the Menu button does nothing. Browser and Select work.
+
+Cause: two `.simultaneousGesture(…, including: .none)` calls, meant to switch the *added* gesture
+off — the parameter row's long-press-to-lock (`ParameterGrid.lockable`, shipped in build 9) and
+the Help-mode tap (`HelpMode.helpTip`, build 14). `GestureMask.none` disables every gesture in
+the subtree, the control's own included. iOS 18+ lets Button taps and the fader's DragGesture
+through regardless, so every dev device looked fine; iOS 17 honours the mask literally.
+Fix: `.subviews` (the view's own gestures stay on, only the added one is off).
+
+- `FaderDragUITests` added: lands on an effect, drags the first fader, expects the readout to
+  change, then taps Menu and expects "Close menu". Fails on iOS 17.5 before the fix, passes after.
+- Faders/pots now expose `parameterFader` / `parameterPot` identifiers with the parameter name as
+  label and the readout as value — the first step of the accessibility pass.
+- iOS 17.5 simulator runtime installed locally (`xcodebuild -downloadPlatform iOS -buildVersion 17.5`);
+  iPad (10th generation) and iPad Pro 13" (M4) devices exist for it. The screenshot robot's iPad
+  branch assumes a three-column browser; at 820 pt (iPad 10th gen) the browser drills down instead,
+  so the robot fails there on every OS — a robot assumption, not a bug.
+- Ships as 1.0.5 build 15 (build 14 on TestFlight has the Help-mode variant of the bug too).
