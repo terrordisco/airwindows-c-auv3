@@ -160,6 +160,12 @@ struct AirwindowsAUView: View {
     @AppStorage("airwindows.persistentRandomButton", store: .airwindowsShared)
     private var persistentRandomButton: Bool = false
 
+    /// Whether the workspace shows the effect's text (tagline + long
+    /// description). Flipped by the info button in the bottom bar; App-Group
+    /// shared so the app and every plugin instance remember the choice.
+    @AppStorage("airwindows.showDescription", store: .airwindowsShared)
+    private var showDescription: Bool = true
+
     private func toggleControlStyle() {
         // Flip to the opposite of whatever's currently rendered. This works
         // whether the previous state was explicit or coming from the auto
@@ -443,6 +449,8 @@ struct AirwindowsAUView: View {
             onRandomEffect: { pickRandomEffect() },
             isRandomButtonPersistent: persistentRandomButton,
             onToggleRandomButtonPersistent: { persistentRandomButton.toggle() },
+            isDescriptionVisible: showDescription,
+            onToggleDescription: { showDescription.toggle() },
             isMonitoring: isMonitoring,
             onToggleMonitoring: onToggleMonitoring,
             scrollpad: scrollpad,

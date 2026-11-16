@@ -1342,3 +1342,21 @@ Fix: `.subviews` (the view's own gestures stay on, only the added one is off).
   Rack/CLAP builds either; effects with text but category "Unclassified" (CStrip, Pafnuty) show in his
   menus under a literal "Unclassified" group, which we avoid via category_overrides.json. Not an issue;
   the weekly sync flags them the moment a description appears.
+
+## Info toggle: show / hide the effect's text (2026-11-16)
+
+An info button (`info.circle`) at the right end of the workspace's bottom bar shows or hides the
+effect's text — the tagline band and the long description together. Blue (`actionButton`) while the
+text is hidden, primary ink (white at night, like the favorite star) while it shows.
+
+- Stored as `airwindows.showDescription` in the App Group (default on), so the app and every plugin
+  instance share and remember it.
+- The bottom bar used to exist only with "Persistent Random Effect Button" on. It is now always
+  there, because the info button lives in it; Random Effect joins it on the left when persistent.
+  Costs about 60 pt of height in every container, short ones (GarageBand strip) included.
+- Colour is the inverse of the usual HIG reading (tinted = on). Sveinbjörn's call: blue = "there is
+  something to open here".
+- `DescriptionToggleUITests` flips it, relaunches, checks it stuck. It finds the button by label:
+  the page-level `effectDetailView` identifier propagates onto plain Buttons inside the workspace and
+  shadows any identifier set on them (faders are explicit accessibility elements and keep theirs).
+- Help-mode string `HelpCopy.descriptionToggle` is a draft for Sveinbjörn to rewrite.

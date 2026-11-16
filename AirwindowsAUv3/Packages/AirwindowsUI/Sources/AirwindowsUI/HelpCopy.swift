@@ -64,6 +64,7 @@ public enum HelpCopy {
 
     public static let tagline = "Chris Johnson's one-line description of the effect."
     public static let description = "Chris Johnson's full write-up of the effect, from airwindows.com."
+    public static let descriptionToggle = "Shows or hides the effect's tagline and write-up. Airwindows remembers your choice."
     public static let randomEffect = "Loads a random effect from the whole catalogue."
 
     // MARK: Menu drawer rows

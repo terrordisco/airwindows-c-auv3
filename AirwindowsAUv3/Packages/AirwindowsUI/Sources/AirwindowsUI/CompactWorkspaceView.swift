@@ -20,7 +20,7 @@
 //  │ ──────────────────────────────────────── │
 //  │  # Highpass  long description…           │
 //  │ ──────────────────────────────────────── │
-//  │  [⚄ Random Effect]                       │  optional persistent bar
+//  │  [⚄ Random Effect]                  (i)  │  bottom bar: optional Random, info toggle
 //  └──────────────────────────────────────────┘
 //  ```
 //
@@ -93,6 +93,12 @@ public struct CompactWorkspaceView: View {
     /// menu drawer; nil hides the row.
     public let isRandomButtonPersistent: Bool
     public let onToggleRandomButtonPersistent: (() -> Void)?
+    /// Info toggle in the bottom bar (Sveinbjörn, 2026-11-16): shows or hides
+    /// the effect's text — the tagline band and the long description — so the
+    /// workspace can be just the controls. The owner persists the choice.
+    /// nil hides the button and the text always shows.
+    public let isDescriptionVisible: Bool
+    public let onToggleDescription: (() -> Void)?
     public let isMonitoring: Bool
     public let onToggleMonitoring: (() -> Void)?
     /// Scrollpad edge (left / right / off) and the menu row's cycle action.
@@ -164,6 +170,8 @@ public struct CompactWorkspaceView: View {
         onRandomEffect: (() -> Void)? = nil,
         isRandomButtonPersistent: Bool = false,
         onToggleRandomButtonPersistent: (() -> Void)? = nil,
+        isDescriptionVisible: Bool = true,
+        onToggleDescription: (() -> Void)? = nil,
         isMonitoring: Bool = false,
         onToggleMonitoring: (() -> Void)? = nil,
         scrollpad: ScrollpadPlacement = .left,
@@ -217,6 +225,8 @@ public struct CompactWorkspaceView: View {
         self.onRandomEffect = onRandomEffect
         self.isRandomButtonPersistent = isRandomButtonPersistent
         self.onToggleRandomButtonPersistent = onToggleRandomButtonPersistent
+        self.isDescriptionVisible = onToggleDescription == nil ? true : isDescriptionVisible
+        self.onToggleDescription = onToggleDescription
         self.isMonitoring = onToggleMonitoring == nil ? false : isMonitoring
         self.onToggleMonitoring = onToggleMonitoring
         self.scrollpad = scrollpad
@@ -320,7 +330,7 @@ public struct CompactWorkspaceView: View {
             levelsRow
             hairline
             body_parameters
-            persistentRandomBar
+            bottomBar
         }
         .animation(.easeOut(duration: 0.2), value: helpMode.isOn)
     }
@@ -524,7 +534,7 @@ public struct CompactWorkspaceView: View {
     /// The tagline in its own centered band between two hairlines.
     @ViewBuilder
     private var taglineBand: some View {
-        if !effect.whatText.isEmpty {
+        if isDescriptionVisible, !effect.whatText.isEmpty {
             hairline
             Text("\u{201C}\(effect.whatText)\u{201D}")
                 // New York Regular Italic — the system serif (variable, so the
@@ -543,7 +553,7 @@ public struct CompactWorkspaceView: View {
 
     @ViewBuilder
     private var descriptionBlock: some View {
-        if shouldShowDescription {
+        if isDescriptionVisible, shouldShowDescription {
             EffectDescriptionText(description, omittingHeadingMatching: effect.whatText)
                 .hEdgePadding(16)
                 .padding(.vertical, 16 * uiScale)
@@ -573,23 +583,31 @@ public struct CompactWorkspaceView: View {
         }
     }
 
-    /// The persistent alternative to the footer: a fixed bar under the
-    /// scrolling field with the same button at the bottom-left corner, so a
-    /// new effect is one tap away without scrolling to the end of the page.
+    /// Fixed bar under the scrolling field. Left: the persistent alternative
+    /// to the Random Effect footer, so a new effect is one tap away without
+    /// scrolling to the end of the page. Right: the info toggle that shows or
+    /// hides the effect's text. The bar disappears when it has neither.
     @ViewBuilder
-    private var persistentRandomBar: some View {
-        if let onRandomEffect, isRandomButtonPersistent {
+    private var bottomBar: some View {
+        let persistentRandom = isRandomButtonPersistent ? onRandomEffect : nil
+        if persistentRandom != nil || onToggleDescription != nil {
             hairline
             HStack {
-                ActionButton(
-                    systemName: "dice",
-                    text: "Random Effect",
-                    role: .outlined,
-                    accessibility: "Pick a random effect",
-                    action: onRandomEffect
-                )
-                .helpTip(HelpCopy.randomEffect)
+                if let persistentRandom {
+                    ActionButton(
+                        systemName: "dice",
+                        text: "Random Effect",
+                        role: .outlined,
+                        accessibility: "Pick a random effect",
+                        action: persistentRandom
+                    )
+                    .helpTip(HelpCopy.randomEffect)
+                }
                 Spacer(minLength: 0)
+                if let onToggleDescription {
+                    DescriptionToggle(isOn: isDescriptionVisible, action: onToggleDescription)
+                        .helpTip(HelpCopy.descriptionToggle)
+                }
             }
             .hEdgePadding(16)
             .padding(.vertical, 10 * uiScale)
@@ -674,6 +692,36 @@ private struct JogChevron: View {
                 : "Next effect\(targetName.map { ", \($0)" } ?? "")"
         )
         .accessibilityHidden(!enabled)
+    }
+}
+
+/// The info button in the bottom bar: shows or hides the effect's text.
+/// Blue (the action colour) while the text is hidden — tapping it will do
+/// something for you — and primary ink (white at night, near-black by day,
+/// like the favorite star) while the text is showing.
+private struct DescriptionToggle: View {
+    let isOn: Bool
+    let action: () -> Void
+
+    @Environment(\.uiScale) private var uiScale
+
+    /// Matches the height of the Random Effect button beside it, so the bar
+    /// is the same height with or without that button.
+    private static let iconSize: CGFloat = 24
+    private static let minTouchTarget: CGFloat = 44
+
+    var body: some View {
+        let side = max(Self.minTouchTarget, 40 * uiScale)
+        Button(action: action) {
+            Image(systemName: "info.circle")
+                .font(.system(size: Self.iconSize * uiScale, weight: .medium))
+                .foregroundStyle(isOn ? Color.primary : AirwindowsPalette.actionButton)
+                .frame(width: side, height: side)
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("Effect description")
+        .accessibilityValue(isOn ? "Showing" : "Hidden")
     }
 }
 
