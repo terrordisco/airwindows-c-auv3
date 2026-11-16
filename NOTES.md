@@ -1351,12 +1351,18 @@ text is hidden, primary ink (white at night, like the favorite star) while it sh
 
 - Stored as `airwindows.showDescription` in the App Group (default on), so the app and every plugin
   instance share and remember it.
-- The bottom bar used to exist only with "Persistent Random Effect Button" on. It is now always
-  there, because the info button lives in it; Random Effect joins it on the left when persistent.
-  Costs about 60 pt of height in every container, short ones (GarageBand strip) included.
+- Same day, second pass (Sveinbjörn): the info button lives in the persistent Random Effect bar and
+  goes with it — bar off, no info button. "Persistent Random Effect Button" now defaults to ON, and
+  the menu drawer has a "Show Effect Info" switch row (right under the Random row) on the same
+  setting, which is the only way to reach it with the bar off.
+- The default flip also reaches existing installs that never touched the switch: nothing is stored
+  for them, so they follow the new default. Anyone who set it explicitly keeps their choice.
 - Colour is the inverse of the usual HIG reading (tinted = on). Sveinbjörn's call: blue = "there is
   something to open here".
-- `DescriptionToggleUITests` flips it, relaunches, checks it stuck. It finds the button by label:
+- `DescriptionToggleUITests` flips it, checks the menu row mirrors it, relaunches, checks it stuck. It finds the button by label:
   the page-level `effectDetailView` identifier propagates onto plain Buttons inside the workspace and
   shadows any identifier set on them (faders are explicit accessibility elements and keep theirs).
 - Help-mode string `HelpCopy.descriptionToggle` is a draft for Sveinbjörn to rewrite.
+- The iOS 17.5 simulator runtime vanished from this Mac mid-session (2026-11-16, not removed by us);
+  the second pass was tested on iOS 27.2 only. Reinstall before the next gesture change:
+  `xcodebuild -downloadPlatform iOS -buildVersion 17.5`.

@@ -83,7 +83,7 @@ public enum HelpCopy {
     public static let rememberSettings = "Saves this effect's current settings. The effect still opens with factory defaults; Recall brings yours back."
     public static let recallSettings = "Applies the settings you remembered for this effect, as one undoable step."
     public static let forgetSettings = "Deletes the remembered settings for this effect."
-    public static let persistentRandomButton = "Keeps the Random Effect button in a bar at the bottom of the screen instead of at the end of the page."
+    public static let persistentRandomButton = "Keeps the Random Effect button in a bar at the bottom of the screen instead of at the end of the page. The bar also holds the info button."
     public static let potsSliders = "Shows the parameters as a grid of pots or a column of sliders."
     public static let nightMode = "Auto follows the host app's look; Night and Day force dark or light."
     public static let scrollpadSetting = "Which edge the scrollpad sits on, left or right — or off."

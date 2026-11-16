@@ -16,6 +16,7 @@
 //      Remember settings   →  Recall settings + Forget saved settings
 //      ─────
 //      Persistent Random Effect Button   [switch]
+//      Show Effect Info                  [switch]   mirrors the bottom bar's info button
 //      ─────
 //      Pots / Sliders      [switch]
 //      Night Mode          Auto / Night / Day
@@ -76,6 +77,12 @@ public struct CompactMenuDrawer: View {
     /// the view rows. nil hides it.
     public let isRandomButtonPersistent: Bool
     public let onToggleRandomButtonPersistent: (() -> Void)?
+    /// "Show Effect Info" — shows or hides the effect's tagline and
+    /// description in the workspace. The same setting as the info button in
+    /// the bottom bar, and the only way to reach it when that bar is off.
+    /// nil hides the row.
+    public let isDescriptionVisible: Bool
+    public let onToggleDescription: (() -> Void)?
     public let appearance: AirwindowsAppearance
     public let onCycleAppearance: () -> Void
     /// App-only input monitoring (mic → effect → speaker). nil in the AUv3.
@@ -127,8 +134,10 @@ public struct CompactMenuDrawer: View {
         onToggleControlStyle: (() -> Void)? = nil,
         isLongPressLockOn: Bool = false,
         onToggleLongPressLock: (() -> Void)? = nil,
-        isRandomButtonPersistent: Bool = false,
+        isRandomButtonPersistent: Bool = true,
         onToggleRandomButtonPersistent: (() -> Void)? = nil,
+        isDescriptionVisible: Bool = true,
+        onToggleDescription: (() -> Void)? = nil,
         appearance: AirwindowsAppearance = .auto,
         onCycleAppearance: @escaping () -> Void = {},
         isMonitoring: Bool = false,
@@ -166,6 +175,8 @@ public struct CompactMenuDrawer: View {
         self.onToggleLongPressLock = onToggleLongPressLock
         self.isRandomButtonPersistent = isRandomButtonPersistent
         self.onToggleRandomButtonPersistent = onToggleRandomButtonPersistent
+        self.isDescriptionVisible = isDescriptionVisible
+        self.onToggleDescription = onToggleDescription
         self.appearance = appearance
         self.onCycleAppearance = onCycleAppearance
         self.isMonitoring = isMonitoring
@@ -201,6 +212,11 @@ public struct CompactMenuDrawer: View {
                     sectionDivider
                     if let onToggleRandomButtonPersistent {
                         randomButtonRow(action: onToggleRandomButtonPersistent)
+                    }
+                    if let onToggleDescription {
+                        descriptionRow(action: onToggleDescription)
+                    }
+                    if onToggleRandomButtonPersistent != nil || onToggleDescription != nil {
                         sectionDivider
                     }
                     viewSection
@@ -381,6 +397,19 @@ public struct CompactMenuDrawer: View {
                     ? "Persistent random effect button, on. Tap to turn off."
                     : "Persistent random effect button, off. Tap to turn on.",
                 help: HelpCopy.persistentRandomButton,
+                action: action)
+    }
+
+    /// Shares the Random button's section: both rows decide what the
+    /// workspace shows below the controls. A toggle, so the drawer stays open.
+    private func descriptionRow(action: @escaping () -> Void) -> some View {
+        MenuRow(systemName: "info.circle",
+                titleView: { Text("Show Effect Info") },
+                trailing: { StyleSwitchGlyph(isOn: isDescriptionVisible) },
+                accessibility: isDescriptionVisible
+                    ? "Show effect info, on. Tap to turn off."
+                    : "Show effect info, off. Tap to turn on.",
+                help: HelpCopy.descriptionToggle,
                 action: action)
     }
 

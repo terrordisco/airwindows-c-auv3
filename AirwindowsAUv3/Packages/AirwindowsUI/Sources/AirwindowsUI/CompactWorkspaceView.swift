@@ -20,7 +20,7 @@
 //  │ ──────────────────────────────────────── │
 //  │  # Highpass  long description…           │
 //  │ ──────────────────────────────────────── │
-//  │  [⚄ Random Effect]                  (i)  │  bottom bar: optional Random, info toggle
+//  │  [⚄ Random Effect]                  (i)  │  optional persistent bar: Random, info toggle
 //  └──────────────────────────────────────────┘
 //  ```
 //
@@ -93,10 +93,12 @@ public struct CompactWorkspaceView: View {
     /// menu drawer; nil hides the row.
     public let isRandomButtonPersistent: Bool
     public let onToggleRandomButtonPersistent: (() -> Void)?
-    /// Info toggle in the bottom bar (Sveinbjörn, 2026-11-16): shows or hides
-    /// the effect's text — the tagline band and the long description — so the
-    /// workspace can be just the controls. The owner persists the choice.
-    /// nil hides the button and the text always shows.
+    /// Info toggle (Sveinbjörn, 2026-11-16): shows or hides the effect's
+    /// text — the tagline band and the long description — so the workspace
+    /// can be just the controls. Two places flip it: the info button at the
+    /// right of the persistent bar (so only while that bar is on) and the
+    /// menu drawer's "Show Effect Info" row (always). The owner persists the
+    /// choice. nil hides both and the text always shows.
     public let isDescriptionVisible: Bool
     public let onToggleDescription: (() -> Void)?
     public let isMonitoring: Bool
@@ -168,7 +170,7 @@ public struct CompactWorkspaceView: View {
         onToggleTempoSync: (() -> Void)? = nil,
         onOpenAbout: (() -> Void)? = nil,
         onRandomEffect: (() -> Void)? = nil,
-        isRandomButtonPersistent: Bool = false,
+        isRandomButtonPersistent: Bool = true,
         onToggleRandomButtonPersistent: (() -> Void)? = nil,
         isDescriptionVisible: Bool = true,
         onToggleDescription: (() -> Void)? = nil,
@@ -583,26 +585,25 @@ public struct CompactWorkspaceView: View {
         }
     }
 
-    /// Fixed bar under the scrolling field. Left: the persistent alternative
-    /// to the Random Effect footer, so a new effect is one tap away without
-    /// scrolling to the end of the page. Right: the info toggle that shows or
-    /// hides the effect's text. The bar disappears when it has neither.
+    /// Fixed bar under the scrolling field, shown while "Persistent Random
+    /// Effect Button" is on. Left: the persistent alternative to the Random
+    /// Effect footer, so a new effect is one tap away without scrolling to
+    /// the end of the page. Right: the info toggle that shows or hides the
+    /// effect's text. With the setting off the whole bar goes, info button
+    /// included — the menu drawer's "Show Effect Info" row does the same job.
     @ViewBuilder
     private var bottomBar: some View {
-        let persistentRandom = isRandomButtonPersistent ? onRandomEffect : nil
-        if persistentRandom != nil || onToggleDescription != nil {
+        if let onRandomEffect, isRandomButtonPersistent {
             hairline
             HStack {
-                if let persistentRandom {
-                    ActionButton(
-                        systemName: "dice",
-                        text: "Random Effect",
-                        role: .outlined,
-                        accessibility: "Pick a random effect",
-                        action: persistentRandom
-                    )
-                    .helpTip(HelpCopy.randomEffect)
-                }
+                ActionButton(
+                    systemName: "dice",
+                    text: "Random Effect",
+                    role: .outlined,
+                    accessibility: "Pick a random effect",
+                    action: onRandomEffect
+                )
+                .helpTip(HelpCopy.randomEffect)
                 Spacer(minLength: 0)
                 if let onToggleDescription {
                     DescriptionToggle(isOn: isDescriptionVisible, action: onToggleDescription)
@@ -651,6 +652,8 @@ public struct CompactWorkspaceView: View {
             onToggleLongPressLock: onToggleLongPressLock,
             isRandomButtonPersistent: isRandomButtonPersistent,
             onToggleRandomButtonPersistent: onRandomEffect == nil ? nil : onToggleRandomButtonPersistent,
+            isDescriptionVisible: isDescriptionVisible,
+            onToggleDescription: onToggleDescription,
             appearance: appearance,
             onCycleAppearance: onCycleAppearance,
             isMonitoring: isMonitoring,

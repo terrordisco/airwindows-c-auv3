@@ -27,6 +27,18 @@ final class DescriptionToggleUITests: XCTestCase {
         toggle.tap()
         XCTAssertEqual(toggle.value as? String, flipped, "tapping the info button should flip it")
 
+        // The menu's "Show Effect Info" row is the same setting: it shows
+        // the new state, and tapping it flips the bar's button back.
+        app.buttons["Menu"].firstMatch.tap()
+        let row = app.buttons.matching(NSPredicate(format: "label BEGINSWITH[c] %@", "Show effect info")).firstMatch
+        XCTAssertTrue(row.waitForExistence(timeout: 5), "the menu should have a Show Effect Info row")
+        XCTAssertTrue(row.label.contains(flipped == "Showing" ? ", on" : ", off"), "menu row should mirror the info button, got '\(row.label)'")
+        row.tap()
+        app.buttons["Close menu"].firstMatch.tap()
+        XCTAssertEqual(toggle.value as? String, original, "the menu row should flip the info button")
+        toggle.tap()
+        XCTAssertEqual(toggle.value as? String, flipped)
+
         // Relaunch: the choice is remembered.
         app.terminate()
         app.launch()

@@ -156,12 +156,15 @@ struct AirwindowsAUView: View {
 
     /// Keep the Random Effect button on screen (a fixed bar at the bottom
     /// left of the workspace) instead of at the end of the scrolling page.
-    /// App-Group shared like the other layout choices.
+    /// App-Group shared like the other layout choices. On by default
+    /// (2026-11-16): the bar also carries the info button. An install that
+    /// never touched the switch has nothing stored, so it follows the default.
     @AppStorage("airwindows.persistentRandomButton", store: .airwindowsShared)
-    private var persistentRandomButton: Bool = false
+    private var persistentRandomButton: Bool = true
 
     /// Whether the workspace shows the effect's text (tagline + long
-    /// description). Flipped by the info button in the bottom bar; App-Group
+    /// description). Flipped by the info button in the bottom bar or the menu
+    /// drawer's "Show Effect Info" row; App-Group
     /// shared so the app and every plugin instance remember the choice.
     @AppStorage("airwindows.showDescription", store: .airwindowsShared)
     private var showDescription: Bool = true
